@@ -8,6 +8,7 @@ import com.fameli.budget.firebase.FameliFirebaseMessagingService_GeneratedInject
 import com.fameli.budget.ui.screens.auth.AuthViewModel_HiltModules;
 import com.fameli.budget.ui.screens.categories.CategoriesViewModel_HiltModules;
 import com.fameli.budget.ui.screens.dashboard.DashboardViewModel_HiltModules;
+import com.fameli.budget.ui.screens.planner.PlannerViewModel_HiltModules;
 import com.fameli.budget.ui.screens.settings.SettingsViewModel_HiltModules;
 import com.fameli.budget.ui.screens.statistics.StatisticsViewModel_HiltModules;
 import com.fameli.budget.ui.screens.transaction.AddTransactionViewModel_HiltModules;
@@ -176,6 +177,7 @@ public final class FameliApp_HiltComponents {
           ViewModelCBuilderModule.class,
           HiltWrapper_ActivityRetainedComponentManager_LifecycleModule.class,
           HiltWrapper_SavedStateHandleModule.class,
+          PlannerViewModel_HiltModules.KeyModule.class,
           SettingsViewModel_HiltModules.KeyModule.class,
           StatisticsViewModel_HiltModules.KeyModule.class
       }
@@ -218,6 +220,7 @@ public final class FameliApp_HiltComponents {
           CategoriesViewModel_HiltModules.BindsModule.class,
           DashboardViewModel_HiltModules.BindsModule.class,
           HiltWrapper_HiltViewModelFactory_ViewModelModule.class,
+          PlannerViewModel_HiltModules.BindsModule.class,
           SettingsViewModel_HiltModules.BindsModule.class,
           StatisticsViewModel_HiltModules.BindsModule.class
       }

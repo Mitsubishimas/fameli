@@ -27,6 +27,11 @@ class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth)
         Result.success(auth.signInAnonymously().await().user!!)
     } catch (e: Exception) { Result.failure(e) }
 
+    suspend fun resetPassword(email: String): Result<Unit> = try {
+        auth.sendPasswordResetEmail(email).await()
+        Result.success(Unit)
+    } catch (e: Exception) { Result.failure(e) }
+
     fun signOut() { auth.signOut() }
     fun getUserId() = auth.currentUser?.uid
 }

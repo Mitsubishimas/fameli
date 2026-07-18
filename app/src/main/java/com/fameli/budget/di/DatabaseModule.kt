@@ -17,9 +17,12 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): FameliDatabase =
-        Room.databaseBuilder(context, FameliDatabase::class.java, "fameli_db").build()
+        Room.databaseBuilder(context, FameliDatabase::class.java, "fameli_db")
+            .fallbackToDestructiveMigration()
+            .build()
 
     @Provides fun provideTransactionDao(db: FameliDatabase) = db.transactionDao()
     @Provides fun provideCategoryDao(db: FameliDatabase) = db.categoryDao()
     @Provides fun provideBudgetDao(db: FameliDatabase) = db.budgetDao()
+    @Provides fun provideTaskDao(db: FameliDatabase) = db.taskDao()
 }

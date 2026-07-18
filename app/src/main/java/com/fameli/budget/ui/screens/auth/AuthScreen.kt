@@ -19,6 +19,7 @@ fun AuthScreen(onSuccess: () -> Unit, viewModel: AuthViewModel = hiltViewModel()
     val isLogin by viewModel.isLoginMode.collectAsState()
     val state by viewModel.uiState.collectAsState()
     val showEmailForm by viewModel.showEmailForm.collectAsState()
+    val showResetPassword by viewModel.showResetPassword.collectAsState()
     var passwordVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isLoggedIn) { if (state.isLoggedIn) onSuccess() }
@@ -27,17 +28,45 @@ fun AuthScreen(onSuccess: () -> Unit, viewModel: AuthViewModel = hiltViewModel()
         Card(Modifier.fillMaxWidth().padding(24.dp)) {
             Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("💰", style = MaterialTheme.typography.displayMedium)
-                Text("Fameli", style = MaterialTheme.typography.headlineLarge)
-                Text("Семейный бюджет", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Семейный бюджет", style = MaterialTheme.typography.headlineLarge)
+                Text("Учёт и планирование", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-                if (!showEmailForm) {
-                    // Кнопки входа
+                if (showResetPassword) {
+                    // Форма сброса пароля
+                    Text("Сброс пароля", style = MaterialTheme.typography.titleLarge)
+                    Text("Введите email для получения ссылки", style = MaterialTheme.typography.bodySmall)
+                    
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { viewModel.updateEmail(it) },
+                        label = { Text("Email") },
+                        leadingIcon = { Icon(Icons.Filled.Email, null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        enabled = !state.isLoading,
+                        singleLine = true
+                    )
+
+                    state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                    
+                    Button(
+                        onClick = { viewModel.resetPassword() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = email.isNotBlank() && !state.isLoading
+                    ) {
+                        Text("Отправить ссылку")
+                    }
+                    
+                    TextButton(onClick = { viewModel.showMainScreen() }) {
+                        Text("← Назад")
+                    }
+                } else if (!showEmailForm) {
+                    // Главный экран входа
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Button(
                         onClick = { viewModel.showEmailLogin() },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Filled.Email, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
@@ -102,6 +131,12 @@ fun AuthScreen(onSuccess: () -> Unit, viewModel: AuthViewModel = hiltViewModel()
                             Spacer(modifier = Modifier.width(8.dp))
                         }
                         Text(if (isLogin) "Войти" else "Зарегистрироваться")
+                    }
+
+                    if (isLogin) {
+                        TextButton(onClick = { viewModel.showResetPasswordForm() }) {
+                            Text("Забыли пароль?")
+                        }
                     }
 
                     TextButton(onClick = { viewModel.showMainScreen() }) {

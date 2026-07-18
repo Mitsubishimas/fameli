@@ -17,60 +17,44 @@ class AuthViewModel @Inject constructor(private val authRepository: FirebaseAuth
     val isLoginMode = MutableStateFlow(true)
     val uiState = MutableStateFlow(AuthUiState())
     val showEmailForm = MutableStateFlow(false)
+    val showResetPassword = MutableStateFlow(false)
     val isLoggedIn = authRepository.currentUser.map { it != null }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
     fun updateEmail(v: String) { email.value = v.trim() }
     fun updatePassword(v: String) { password.value = v.trim() }
 
-    fun showEmailLogin() {
-        isLoginMode.value = true
-        showEmailForm.value = true
-        email.value = ""
-        password.value = ""
-        uiState.value = AuthUiState()
-    }
+    fun showEmailLogin() { isLoginMode.value = true; showEmailForm.value = true; clear() }
+    fun showEmailRegister() { isLoginMode.value = false; showEmailForm.value = true; clear() }
+    fun showMainScreen() { showEmailForm.value = false; showResetPassword.value = false; clear() }
+    fun showResetPasswordForm() { showResetPassword.value = true; showEmailForm.value = false; clear() }
 
-    fun showEmailRegister() {
-        isLoginMode.value = false
-        showEmailForm.value = true
-        email.value = ""
-        password.value = ""
-        uiState.value = AuthUiState()
-    }
-
-    fun showMainScreen() {
-        showEmailForm.value = false
-        uiState.value = AuthUiState()
-    }
+    private fun clear() { email.value = ""; password.value = ""; uiState.value = AuthUiState() }
 
     fun authenticate() = viewModelScope.launch {
-        if (email.value.isBlank() || password.value.isBlank()) {
-            uiState.value = AuthUiState(error = "Заполните все поля")
-            return@launch
-        }
-        if (password.value.length < 6) {
-            uiState.value = AuthUiState(error = "Пароль должен быть не менее 6 символов")
-            return@launch
-        }
-
+        if (email.value.isBlank() || password.value.isBlank()) { uiState.value = AuthUiState(error = "Заполните все поля"); return@launch }
+        if (password.value.length < 6) { uiState.value = AuthUiState(error = "Пароль минимум 6 символов"); return@launch }
         uiState.value = AuthUiState(isLoading = true)
-        val result = if (isLoginMode.value) {
-            authRepository.signIn(email.value, password.value)
-        } else {
-            authRepository.signUp(email.value, password.value)
-        }
+        val result = if (isLoginMode.value) authRepository.signIn(email.value, password.value) else authRepository.signUp(email.value, password.value)
         result.fold(
             onSuccess = { uiState.value = AuthUiState(isLoggedIn = true) },
             onFailure = {
-                val msg = when {
-                    it.message?.contains("email already") == true -> "Этот email уже зарегистрирован"
+                uiState.value = AuthUiState(error = when {
+                    it.message?.contains("email already") == true -> "Email уже зарегистрирован"
                     it.message?.contains("invalid email") == true -> "Неверный email"
                     it.message?.contains("password is invalid") == true -> "Неверный пароль"
-                    it.message?.contains("user not found") == true -> "Пользователь не найден. Создайте аккаунт"
+                    it.message?.contains("user not found") == true -> "Пользователь не найден"
                     else -> it.message ?: "Ошибка"
-                }
-                uiState.value = AuthUiState(error = msg)
+                })
             }
+        )
+    }
+
+    fun resetPassword() = viewModelScope.launch {
+        if (email.value.isBlank()) { uiState.value = AuthUiState(error = "Введите email"); return@launch }
+        uiState.value = AuthUiState(isLoading = true)
+        authRepository.resetPassword(email.value).fold(
+            onSuccess = { uiState.value = AuthUiState(error = "Ссылка отправлена на ${email.value}. Проверьте почту!") },
+            onFailure = { uiState.value = AuthUiState(error = "Ошибка: ${it.message}") }
         )
     }
 
@@ -78,7 +62,7 @@ class AuthViewModel @Inject constructor(private val authRepository: FirebaseAuth
         uiState.value = AuthUiState(isLoading = true)
         authRepository.signInAnonymously().fold(
             onSuccess = { uiState.value = AuthUiState(isLoggedIn = true) },
-            onFailure = { uiState.value = AuthUiState(error = "Ошибка входа. Проверьте интернет.") }
+            onFailure = { uiState.value = AuthUiState(error = "Ошибка. Проверьте интернет.") }
         )
     }
 }

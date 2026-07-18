@@ -1,4 +1,4 @@
-#Sat Jul 18 15:07:55 UTC 2026
+#Sat Jul 18 15:36:09 UTC 2026
 path.4=12/classes.dex
 path.3=11/classes.dex
 path.2=10/classes.dex
@@ -19,9 +19,11 @@ base.8=/home/codespace/fameli/app/build/intermediates/dex/debug/mergeProjectDexD
 base.7=/home/codespace/fameli/app/build/intermediates/dex/debug/mergeProjectDexDebug/15/classes.dex
 base.6=/home/codespace/fameli/app/build/intermediates/dex/debug/mergeProjectDexDebug/14/classes.dex
 base.5=/home/codespace/fameli/app/build/intermediates/dex/debug/mergeProjectDexDebug/13/classes.dex
+renamed.18=classes19.dex
 renamed.17=classes18.dex
 renamed.9=classes10.dex
 renamed.16=classes17.dex
+path.18=1/classes.dex
 renamed.8=classes9.dex
 renamed.15=classes16.dex
 renamed.14=classes15.dex
@@ -33,6 +35,7 @@ base.17=/home/codespace/fameli/app/build/intermediates/dex/debug/mergeExtDexDebu
 base.16=/home/codespace/fameli/app/build/intermediates/dex/debug/mergeExtDexDebug/classes3.dex
 base.15=/home/codespace/fameli/app/build/intermediates/dex/debug/mergeExtDexDebug/classes2.dex
 base.14=/home/codespace/fameli/app/build/intermediates/dex/debug/mergeProjectDexDebug/8/classes.dex
+base.18=/home/codespace/fameli/app/build/intermediates/dex/debug/mergeProjectDexDebug/1/classes.dex
 renamed.3=classes4.dex
 path.12=6/classes.dex
 renamed.2=classes3.dex
