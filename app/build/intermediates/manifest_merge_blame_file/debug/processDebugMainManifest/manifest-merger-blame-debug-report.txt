@@ -9,14 +9,14 @@
 9        android:targetSdkVersion="35" />
 10
 11    <uses-permission android:name="android.permission.INTERNET" />
-11-->/workspaces/fameli/app/src/main/AndroidManifest.xml:3:5-67
-11-->/workspaces/fameli/app/src/main/AndroidManifest.xml:3:22-64
+11-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:3:5-67
+11-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:3:22-64
 12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-12-->/workspaces/fameli/app/src/main/AndroidManifest.xml:4:5-79
-12-->/workspaces/fameli/app/src/main/AndroidManifest.xml:4:22-76
+12-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:4:5-79
+12-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:4:22-76
 13    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-13-->/workspaces/fameli/app/src/main/AndroidManifest.xml:5:5-77
-13-->/workspaces/fameli/app/src/main/AndroidManifest.xml:5:22-74
+13-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:5:5-77
+13-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:5:22-74
 14    <uses-permission android:name="android.permission.WAKE_LOCK" />
 14-->[androidx.work:work-runtime:2.10.0] /home/codespace/.gradle/caches/8.9/transforms/b683405871d3d4dbb15a092cbb0ce3ab/transformed/work-runtime-2.10.0/AndroidManifest.xml:23:5-68
 14-->[androidx.work:work-runtime:2.10.0] /home/codespace/.gradle/caches/8.9/transforms/b683405871d3d4dbb15a092cbb0ce3ab/transformed/work-runtime-2.10.0/AndroidManifest.xml:23:22-65
@@ -45,96 +45,96 @@
 24-->[androidx.core:core:1.13.1] /home/codespace/.gradle/caches/8.9/transforms/cb1512eadd9d2dd1cfb96ca524557321/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
 25
 26    <application
-26-->/workspaces/fameli/app/src/main/AndroidManifest.xml:7:5-49:19
+26-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:7:5-49:19
 27        android:name="com.fameli.budget.FameliApp"
-27-->/workspaces/fameli/app/src/main/AndroidManifest.xml:8:9-34
+27-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:8:9-34
 28        android:allowBackup="true"
-28-->/workspaces/fameli/app/src/main/AndroidManifest.xml:9:9-35
+28-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:9:9-35
 29        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 29-->[androidx.core:core:1.13.1] /home/codespace/.gradle/caches/8.9/transforms/cb1512eadd9d2dd1cfb96ca524557321/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
 30        android:debuggable="true"
 31        android:extractNativeLibs="false"
 32        android:icon="@mipmap/ic_launcher"
-32-->/workspaces/fameli/app/src/main/AndroidManifest.xml:10:9-43
+32-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:10:9-43
 33        android:label="Fameli"
-33-->/workspaces/fameli/app/src/main/AndroidManifest.xml:11:9-31
+33-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:11:9-31
 34        android:supportsRtl="true"
-34-->/workspaces/fameli/app/src/main/AndroidManifest.xml:12:9-35
+34-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:12:9-35
 35        android:theme="@style/Theme.Fameli.Splash" >
-35-->/workspaces/fameli/app/src/main/AndroidManifest.xml:13:9-51
+35-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:13:9-51
 36        <activity
-36-->/workspaces/fameli/app/src/main/AndroidManifest.xml:15:9-29:20
+36-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:15:9-29:20
 37            android:name="com.fameli.budget.MainActivity"
-37-->/workspaces/fameli/app/src/main/AndroidManifest.xml:16:13-41
+37-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:16:13-41
 38            android:exported="true"
-38-->/workspaces/fameli/app/src/main/AndroidManifest.xml:17:13-36
+38-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:17:13-36
 39            android:theme="@style/Theme.Fameli.Splash" >
-39-->/workspaces/fameli/app/src/main/AndroidManifest.xml:18:13-55
+39-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:18:13-55
 40            <intent-filter>
-40-->/workspaces/fameli/app/src/main/AndroidManifest.xml:19:13-22:29
+40-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:19:13-22:29
 41                <action android:name="android.intent.action.MAIN" />
-41-->/workspaces/fameli/app/src/main/AndroidManifest.xml:20:17-69
-41-->/workspaces/fameli/app/src/main/AndroidManifest.xml:20:25-66
+41-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:20:17-69
+41-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:20:25-66
 42
 43                <category android:name="android.intent.category.LAUNCHER" />
-43-->/workspaces/fameli/app/src/main/AndroidManifest.xml:21:17-77
-43-->/workspaces/fameli/app/src/main/AndroidManifest.xml:21:27-74
+43-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:21:17-77
+43-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:21:27-74
 44            </intent-filter>
 45            <intent-filter>
-45-->/workspaces/fameli/app/src/main/AndroidManifest.xml:23:13-28:29
+45-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:23:13-28:29
 46                <action android:name="android.intent.action.VIEW" />
-46-->/workspaces/fameli/app/src/main/AndroidManifest.xml:24:17-69
-46-->/workspaces/fameli/app/src/main/AndroidManifest.xml:24:25-66
+46-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:24:17-69
+46-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:24:25-66
 47
 48                <category android:name="android.intent.category.DEFAULT" />
-48-->/workspaces/fameli/app/src/main/AndroidManifest.xml:25:17-76
-48-->/workspaces/fameli/app/src/main/AndroidManifest.xml:25:27-73
+48-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:25:17-76
+48-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:25:27-73
 49                <category android:name="android.intent.category.BROWSABLE" />
-49-->/workspaces/fameli/app/src/main/AndroidManifest.xml:26:17-78
-49-->/workspaces/fameli/app/src/main/AndroidManifest.xml:26:27-75
+49-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:26:17-78
+49-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:26:27-75
 50
 51                <data
-51-->/workspaces/fameli/app/src/main/AndroidManifest.xml:27:17-81
+51-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:27:17-81
 52                    android:host="oauth"
-52-->/workspaces/fameli/app/src/main/AndroidManifest.xml:27:23-43
+52-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:27:23-43
 53                    android:scheme="com.fameli.budget" />
-53-->/workspaces/fameli/app/src/main/AndroidManifest.xml:27:44-78
+53-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:27:44-78
 54            </intent-filter>
 55        </activity>
 56
 57        <service
-57-->/workspaces/fameli/app/src/main/AndroidManifest.xml:31:9-37:19
+57-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:31:9-37:19
 58            android:name="com.fameli.budget.firebase.FameliFirebaseMessagingService"
-58-->/workspaces/fameli/app/src/main/AndroidManifest.xml:32:13-68
+58-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:32:13-68
 59            android:exported="false" >
-59-->/workspaces/fameli/app/src/main/AndroidManifest.xml:33:13-37
+59-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:33:13-37
 60            <intent-filter>
-60-->/workspaces/fameli/app/src/main/AndroidManifest.xml:34:13-36:29
+60-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:34:13-36:29
 61                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-61-->/workspaces/fameli/app/src/main/AndroidManifest.xml:35:17-78
-61-->/workspaces/fameli/app/src/main/AndroidManifest.xml:35:25-75
+61-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:35:17-78
+61-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:35:25-75
 62            </intent-filter>
 63        </service>
 64
 65        <receiver
-65-->/workspaces/fameli/app/src/main/AndroidManifest.xml:39:9-48:20
+65-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:39:9-48:20
 66            android:name="com.fameli.budget.widget.BudgetWidgetProvider"
-66-->/workspaces/fameli/app/src/main/AndroidManifest.xml:40:13-56
+66-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:40:13-56
 67            android:exported="true" >
-67-->/workspaces/fameli/app/src/main/AndroidManifest.xml:41:13-36
+67-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:41:13-36
 68            <intent-filter>
-68-->/workspaces/fameli/app/src/main/AndroidManifest.xml:42:13-44:29
+68-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:42:13-44:29
 69                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-69-->/workspaces/fameli/app/src/main/AndroidManifest.xml:43:17-84
-69-->/workspaces/fameli/app/src/main/AndroidManifest.xml:43:25-81
+69-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:43:17-84
+69-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:43:25-81
 70            </intent-filter>
 71
 72            <meta-data
-72-->/workspaces/fameli/app/src/main/AndroidManifest.xml:45:13-47:62
+72-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:45:13-47:62
 73                android:name="android.appwidget.provider"
-73-->/workspaces/fameli/app/src/main/AndroidManifest.xml:46:17-58
+73-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:46:17-58
 74                android:resource="@xml/budget_widget_info" />
-74-->/workspaces/fameli/app/src/main/AndroidManifest.xml:47:17-59
+74-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:47:17-59
 75        </receiver>
 76
 77        <provider
@@ -478,23 +478,23 @@
 250            <intent-filter>
 250-->[com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:35:13-45:29
 251                <action android:name="android.intent.action.VIEW" />
-251-->/workspaces/fameli/app/src/main/AndroidManifest.xml:24:17-69
-251-->/workspaces/fameli/app/src/main/AndroidManifest.xml:24:25-66
+251-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:24:17-69
+251-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:24:25-66
 252
 253                <category android:name="android.intent.category.DEFAULT" />
-253-->/workspaces/fameli/app/src/main/AndroidManifest.xml:25:17-76
-253-->/workspaces/fameli/app/src/main/AndroidManifest.xml:25:27-73
+253-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:25:17-76
+253-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:25:27-73
 254                <category android:name="android.intent.category.BROWSABLE" />
-254-->/workspaces/fameli/app/src/main/AndroidManifest.xml:26:17-78
-254-->/workspaces/fameli/app/src/main/AndroidManifest.xml:26:27-75
+254-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:26:17-78
+254-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:26:27-75
 255
 256                <data
-256-->/workspaces/fameli/app/src/main/AndroidManifest.xml:27:17-81
+256-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:27:17-81
 257                    android:host="firebase.auth"
-257-->/workspaces/fameli/app/src/main/AndroidManifest.xml:27:23-43
+257-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:27:23-43
 258                    android:path="/"
 259                    android:scheme="genericidp" />
-259-->/workspaces/fameli/app/src/main/AndroidManifest.xml:27:44-78
+259-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:27:44-78
 260            </intent-filter>
 261        </activity>
 262        <activity
@@ -512,23 +512,23 @@
 268            <intent-filter>
 268-->[com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:53:13-63:29
 269                <action android:name="android.intent.action.VIEW" />
-269-->/workspaces/fameli/app/src/main/AndroidManifest.xml:24:17-69
-269-->/workspaces/fameli/app/src/main/AndroidManifest.xml:24:25-66
+269-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:24:17-69
+269-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:24:25-66
 270
 271                <category android:name="android.intent.category.DEFAULT" />
-271-->/workspaces/fameli/app/src/main/AndroidManifest.xml:25:17-76
-271-->/workspaces/fameli/app/src/main/AndroidManifest.xml:25:27-73
+271-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:25:17-76
+271-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:25:27-73
 272                <category android:name="android.intent.category.BROWSABLE" />
-272-->/workspaces/fameli/app/src/main/AndroidManifest.xml:26:17-78
-272-->/workspaces/fameli/app/src/main/AndroidManifest.xml:26:27-75
+272-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:26:17-78
+272-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:26:27-75
 273
 274                <data
-274-->/workspaces/fameli/app/src/main/AndroidManifest.xml:27:17-81
+274-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:27:17-81
 275                    android:host="firebase.auth"
-275-->/workspaces/fameli/app/src/main/AndroidManifest.xml:27:23-43
+275-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:27:23-43
 276                    android:path="/"
 277                    android:scheme="recaptcha" />
-277-->/workspaces/fameli/app/src/main/AndroidManifest.xml:27:44-78
+277-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:27:44-78
 278            </intent-filter>
 279        </activity>
 280
@@ -567,10 +567,10 @@
 300            android:exported="false" >
 300-->[com.google.firebase:firebase-messaging:24.0.3] /home/codespace/.gradle/caches/8.9/transforms/a6e460fba27f2c27c6e3d536ff9daadc/transformed/firebase-messaging-24.0.3/AndroidManifest.xml:49:13-37
 301            <intent-filter android:priority="-500" >
-301-->/workspaces/fameli/app/src/main/AndroidManifest.xml:34:13-36:29
+301-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:34:13-36:29
 302                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-302-->/workspaces/fameli/app/src/main/AndroidManifest.xml:35:17-78
-302-->/workspaces/fameli/app/src/main/AndroidManifest.xml:35:25-75
+302-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:35:17-78
+302-->/home/codespace/fameli/app/src/main/AndroidManifest.xml:35:25-75
 303            </intent-filter>
 304        </service>
 305        <service
