@@ -16,6 +16,7 @@ import com.fameli.budget.data.local.entity.TaskEntity
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlannerScreen(
     viewModel: PlannerViewModel,
@@ -24,9 +25,10 @@ fun PlannerScreen(
 ) {
     val tasks by viewModel.tasks.collectAsState()
     val internalShowDialog by viewModel.showAddDialog.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
 
-    // Используем внешний или внутренний флаг
     val showDialog = showAddDialog || internalShowDialog
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -34,7 +36,23 @@ fun PlannerScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                Text("📅 Планировщик", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("📅 Планировщик", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    
+                    // Фильтр по дате
+                    TextButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Filled.DateRange, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            SimpleDateFormat("dd.MM.yyyy", Locale("ru")).format(Date(selectedDate)),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
                 Spacer(Modifier.height(8.dp))
             }
 
@@ -43,7 +61,7 @@ fun PlannerScreen(
                     Card(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("📝", style = MaterialTheme.typography.displayMedium)
-                            Text("Нет задач", style = MaterialTheme.typography.bodyLarge)
+                            Text("Нет задач на выбранную дату", style = MaterialTheme.typography.bodyLarge)
                             Text("Нажмите + чтобы добавить", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
@@ -72,6 +90,28 @@ fun PlannerScreen(
         }
     }
 
+    // DatePicker диалог
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { viewModel.setSelectedDate(it) }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Отмена") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    // Диалог добавления задачи
     if (showDialog) {
         AddTaskDialog(
             viewModel = viewModel,
@@ -119,6 +159,8 @@ fun AddTaskDialog(viewModel: PlannerViewModel, onDismiss: () -> Unit) {
     val title by viewModel.newTaskTitle.collectAsState()
     val desc by viewModel.newTaskDesc.collectAsState()
     val time by viewModel.newTaskTime.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
+    var showDatePicker by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -146,6 +188,16 @@ fun AddTaskDialog(viewModel: PlannerViewModel, onDismiss: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
+
+                // Выбор даты
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Filled.DateRange, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Дата: ${SimpleDateFormat("dd MMMM yyyy", Locale("ru")).format(Date(selectedDate))}")
+                }
             }
         },
         confirmButton = {
@@ -158,4 +210,25 @@ fun AddTaskDialog(viewModel: PlannerViewModel, onDismiss: () -> Unit) {
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } }
     )
+
+    // DatePicker внутри диалога
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { viewModel.setSelectedDate(it) }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Отмена") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }

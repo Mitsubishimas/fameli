@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- Required by older versions of Google Play services to create IID tokens -->
@@ -52,6 +53,9 @@
             </intent-filter>
         </service>
 
+        <receiver
+            android:name="com.fameli.budget.worker.TaskReminderReceiver"
+            android:exported="false" />
         <receiver
             android:name="com.fameli.budget.widget.BudgetWidgetProvider"
             android:exported="true" >

@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-44:12
-INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-44:12
-INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-44:12
-INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-44:12
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-49:12
+INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-49:12
+INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-49:12
+INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-49:12
 MERGED from [com.patrykandpatrick.vico:compose:2.0.0-beta.2] /home/codespace/.gradle/caches/8.9/transforms/90ca76fc55c34fa6a4dd90ac1e3241a4/transformed/compose-2.0.0-beta.2/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.appcompat:appcompat-resources:1.7.0] /home/codespace/.gradle/caches/8.9/transforms/2ea148b7fb610703c84e274d296f9739/transformed/appcompat-resources-1.7.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.appcompat:appcompat:1.7.0] /home/codespace/.gradle/caches/8.9/transforms/1fb8462187a857fc47f4e7e31bceb442/transformed/appcompat-1.7.0/AndroidManifest.xml:2:1-7:12
@@ -191,9 +191,13 @@ MERGED from [com.google.firebase:firebase-messaging:24.0.3] /home/codespace/.gra
 MERGED from [com.google.firebase:firebase-messaging:24.0.3] /home/codespace/.gradle/caches/8.9/transforms/a6e460fba27f2c27c6e3d536ff9daadc/transformed/firebase-messaging-24.0.3/AndroidManifest.xml:23:5-77
 	android:name
 		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:5:22-74
+uses-permission#android.permission.SCHEDULE_EXACT_ALARM
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:6:5-79
+	android:name
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:6:22-76
 application
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:7:5-43:19
-INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:7:5-43:19
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:8:5-48:19
+INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:8:5-48:19
 MERGED from [androidx.work:work-runtime:2.10.0] /home/codespace/.gradle/caches/8.9/transforms/b683405871d3d4dbb15a092cbb0ce3ab/transformed/work-runtime-2.10.0/AndroidManifest.xml:28:5-143:19
 MERGED from [androidx.work:work-runtime:2.10.0] /home/codespace/.gradle/caches/8.9/transforms/b683405871d3d4dbb15a092cbb0ce3ab/transformed/work-runtime-2.10.0/AndroidManifest.xml:28:5-143:19
 MERGED from [com.google.firebase:firebase-auth-ktx:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/70ef93e921ea597362d13f566b8f1917/transformed/firebase-auth-ktx-23.1.0/AndroidManifest.xml:7:5-15:19
@@ -273,65 +277,71 @@ MERGED from [com.google.android.play:core-common:2.0.3] /home/codespace/.gradle/
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.13.1] /home/codespace/.gradle/caches/8.9/transforms/cb1512eadd9d2dd1cfb96ca524557321/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:12:9-35
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:13:9-35
 	android:label
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:11:9-40
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:12:9-40
 	android:icon
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:10:9-43
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:11:9-43
 	android:allowBackup
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:9:9-35
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:10:9-35
 	android:theme
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:13:9-51
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:14:9-51
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:8:9-34
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:9:9-34
 activity#com.fameli.budget.MainActivity
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:15:9-23:20
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:16:9-24:20
 	android:exported
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:17:13-36
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:18:13-36
 	android:theme
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:18:13-55
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:19:13-55
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:16:13-41
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:17:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:19:13-22:29
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:20:13-23:29
 action#android.intent.action.MAIN
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:20:17-69
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:21:17-69
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:20:25-66
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:21:25-66
 category#android.intent.category.LAUNCHER
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:21:17-77
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:22:17-77
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:21:27-74
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:22:27-74
 service#com.fameli.budget.firebase.FameliFirebaseMessagingService
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:25:9-31:19
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:26:9-32:19
 	android:exported
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:27:13-37
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:28:13-37
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:26:13-68
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:27:13-68
 intent-filter#action:name:com.google.firebase.MESSAGING_EVENT
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:28:13-30:29
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:29:13-31:29
 action#com.google.firebase.MESSAGING_EVENT
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:29:17-78
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:30:17-78
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:29:25-75
-receiver#com.fameli.budget.widget.BudgetWidgetProvider
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:33:9-42:20
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:30:25-75
+receiver#com.fameli.budget.worker.TaskReminderReceiver
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:34:9-36:40
 	android:exported
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:35:13-36
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:36:13-37
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:34:13-56
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:35:13-56
+receiver#com.fameli.budget.widget.BudgetWidgetProvider
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:38:9-47:20
+	android:exported
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:40:13-36
+	android:name
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:39:13-56
 intent-filter#action:name:android.appwidget.action.APPWIDGET_UPDATE
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:36:13-38:29
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:41:13-43:29
 action#android.appwidget.action.APPWIDGET_UPDATE
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:37:17-84
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:42:17-84
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:37:25-81
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:42:25-81
 meta-data#android.appwidget.provider
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:39:13-41:62
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:44:13-46:62
 	android:resource
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:41:17-59
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:46:17-59
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:40:17-58
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:45:17-58
 uses-sdk
 INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml
