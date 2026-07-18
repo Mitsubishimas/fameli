@@ -12,6 +12,7 @@ import androidx.navigation.compose.*
 import com.fameli.budget.ui.screens.auth.*
 import com.fameli.budget.ui.screens.categories.*
 import com.fameli.budget.ui.screens.dashboard.*
+import com.fameli.budget.ui.screens.family.*
 import com.fameli.budget.ui.screens.planner.*
 import com.fameli.budget.ui.screens.settings.*
 import com.fameli.budget.ui.screens.statistics.*
@@ -24,6 +25,7 @@ sealed class Screen(val route: String) {
     object Planner : Screen("planner")
     object AddTransaction : Screen("add_transaction")
     object Categories : Screen("categories")
+    object Family : Screen("family")
     object Settings : Screen("settings")
 }
 
@@ -40,6 +42,7 @@ fun FameliNavHost() {
         composable(Screen.Planner.route) { MainScaffold(navController) }
         composable(Screen.AddTransaction.route) { MainScaffold(navController) }
         composable(Screen.Categories.route) { MainScaffold(navController) }
+        composable(Screen.Family.route) { MainScaffold(navController) }
         composable(Screen.Settings.route) { MainScaffold(navController) }
     }
 }
@@ -48,8 +51,6 @@ fun FameliNavHost() {
 fun MainScaffold(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-
-    // Состояние для диалога добавления задачи
     var showAddTaskDialog by remember { mutableStateOf(false) }
     val plannerViewModel: PlannerViewModel = hiltViewModel()
 
@@ -58,9 +59,9 @@ fun MainScaffold(navController: NavHostController) {
             NavigationBar {
                 listOf(
                     Triple(Screen.Dashboard, "Главная", Icons.Filled.Home),
-                    Triple(Screen.Statistics, "Статистика", Icons.Filled.PieChart),
                     Triple(Screen.Planner, "Планы", Icons.Filled.CalendarMonth),
                     Triple(Screen.Categories, "Категории", Icons.Filled.Category),
+                    Triple(Screen.Family, "Семья", Icons.Filled.People),
                     Triple(Screen.Settings, "Ещё", Icons.Filled.MoreHoriz),
                 ).forEach { (screen, title, icon) ->
                     NavigationBarItem(
@@ -75,16 +76,11 @@ fun MainScaffold(navController: NavHostController) {
         floatingActionButton = {
             when (currentRoute) {
                 Screen.Planner.route -> {
-                    // На вкладке "Планы" — добавляем задачу
                     FloatingActionButton(onClick = { showAddTaskDialog = true }) {
                         Icon(Icons.Filled.Add, "Добавить задачу")
                     }
                 }
-                Screen.Categories.route -> {
-                    // На вкладке "Категории" — своя кнопка в самом экране
-                }
                 else -> {
-                    // На остальных — добавляем транзакцию
                     FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) {
                         Icon(Icons.Filled.Add, "Добавить")
                     }
@@ -103,6 +99,7 @@ fun MainScaffold(navController: NavHostController) {
                 )
                 Screen.AddTransaction.route -> AddTransactionScreen(navController)
                 Screen.Categories.route -> CategoriesScreen()
+                Screen.Family.route -> FamilyScreen()
                 Screen.Settings.route -> SettingsScreen()
             }
         }
