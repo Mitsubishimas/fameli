@@ -60,8 +60,8 @@ fun MainScaffold(navController: NavHostController) {
                 listOf(
                     Triple(Screen.Dashboard, "Главная", Icons.Filled.Home),
                     Triple(Screen.Planner, "Планы", Icons.Filled.CalendarMonth),
-                    Triple(Screen.Categories, "Категории", Icons.Filled.Category),
                     Triple(Screen.Family, "Семья", Icons.Filled.People),
+                    Triple(Screen.Categories, "Категории", Icons.Filled.Category),
                     Triple(Screen.Settings, "Ещё", Icons.Filled.MoreHoriz),
                 ).forEach { (screen, title, icon) ->
                     NavigationBarItem(
@@ -100,7 +100,9 @@ fun MainScaffold(navController: NavHostController) {
                 Screen.AddTransaction.route -> AddTransactionScreen(navController)
                 Screen.Categories.route -> CategoriesScreen()
                 Screen.Family.route -> FamilyScreen()
-                Screen.Settings.route -> SettingsScreen()
+                Screen.Settings.route -> SettingsScreen(
+                    onNavigateToFamily = { navController.navigate(Screen.Family.route) }
+                )
             }
         }
     }

@@ -36,9 +36,9 @@ class SettingsViewModel @Inject constructor(
     val currentVersion: String by lazy {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            pInfo.versionName ?: "0.1.0"
+            pInfo.versionName ?: "0.6.0"
         } catch (e: PackageManager.NameNotFoundException) {
-            "0.1.0"
+            "0.6.0"
         }
     }
 

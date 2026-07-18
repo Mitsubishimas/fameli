@@ -16,15 +16,36 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(
+    viewModel: SettingsViewModel = hiltViewModel(),
+    onNavigateToFamily: (() -> Unit)? = null
+) {
     val token by viewModel.yandexToken.collectAsState()
-    val lastSync by viewModel.lastSync.collectAsState()
-    val isSyncing by viewModel.isSyncing.collectAsState()
     val updateStatus by viewModel.updateStatus.collectAsState()
     val context = LocalContext.current
 
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         
+        // Семья
+        item {
+            Text("Семья", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Button(
+                        onClick = { onNavigateToFamily?.invoke() },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(Icons.Filled.People, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Управление семьёй")
+                    }
+                }
+            }
+        }
+
         // Аккаунт
         item {
             Text("Аккаунт", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -67,7 +88,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                                 Column(Modifier.padding(12.dp)) {
                                     Text("Доступна новая версия: ${status.version}", fontWeight = FontWeight.Bold)
-                                    Spacer(Modifier.height(4.dp))
                                     Button(onClick = {
                                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Mitsubishimas/fameli/releases/latest"))
                                         context.startActivity(intent)
@@ -98,52 +118,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             }
         }
 
-        // Яндекс.Диск
-        item {
-            Text("Яндекс.Диск", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-        item {
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    if (token == null) {
-                        Button(onClick = { viewModel.login() }, modifier = Modifier.fillMaxWidth()) { Text("Войти через Яндекс ID") }
-                    } else {
-                        Text("Подключено ✅")
-                        TextButton(onClick = { viewModel.logout() }) { Text("Отключить") }
-                    }
-                }
-            }
-        }
-
-        // Синхронизация
-        item {
-            Text("Синхронизация", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-        item {
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Button(
-                        onClick = { viewModel.syncNow() },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isSyncing
-                    ) {
-                        if (isSyncing) {
-                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Синхронизация...")
-                        } else {
-                            Icon(Icons.Filled.Sync, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Синхронизировать сейчас")
-                        }
-                    }
-                    if (lastSync > 0) {
-                        Text("Последняя: ${java.text.SimpleDateFormat("dd.MM HH:mm").format(java.util.Date(lastSync))}", style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
-        }
-
         // О приложении
         item {
             Text("О приложении", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -153,6 +127,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 Column(Modifier.padding(16.dp)) {
                     Text("Семейный бюджет", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                     Text("Версия ${viewModel.currentVersion}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Семейная синхронизация через Firestore", style = MaterialTheme.typography.bodySmall)
                     Text("Made with ❤️ by Fameli Team", style = MaterialTheme.typography.bodySmall)
                 }
             }
