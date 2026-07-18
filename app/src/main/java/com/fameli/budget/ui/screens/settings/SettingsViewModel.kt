@@ -1,9 +1,9 @@
 package com.fameli.budget.ui.screens.settings
 
 import android.content.Context
-import android.content.pm.PackageManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fameli.budget.BuildConfig
 import com.fameli.budget.firebase.FirebaseAuthRepository
 import com.fameli.budget.worker.SyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,14 +33,8 @@ class SettingsViewModel @Inject constructor(
     val isSyncing: StateFlow<Boolean> = MutableStateFlow(false)
     val updateStatus = MutableStateFlow<UpdateStatus>(UpdateStatus.Idle)
 
-    val currentVersion: String by lazy {
-        try {
-            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            pInfo.versionName ?: "0.7.0"
-        } catch (e: PackageManager.NameNotFoundException) {
-            "0.7.0"
-        }
-    }
+    // Берём версию из BuildConfig (единственный источник правды)
+    val currentVersion: String = BuildConfig.VERSION_NAME
 
     fun checkForUpdates() = viewModelScope.launch {
         updateStatus.value = UpdateStatus.Checking
@@ -63,7 +57,6 @@ class SettingsViewModel @Inject constructor(
         try {
             val url = URL("https://api.github.com/repos/Mitsubishimas/fameli/releases/latest")
             val json = url.readText()
-            // Простой парсинг JSON
             val tagName = json.split("\"tag_name\":\"")[1].split("\"")[0]
             tagName.removePrefix("v")
         } catch (e: Exception) {
@@ -71,7 +64,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun login() { /* OAuth Яндекс */ }
+    fun login() { }
     fun logout() = viewModelScope.launch { authRepository.signOut() }
     fun syncNow() { SyncWorker.enqueue(context, "") }
 }
