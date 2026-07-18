@@ -1,15 +1,27 @@
 package com.fameli.budget.ui.screens.settings
 
 import android.content.Context
+import android.content.pm.PackageManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fameli.budget.firebase.FirebaseAuthRepository
 import com.fameli.budget.worker.SyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.URL
 import javax.inject.Inject
+
+sealed class UpdateStatus {
+    object Idle : UpdateStatus()
+    object Checking : UpdateStatus()
+    data class UpdateAvailable(val version: String, val url: String) : UpdateStatus()
+    object UpToDate : UpdateStatus()
+    data class Error(val message: String) : UpdateStatus()
+}
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -19,9 +31,47 @@ class SettingsViewModel @Inject constructor(
     val yandexToken: StateFlow<String?> = MutableStateFlow(null)
     val lastSync: StateFlow<Long> = MutableStateFlow(0)
     val isSyncing: StateFlow<Boolean> = MutableStateFlow(false)
+    val updateStatus = MutableStateFlow<UpdateStatus>(UpdateStatus.Idle)
+
+    val currentVersion: String by lazy {
+        try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            pInfo.versionName ?: "0.1.0"
+        } catch (e: PackageManager.NameNotFoundException) {
+            "0.1.0"
+        }
+    }
+
+    fun checkForUpdates() = viewModelScope.launch {
+        updateStatus.value = UpdateStatus.Checking
+        try {
+            val latestVersion = fetchLatestVersion()
+            if (latestVersion != null && latestVersion != currentVersion) {
+                updateStatus.value = UpdateStatus.UpdateAvailable(
+                    version = latestVersion,
+                    url = "https://github.com/Mitsubishimas/fameli/releases/latest"
+                )
+            } else {
+                updateStatus.value = UpdateStatus.UpToDate
+            }
+        } catch (e: Exception) {
+            updateStatus.value = UpdateStatus.Error("Не удалось проверить обновления")
+        }
+    }
+
+    private suspend fun fetchLatestVersion(): String? = withContext(Dispatchers.IO) {
+        try {
+            val url = URL("https://api.github.com/repos/Mitsubishimas/fameli/releases/latest")
+            val json = url.readText()
+            // Простой парсинг JSON
+            val tagName = json.split("\"tag_name\":\"")[1].split("\"")[0]
+            tagName.removePrefix("v")
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     fun login() { /* OAuth Яндекс */ }
     fun logout() = viewModelScope.launch { authRepository.signOut() }
     fun syncNow() { SyncWorker.enqueue(context, "") }
-    fun exportCsv() { /* TODO */ }
 }

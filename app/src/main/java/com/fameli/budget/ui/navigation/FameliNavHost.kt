@@ -49,16 +49,20 @@ fun MainScaffold(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
+    // Состояние для диалога добавления задачи
+    var showAddTaskDialog by remember { mutableStateOf(false) }
+    val plannerViewModel: PlannerViewModel = hiltViewModel()
+
     Scaffold(
         bottomBar = {
             NavigationBar {
                 listOf(
-                    Quint(Screen.Dashboard, "Главная", Icons.Filled.Home, Icons.Filled.Home),
-                    Quint(Screen.Statistics, "Статистика", Icons.Filled.PieChart, Icons.Filled.PieChart),
-                    Quint(Screen.Planner, "Планы", Icons.Filled.CalendarMonth, Icons.Filled.CalendarMonth),
-                    Quint(Screen.Categories, "Категории", Icons.Filled.Category, Icons.Filled.Category),
-                    Quint(Screen.Settings, "Ещё", Icons.Filled.MoreHoriz, Icons.Filled.MoreHoriz),
-                ).forEach { (screen, title, icon, _) ->
+                    Triple(Screen.Dashboard, "Главная", Icons.Filled.Home),
+                    Triple(Screen.Statistics, "Статистика", Icons.Filled.PieChart),
+                    Triple(Screen.Planner, "Планы", Icons.Filled.CalendarMonth),
+                    Triple(Screen.Categories, "Категории", Icons.Filled.Category),
+                    Triple(Screen.Settings, "Ещё", Icons.Filled.MoreHoriz),
+                ).forEach { (screen, title, icon) ->
                     NavigationBarItem(
                         icon = { Icon(icon, title) },
                         label = { Text(title, style = MaterialTheme.typography.labelSmall) },
@@ -69,8 +73,22 @@ fun MainScaffold(navController: NavHostController) {
             }
         },
         floatingActionButton = {
-            if (currentRoute != Screen.AddTransaction.route) {
-                FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) { Icon(Icons.Filled.Add, "Добавить") }
+            when (currentRoute) {
+                Screen.Planner.route -> {
+                    // На вкладке "Планы" — добавляем задачу
+                    FloatingActionButton(onClick = { showAddTaskDialog = true }) {
+                        Icon(Icons.Filled.Add, "Добавить задачу")
+                    }
+                }
+                Screen.Categories.route -> {
+                    // На вкладке "Категории" — своя кнопка в самом экране
+                }
+                else -> {
+                    // На остальных — добавляем транзакцию
+                    FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) {
+                        Icon(Icons.Filled.Add, "Добавить")
+                    }
+                }
             }
         }
     ) { padding ->
@@ -78,7 +96,11 @@ fun MainScaffold(navController: NavHostController) {
             when (currentRoute) {
                 Screen.Dashboard.route -> DashboardScreen()
                 Screen.Statistics.route -> StatisticsScreen()
-                Screen.Planner.route -> PlannerScreen()
+                Screen.Planner.route -> PlannerScreen(
+                    viewModel = plannerViewModel,
+                    showAddDialog = showAddTaskDialog,
+                    onDismissDialog = { showAddTaskDialog = false }
+                )
                 Screen.AddTransaction.route -> AddTransactionScreen(navController)
                 Screen.Categories.route -> CategoriesScreen()
                 Screen.Settings.route -> SettingsScreen()
@@ -86,5 +108,3 @@ fun MainScaffold(navController: NavHostController) {
         }
     }
 }
-
-data class Quint<T1, T2, T3, T4>(val first: T1, val second: T2, val third: T3, val fourth: T4)

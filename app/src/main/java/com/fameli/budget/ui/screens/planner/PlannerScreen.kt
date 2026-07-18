@@ -12,16 +12,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.fameli.budget.data.local.entity.TaskEntity
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlannerScreen(viewModel: PlannerViewModel = hiltViewModel()) {
+fun PlannerScreen(
+    viewModel: PlannerViewModel,
+    showAddDialog: Boolean = false,
+    onDismissDialog: () -> Unit = {}
+) {
     val tasks by viewModel.tasks.collectAsState()
-    val showAdd by viewModel.showAddDialog.collectAsState()
+    val internalShowDialog by viewModel.showAddDialog.collectAsState()
+
+    // Используем внешний или внутренний флаг
+    val showDialog = showAddDialog || internalShowDialog
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -29,7 +34,7 @@ fun PlannerScreen(viewModel: PlannerViewModel = hiltViewModel()) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                Text("📅 Планировщик задач", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text("📅 Планировщик", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
             }
 
@@ -39,13 +44,12 @@ fun PlannerScreen(viewModel: PlannerViewModel = hiltViewModel()) {
                         Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("📝", style = MaterialTheme.typography.displayMedium)
                             Text("Нет задач", style = MaterialTheme.typography.bodyLarge)
-                            Text("Добавьте первую задачу", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Нажмите + чтобы добавить", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
             }
 
-            // Группируем по датам
             val grouped = tasks.groupBy { 
                 SimpleDateFormat("dd MMMM yyyy", Locale("ru")).format(Date(it.date))
             }
@@ -66,18 +70,16 @@ fun PlannerScreen(viewModel: PlannerViewModel = hiltViewModel()) {
 
             item { Spacer(Modifier.height(72.dp)) }
         }
-
-        FloatingActionButton(
-            onClick = { viewModel.showAdd() },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
-        ) {
-            Icon(Icons.Filled.Add, "Добавить задачу")
-        }
     }
 
-    // Диалог добавления
-    if (showAdd) {
-        AddTaskDialog(viewModel)
+    if (showDialog) {
+        AddTaskDialog(
+            viewModel = viewModel,
+            onDismiss = {
+                viewModel.hideAdd()
+                onDismissDialog()
+            }
+        )
     }
 }
 
@@ -88,10 +90,7 @@ fun TaskCard(task: TaskEntity, onToggle: () -> Unit, onDelete: () -> Unit) {
             Modifier.padding(12.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Checkbox(
-                checked = task.isCompleted,
-                onCheckedChange = { onToggle() }
-            )
+            Checkbox(checked = task.isCompleted, onCheckedChange = { onToggle() })
             Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                 Text(
                     task.title,
@@ -116,13 +115,13 @@ fun TaskCard(task: TaskEntity, onToggle: () -> Unit, onDelete: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskDialog(viewModel: PlannerViewModel) {
+fun AddTaskDialog(viewModel: PlannerViewModel, onDismiss: () -> Unit) {
     val title by viewModel.newTaskTitle.collectAsState()
     val desc by viewModel.newTaskDesc.collectAsState()
     val time by viewModel.newTaskTime.collectAsState()
 
     AlertDialog(
-        onDismissRequest = { viewModel.hideAdd() },
+        onDismissRequest = onDismiss,
         title = { Text("Новая задача") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -143,19 +142,20 @@ fun AddTaskDialog(viewModel: PlannerViewModel) {
                 OutlinedTextField(
                     value = time,
                     onValueChange = { viewModel.newTaskTime.value = it },
-                    label = { Text("Время (например 14:30)") },
+                    label = { Text("Время (14:30)") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
             }
         },
         confirmButton = {
-            Button(onClick = { viewModel.addTask() }, enabled = title.isNotBlank()) {
+            Button(onClick = {
+                viewModel.addTask()
+                onDismiss()
+            }, enabled = title.isNotBlank()) {
                 Text("Добавить")
             }
         },
-        dismissButton = {
-            TextButton(onClick = { viewModel.hideAdd() }) { Text("Отмена") }
-        }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } }
     )
 }

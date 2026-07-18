@@ -14,14 +14,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.fameli.budget.firebase.FirebaseAuthRepository
-import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val token by viewModel.yandexToken.collectAsState()
     val lastSync by viewModel.lastSync.collectAsState()
     val isSyncing by viewModel.isSyncing.collectAsState()
+    val updateStatus by viewModel.updateStatus.collectAsState()
     val context = LocalContext.current
 
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -37,6 +36,63 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                         Icon(Icons.Filled.Logout, null)
                         Spacer(Modifier.width(8.dp))
                         Text("Выйти из аккаунта")
+                    }
+                }
+            }
+        }
+
+        // Обновления
+        item {
+            Text("Обновления", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Update, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Текущая версия: ${viewModel.currentVersion}", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    
+                    when (val status = updateStatus) {
+                        is UpdateStatus.Checking -> {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Проверка обновлений...")
+                            }
+                        }
+                        is UpdateStatus.UpdateAvailable -> {
+                            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                                Column(Modifier.padding(12.dp)) {
+                                    Text("Доступна новая версия: ${status.version}", fontWeight = FontWeight.Bold)
+                                    Spacer(Modifier.height(4.dp))
+                                    Button(onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Mitsubishimas/fameli/releases/latest"))
+                                        context.startActivity(intent)
+                                    }, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Скачать обновление")
+                                    }
+                                }
+                            }
+                        }
+                        is UpdateStatus.UpToDate -> {
+                            Text("✅ У вас последняя версия", color = MaterialTheme.colorScheme.primary)
+                        }
+                        is UpdateStatus.Error -> {
+                            Text("❌ ${status.message}", color = MaterialTheme.colorScheme.error)
+                        }
+                        else -> {}
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = { viewModel.checkForUpdates() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = updateStatus !is UpdateStatus.Checking
+                    ) {
+                        Text("Проверить обновления")
                     }
                 }
             }
@@ -88,44 +144,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             }
         }
 
-        // Обновления
-        item {
-            Text("Обновления", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-        item {
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Button(
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Mitsubishimas/fameli/releases"))
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Filled.Update, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Проверить обновления")
-                    }
-                }
-            }
-        }
-
-        // Экспорт
-        item {
-            Text("Экспорт", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-        item {
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Button(onClick = { viewModel.exportCsv() }, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Filled.Download, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Экспорт в CSV")
-                    }
-                }
-            }
-        }
-
         // О приложении
         item {
             Text("О приложении", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -133,9 +151,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Fameli v0.1.0", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                    Text("Семейный бюджет с облачной синхронизацией", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(4.dp))
+                    Text("Семейный бюджет", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                    Text("Версия ${viewModel.currentVersion}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("Made with ❤️ by Fameli Team", style = MaterialTheme.typography.bodySmall)
                 }
             }
