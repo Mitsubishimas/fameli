@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-50:12
-INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-50:12
-INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-50:12
-INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-50:12
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-44:12
+INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-44:12
+INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-44:12
+INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:2:1-44:12
 MERGED from [com.patrykandpatrick.vico:compose:2.0.0-beta.2] /home/codespace/.gradle/caches/8.9/transforms/90ca76fc55c34fa6a4dd90ac1e3241a4/transformed/compose-2.0.0-beta.2/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.appcompat:appcompat-resources:1.7.0] /home/codespace/.gradle/caches/8.9/transforms/2ea148b7fb610703c84e274d296f9739/transformed/appcompat-resources-1.7.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.appcompat:appcompat:1.7.0] /home/codespace/.gradle/caches/8.9/transforms/1fb8462187a857fc47f4e7e31bceb442/transformed/appcompat-1.7.0/AndroidManifest.xml:2:1-7:12
@@ -192,8 +192,8 @@ MERGED from [com.google.firebase:firebase-messaging:24.0.3] /home/codespace/.gra
 	android:name
 		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:5:22-74
 application
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:7:5-49:19
-INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:7:5-49:19
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:7:5-43:19
+INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:7:5-43:19
 MERGED from [androidx.work:work-runtime:2.10.0] /home/codespace/.gradle/caches/8.9/transforms/b683405871d3d4dbb15a092cbb0ce3ab/transformed/work-runtime-2.10.0/AndroidManifest.xml:28:5-143:19
 MERGED from [androidx.work:work-runtime:2.10.0] /home/codespace/.gradle/caches/8.9/transforms/b683405871d3d4dbb15a092cbb0ce3ab/transformed/work-runtime-2.10.0/AndroidManifest.xml:28:5-143:19
 MERGED from [com.google.firebase:firebase-auth-ktx:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/70ef93e921ea597362d13f566b8f1917/transformed/firebase-auth-ktx-23.1.0/AndroidManifest.xml:7:5-15:19
@@ -275,7 +275,7 @@ MERGED from [com.google.android.play:core-common:2.0.3] /home/codespace/.gradle/
 	android:supportsRtl
 		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:12:9-35
 	android:label
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:11:9-31
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:11:9-40
 	android:icon
 		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:10:9-43
 	android:allowBackup
@@ -285,7 +285,7 @@ MERGED from [com.google.android.play:core-common:2.0.3] /home/codespace/.gradle/
 	android:name
 		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:8:9-34
 activity#com.fameli.budget.MainActivity
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:15:9-29:20
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:15:9-23:20
 	android:exported
 		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:17:13-36
 	android:theme
@@ -302,56 +302,36 @@ category#android.intent.category.LAUNCHER
 ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:21:17-77
 	android:name
 		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:21:27-74
-intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:host:oauth+data:scheme:com.fameli.budget
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:23:13-28:29
-action#android.intent.action.VIEW
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:24:17-69
-	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:24:25-66
-category#android.intent.category.DEFAULT
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:25:17-76
-	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:25:27-73
-category#android.intent.category.BROWSABLE
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:26:17-78
-	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:26:27-75
-data
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:27:17-81
-	android:host
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:27:23-43
-	android:scheme
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:27:44-78
 service#com.fameli.budget.firebase.FameliFirebaseMessagingService
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:31:9-37:19
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:25:9-31:19
 	android:exported
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:33:13-37
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:27:13-37
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:32:13-68
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:26:13-68
 intent-filter#action:name:com.google.firebase.MESSAGING_EVENT
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:34:13-36:29
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:28:13-30:29
 action#com.google.firebase.MESSAGING_EVENT
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:35:17-78
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:29:17-78
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:35:25-75
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:29:25-75
 receiver#com.fameli.budget.widget.BudgetWidgetProvider
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:39:9-48:20
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:33:9-42:20
 	android:exported
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:41:13-36
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:35:13-36
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:40:13-56
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:34:13-56
 intent-filter#action:name:android.appwidget.action.APPWIDGET_UPDATE
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:42:13-44:29
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:36:13-38:29
 action#android.appwidget.action.APPWIDGET_UPDATE
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:43:17-84
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:37:17-84
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:43:25-81
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:37:25-81
 meta-data#android.appwidget.provider
-ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:45:13-47:62
+ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:39:13-41:62
 	android:resource
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:47:17-59
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:41:17-59
 	android:name
-		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:46:17-58
+		ADDED from /home/codespace/fameli/app/src/main/AndroidManifest.xml:40:17-58
 uses-sdk
 INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /home/codespace/fameli/app/src/main/AndroidManifest.xml
@@ -920,6 +900,26 @@ ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/ca
 		ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:30:13-80
 intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.BROWSABLE+category:name:android.intent.category.DEFAULT+data:host:firebase.auth+data:path:/+data:scheme:genericidp
 ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:35:13-45:29
+action#android.intent.action.VIEW
+ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:36:17-69
+	android:name
+		ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:36:25-66
+category#android.intent.category.DEFAULT
+ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:38:17-76
+	android:name
+		ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:38:27-73
+category#android.intent.category.BROWSABLE
+ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:39:17-78
+	android:name
+		ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:39:27-75
+data
+ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:41:17-44:51
+	android:path
+		ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:43:21-37
+	android:host
+		ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:42:21-49
+	android:scheme
+		ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:44:21-48
 activity#com.google.firebase.auth.internal.RecaptchaActivity
 ADDED from [com.google.firebase:firebase-auth:23.1.0] /home/codespace/.gradle/caches/8.9/transforms/6e335711d41a1319028fea7bb25cf7fb/transformed/firebase-auth-23.1.0/AndroidManifest.xml:47:9-64:20
 	android:excludeFromRecents

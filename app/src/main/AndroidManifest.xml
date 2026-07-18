@@ -8,7 +8,7 @@
         android:name=".FameliApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="Fameli"
+        android:label="Семейный бюджет"
         android:supportsRtl="true"
         android:theme="@style/Theme.Fameli.Splash">
 
@@ -19,12 +19,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:host="oauth" android:scheme="com.fameli.budget" />
             </intent-filter>
         </activity>
 
