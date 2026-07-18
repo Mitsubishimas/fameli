@@ -13,6 +13,7 @@ import com.fameli.budget.ui.screens.auth.*
 import com.fameli.budget.ui.screens.categories.*
 import com.fameli.budget.ui.screens.dashboard.*
 import com.fameli.budget.ui.screens.family.*
+import com.fameli.budget.ui.screens.goals.*
 import com.fameli.budget.ui.screens.planner.*
 import com.fameli.budget.ui.screens.settings.*
 import com.fameli.budget.ui.screens.statistics.*
@@ -23,6 +24,7 @@ sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Statistics : Screen("statistics")
     object Planner : Screen("planner")
+    object Goals : Screen("goals")
     object AddTransaction : Screen("add_transaction")
     object Categories : Screen("categories")
     object Family : Screen("family")
@@ -40,6 +42,7 @@ fun FameliNavHost() {
         composable(Screen.Dashboard.route) { MainScaffold(navController) }
         composable(Screen.Statistics.route) { MainScaffold(navController) }
         composable(Screen.Planner.route) { MainScaffold(navController) }
+        composable(Screen.Goals.route) { MainScaffold(navController) }
         composable(Screen.AddTransaction.route) { MainScaffold(navController) }
         composable(Screen.Categories.route) { MainScaffold(navController) }
         composable(Screen.Family.route) { MainScaffold(navController) }
@@ -59,9 +62,9 @@ fun MainScaffold(navController: NavHostController) {
             NavigationBar {
                 listOf(
                     Triple(Screen.Dashboard, "Главная", Icons.Filled.Home),
+                    Triple(Screen.Goals, "Цели", Icons.Filled.Flag),
                     Triple(Screen.Planner, "Планы", Icons.Filled.CalendarMonth),
                     Triple(Screen.Family, "Семья", Icons.Filled.People),
-                    Triple(Screen.Categories, "Категории", Icons.Filled.Category),
                     Triple(Screen.Settings, "Ещё", Icons.Filled.MoreHoriz),
                 ).forEach { (screen, title, icon) ->
                     NavigationBarItem(
@@ -80,6 +83,9 @@ fun MainScaffold(navController: NavHostController) {
                         Icon(Icons.Filled.Add, "Добавить задачу")
                     }
                 }
+                Screen.Goals.route -> {
+                    // GoalScreen сам управляет FAB
+                }
                 else -> {
                     FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) {
                         Icon(Icons.Filled.Add, "Добавить")
@@ -97,6 +103,7 @@ fun MainScaffold(navController: NavHostController) {
                     showAddDialog = showAddTaskDialog,
                     onDismissDialog = { showAddTaskDialog = false }
                 )
+                Screen.Goals.route -> GoalScreen()
                 Screen.AddTransaction.route -> AddTransactionScreen(navController)
                 Screen.Categories.route -> CategoriesScreen()
                 Screen.Family.route -> FamilyScreen()

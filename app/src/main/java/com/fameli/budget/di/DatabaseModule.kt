@@ -25,4 +25,5 @@ object DatabaseModule {
     @Provides fun provideCategoryDao(db: FameliDatabase) = db.categoryDao()
     @Provides fun provideBudgetDao(db: FameliDatabase) = db.budgetDao()
     @Provides fun provideTaskDao(db: FameliDatabase) = db.taskDao()
+    @Provides fun provideGoalDao(db: FameliDatabase) = db.goalDao()
 }
