@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "189624151535",
+    "project_id": "fameli-private",
+    "storage_bucket": "fameli-private.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:189624151535:android:7779d2fd75fa43bdb55a1a",
+        "android_client_info": {
+          "package_name": "com.fameli.budget"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqAYeScy6FAmsjt5m1YUQRO-7zUIiX_RI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
