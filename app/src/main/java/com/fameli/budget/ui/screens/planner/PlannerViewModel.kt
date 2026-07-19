@@ -1,6 +1,5 @@
 package com.fameli.budget.ui.screens.planner
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fameli.budget.data.local.dao.TaskDao
@@ -14,7 +13,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlannerViewModel @Inject constructor(
-    private val application: Application,
     private val taskDao: TaskDao,
     private val authRepository: FirebaseAuthRepository
 ) : ViewModel() {
@@ -33,19 +31,26 @@ class PlannerViewModel @Inject constructor(
 
     fun setSelectedDate(date: Long) { selectedDate.value = date }
 
-    fun addTask(title: String, description: String) = viewModelScope.launch {
-        val task = TaskEntity(
-            cloudId = UUID.randomUUID().toString(),
-            title = title,
-            description = description,
-            date = selectedDate.value,
-            time = newTaskTime.value,
-            createdBy = authRepository.currentUser.value?.email ?: "Я",
-            createdByUid = authRepository.getUserId() ?: ""
-        )
-        taskDao.insert(task)
+    fun addTask(title: String, description: String) {
+        viewModelScope.launch {
+            val task = TaskEntity(
+                cloudId = UUID.randomUUID().toString(),
+                title = title,
+                description = description,
+                date = selectedDate.value,
+                time = newTaskTime.value,
+                createdBy = authRepository.currentUser.value?.email ?: "Я",
+                createdByUid = authRepository.getUserId() ?: ""
+            )
+            taskDao.insert(task)
+        }
     }
 
-    fun toggleComplete(task: TaskEntity) = viewModelScope.launch { taskDao.toggleComplete(task.id, !task.isCompleted) }
-    fun deleteTask(task: TaskEntity) = viewModelScope.launch { taskDao.softDelete(task.id) }
+    fun toggleComplete(task: TaskEntity) {
+        viewModelScope.launch { taskDao.toggleComplete(task.id, !task.isCompleted) }
+    }
+
+    fun deleteTask(task: TaskEntity) {
+        viewModelScope.launch { taskDao.softDelete(task.id) }
+    }
 }

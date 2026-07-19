@@ -14,9 +14,9 @@ import javax.inject.Inject
 class StatisticsViewModel @Inject constructor(private val dao: TransactionDao) : ViewModel() {
     val period = MutableStateFlow("month")
 
-    val expenses: StateFlow<List<CategoryExpense>> = period.flatMapLatest { p ->
+    private fun getRange(p: String): Pair<Long, Long> {
         val now = LocalDate.now()
-        val (start, end) = when (p) {
+        return when (p) {
             "day" -> {
                 val start = now.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
                 start to start + 86400000 - 1
@@ -30,7 +30,16 @@ class StatisticsViewModel @Inject constructor(private val dao: TransactionDao) :
                 now.plusYears(1).withDayOfYear(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000 - 1
             }
         }
-        dao.getCategorySums(start, end, "EXPENSE")
+    }
+
+    val expenses: StateFlow<List<CategoryExpense>> = period.flatMapLatest { p ->
+        val (s, e) = getRange(p)
+        dao.getCategorySums(s, e, "EXPENSE")
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val incomes: StateFlow<List<CategoryExpense>> = period.flatMapLatest { p ->
+        val (s, e) = getRange(p)
+        dao.getCategorySums(s, e, "INCOME")
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setPeriod(p: String) { period.value = p }
