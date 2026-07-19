@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fameli.budget.data.local.dao.TransactionDao
 import com.fameli.budget.data.model.CategoryExpense
+import com.fameli.budget.data.model.MonthlyBalance
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import java.time.LocalDate
@@ -16,5 +17,7 @@ class StatisticsViewModel @Inject constructor(private val dao: TransactionDao) :
     private val start = now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
     private val end = now.plusMonths(1).withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000 - 1
 
-    val expenses: StateFlow<List<CategoryExpense>> = dao.getCategorySums(start, end, "EXPENSE").stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val expenses = dao.getCategorySums(start, end, "EXPENSE").stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val incomes = dao.getCategorySums(start, end, "INCOME").stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val balance = dao.getMonthlyBalance(start, end).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MonthlyBalance(0.0, 0.0))
 }

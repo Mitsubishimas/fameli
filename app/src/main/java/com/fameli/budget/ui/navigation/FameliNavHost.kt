@@ -19,16 +19,16 @@ import com.fameli.budget.ui.screens.settings.*
 import com.fameli.budget.ui.screens.statistics.*
 import com.fameli.budget.ui.screens.transaction.*
 
-sealed class Screen(val route: String) {
-    object Auth : Screen("auth")
-    object Dashboard : Screen("dashboard")
-    object Statistics : Screen("statistics")
-    object Planner : Screen("planner")
-    object Goals : Screen("goals")
-    object AddTransaction : Screen("add_transaction")
-    object Categories : Screen("categories")
-    object Family : Screen("family")
-    object Settings : Screen("settings")
+sealed class Screen(val route: String, val title: String) {
+    object Auth : Screen("auth", "Вход")
+    object Dashboard : Screen("dashboard", "Главная")
+    object Statistics : Screen("statistics", "Статистика")
+    object Planner : Screen("planner", "Планы")
+    object Goals : Screen("goals", "Цели")
+    object AddTransaction : Screen("add_transaction", "Добавить")
+    object Categories : Screen("categories", "Категории")
+    object Family : Screen("family", "Семья")
+    object Settings : Screen("settings", "Ещё")
 }
 
 @Composable
@@ -54,43 +54,40 @@ fun FameliNavHost() {
 fun MainScaffold(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    var showAddTaskDialog by remember { mutableStateOf(false) }
-    val plannerViewModel: PlannerViewModel = hiltViewModel()
 
     Scaffold(
         bottomBar = {
             NavigationBar {
-                listOf(
-                    Triple(Screen.Dashboard, "Главная", Icons.Filled.Home),
-                    Triple(Screen.Goals, "Цели", Icons.Filled.Flag),
-                    Triple(Screen.Planner, "Планы", Icons.Filled.CalendarMonth),
-                    Triple(Screen.Family, "Семья", Icons.Filled.People),
-                    Triple(Screen.Settings, "Ещё", Icons.Filled.MoreHoriz),
-                ).forEach { (screen, title, icon) ->
-                    NavigationBarItem(
-                        icon = { Icon(icon, title) },
-                        label = { Text(title, style = MaterialTheme.typography.labelSmall) },
-                        selected = currentRoute == screen.route,
-                        onClick = { navController.navigate(screen.route) { popUpTo(Screen.Dashboard.route) { saveState = true }; launchSingleTop = true; restoreState = true } }
-                    )
-                }
-            }
-        },
-        floatingActionButton = {
-            when (currentRoute) {
-                Screen.Planner.route -> {
-                    FloatingActionButton(onClick = { showAddTaskDialog = true }) {
-                        Icon(Icons.Filled.Add, "Добавить задачу")
-                    }
-                }
-                Screen.Goals.route -> {
-                    // GoalScreen сам управляет FAB
-                }
-                else -> {
-                    FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) {
-                        Icon(Icons.Filled.Add, "Добавить")
-                    }
-                }
+                NavigationBarItem(
+                    selected = currentRoute == Screen.Dashboard.route,
+                    onClick = { navController.navigate(Screen.Dashboard.route) { popUpTo(0); launchSingleTop = true } },
+                    icon = { Icon(Icons.Filled.Home, "Главная") },
+                    label = { Text("Главная") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == Screen.Goals.route,
+                    onClick = { navController.navigate(Screen.Goals.route) { popUpTo(0); launchSingleTop = true } },
+                    icon = { Icon(Icons.Filled.Flag, "Цели") },
+                    label = { Text("Цели") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == Screen.Planner.route,
+                    onClick = { navController.navigate(Screen.Planner.route) { popUpTo(0); launchSingleTop = true } },
+                    icon = { Icon(Icons.Filled.CalendarMonth, "Планы") },
+                    label = { Text("Планы") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == Screen.Family.route,
+                    onClick = { navController.navigate(Screen.Family.route) { popUpTo(0); launchSingleTop = true } },
+                    icon = { Icon(Icons.Filled.People, "Семья") },
+                    label = { Text("Семья") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == Screen.Settings.route,
+                    onClick = { navController.navigate(Screen.Settings.route) { popUpTo(0); launchSingleTop = true } },
+                    icon = { Icon(Icons.Filled.Settings, "Ещё") },
+                    label = { Text("Ещё") }
+                )
             }
         }
     ) { padding ->
@@ -98,18 +95,12 @@ fun MainScaffold(navController: NavHostController) {
             when (currentRoute) {
                 Screen.Dashboard.route -> DashboardScreen()
                 Screen.Statistics.route -> StatisticsScreen()
-                Screen.Planner.route -> PlannerScreen(
-                    viewModel = plannerViewModel,
-                    showAddDialog = showAddTaskDialog,
-                    onDismissDialog = { showAddTaskDialog = false }
-                )
+                Screen.Planner.route -> PlannerScreen(hiltViewModel(), false) {}
                 Screen.Goals.route -> GoalScreen()
                 Screen.AddTransaction.route -> AddTransactionScreen(navController)
                 Screen.Categories.route -> CategoriesScreen()
                 Screen.Family.route -> FamilyScreen()
-                Screen.Settings.route -> SettingsScreen(
-                    onNavigateToFamily = { navController.navigate(Screen.Family.route) }
-                )
+                Screen.Settings.route -> SettingsScreen()
             }
         }
     }

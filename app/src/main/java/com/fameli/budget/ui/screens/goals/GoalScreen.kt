@@ -26,6 +26,13 @@ fun GoalScreen(viewModel: GoalViewModel = hiltViewModel()) {
     val showAddDialog by viewModel.showAddDialog.collectAsState()
     val showAddMoneyDialog by viewModel.showAddMoneyDialog.collectAsState()
 
+    // Локальные состояния для полей ввода
+    var goalTitle by remember { mutableStateOf("") }
+    var goalDesc by remember { mutableStateOf("") }
+    var goalTarget by remember { mutableStateOf("") }
+    var moneyAmount by remember { mutableStateOf("") }
+    var moneyComment by remember { mutableStateOf("") }
+
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
             Modifier.fillMaxSize().padding(16.dp),
@@ -40,20 +47,20 @@ fun GoalScreen(viewModel: GoalViewModel = hiltViewModel()) {
                     Card(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("🎯", style = MaterialTheme.typography.displayMedium)
-                            Text("Нет целей", style = MaterialTheme.typography.bodyLarge)
-                            Text("Создайте первую цель для накопления", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Нет целей")
                         }
                     }
                 }
             }
 
             items(goals) { goal ->
+                val transactions by viewModel.getTransactions(goal.id).collectAsState(emptyList())
                 GoalCard(
                     goal = goal,
+                    transactions = transactions,
                     onAddMoney = { viewModel.showAddMoney(goal.id) },
                     onDelete = { viewModel.deleteGoal(goal) },
-                    onToggle = { viewModel.toggleComplete(goal) },
-                    viewModel = viewModel
+                    onToggle = { viewModel.toggleComplete(goal) }
                 )
             }
 
@@ -63,174 +70,123 @@ fun GoalScreen(viewModel: GoalViewModel = hiltViewModel()) {
         FloatingActionButton(
             onClick = { viewModel.showAdd() },
             modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
-        ) {
-            Icon(Icons.Filled.Add, "Добавить цель")
-        }
+        ) { Icon(Icons.Filled.Add, null) }
     }
 
     // Диалог создания цели
     if (showAddDialog) {
-        AddGoalDialog(viewModel)
+        AlertDialog(
+            onDismissRequest = { 
+                viewModel.hideAdd()
+                goalTitle = ""; goalDesc = ""; goalTarget = ""
+            },
+            title = { Text("Новая цель") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = goalTitle,
+                        onValueChange = { goalTitle = it },
+                        label = { Text("Название") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = goalDesc,
+                        onValueChange = { goalDesc = it },
+                        label = { Text("Описание") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = goalTarget,
+                        onValueChange = { goalTarget = it },
+                        label = { Text("Сумма (₽)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.addGoal(goalTitle, goalDesc, goalTarget)
+                        goalTitle = ""; goalDesc = ""; goalTarget = ""
+                    },
+                    enabled = goalTitle.isNotBlank() && goalTarget.toDoubleOrNull() != null
+                ) { Text("Создать") }
+            },
+            dismissButton = { 
+                TextButton(onClick = { viewModel.hideAdd(); goalTitle = ""; goalDesc = ""; goalTarget = "" }) { Text("Отмена") } 
+            }
+        )
     }
 
-    // Диалог пополнения/снятия
+    // Диалог пополнения
     if (showAddMoneyDialog != null) {
-        AddMoneyDialog(viewModel, showAddMoneyDialog!!)
+        AlertDialog(
+            onDismissRequest = { viewModel.hideAddMoney(); moneyAmount = ""; moneyComment = "" },
+            title = { Text("Пополнить цель") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = moneyAmount,
+                        onValueChange = { moneyAmount = it },
+                        label = { Text("Сумма (₽)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = moneyComment,
+                        onValueChange = { moneyComment = it },
+                        label = { Text("Комментарий") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.addMoney(showAddMoneyDialog!!, true, moneyAmount, moneyComment)
+                        moneyAmount = ""; moneyComment = ""
+                    },
+                    enabled = moneyAmount.toDoubleOrNull() != null
+                ) { Text("Пополнить") }
+            },
+            dismissButton = { TextButton(onClick = { viewModel.hideAddMoney(); moneyAmount = ""; moneyComment = "" }) { Text("Отмена") } }
+        )
     }
 }
 
 @Composable
-fun GoalCard(
-    goal: GoalEntity,
-    onAddMoney: () -> Unit,
-    onDelete: () -> Unit,
-    onToggle: () -> Unit,
-    viewModel: GoalViewModel
-) {
+fun GoalCard(goal: GoalEntity, transactions: List<GoalTransactionEntity>, onAddMoney: () -> Unit, onDelete: () -> Unit, onToggle: () -> Unit) {
     val progress = (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f)
-    val transactions by viewModel.goalDao.getTransactions(goal.id).collectAsState(initial = emptyList())
-
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column(Modifier.weight(1f)) {
-                    Text(goal.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    if (goal.description.isNotBlank()) {
-                        Text(goal.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    Text(goal.title, fontWeight = FontWeight.Bold)
+                    if (goal.description.isNotBlank()) Text(goal.description, style = MaterialTheme.typography.bodySmall)
                 }
                 Row {
                     Checkbox(checked = goal.isCompleted, onCheckedChange = { onToggle() })
-                    IconButton(onClick = onDelete) { Icon(Icons.Filled.Delete, "Удалить", tint = MaterialTheme.colorScheme.error) }
+                    IconButton(onClick = onDelete) { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) }
                 }
             }
-
             Spacer(Modifier.height(8.dp))
             LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(4.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
-                Text(
-                    "${NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(goal.currentAmount)} / ${NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(goal.targetAmount)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Text("${(progress * 100).toInt()}% — ${NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(goal.currentAmount)} / ${NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(goal.targetAmount)}")
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onAddMoney, modifier = Modifier.weight(1f)) { Text("💰 Пополнить") }
-                Spacer(Modifier.width(8.dp))
                 OutlinedButton(onClick = onAddMoney, modifier = Modifier.weight(1f)) { Text("💸 Снять") }
             }
-
-            // Чат/история пополнений
             if (transactions.isNotEmpty()) {
-                Spacer(Modifier.height(8.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(8.dp))
-                Text("История", style = MaterialTheme.typography.titleSmall)
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
                 transactions.takeLast(5).forEach { txn ->
-                    TransactionComment(txn)
+                    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                        Text(if (txn.amount > 0) "+${NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(txn.amount)}" else NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(txn.amount), color = if (txn.amount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error, modifier = Modifier.width(80.dp), style = MaterialTheme.typography.bodySmall)
+                        Text("${txn.userName}: ${txn.comment}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
     }
-}
-
-@Composable
-fun TransactionComment(txn: GoalTransactionEntity) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            if (txn.amount > 0) "+${NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(txn.amount)}"
-            else NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(txn.amount),
-            color = if (txn.amount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.width(80.dp)
-        )
-        Column(Modifier.weight(1f)) {
-            Text(txn.comment, style = MaterialTheme.typography.bodySmall)
-            Text(
-                "${txn.userName} • ${SimpleDateFormat("dd.MM HH:mm", Locale("ru")).format(Date(txn.timestamp))}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddGoalDialog(viewModel: GoalViewModel) {
-    AlertDialog(
-        onDismissRequest = { viewModel.hideAdd() },
-        title = { Text("Новая цель") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = viewModel.newGoalTitle.value,
-                    onValueChange = { viewModel.newGoalTitle.value = it },
-                    label = { Text("Название (например: Отпуск, Машина)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = viewModel.newGoalDesc.value,
-                    onValueChange = { viewModel.newGoalDesc.value = it },
-                    label = { Text("Описание") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = viewModel.newGoalTarget.value,
-                    onValueChange = { viewModel.newGoalTarget.value = it },
-                    label = { Text("Сумма цели (₽)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                )
-            }
-        },
-        confirmButton = {
-            Button(onClick = { viewModel.addGoal() }, enabled = viewModel.newGoalTitle.value.isNotBlank() && viewModel.newGoalTarget.value.toDoubleOrNull() != null) {
-                Text("Создать")
-            }
-        },
-        dismissButton = { TextButton(onClick = { viewModel.hideAdd() }) { Text("Отмена") } }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddMoneyDialog(viewModel: GoalViewModel, goalId: Long) {
-    AlertDialog(
-        onDismissRequest = { viewModel.hideAddMoney() },
-        title = { Text("Пополнить цель") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = viewModel.addAmount.value,
-                    onValueChange = { viewModel.addAmount.value = it },
-                    label = { Text("Сумма (₽)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                )
-                OutlinedTextField(
-                    value = viewModel.addComment.value,
-                    onValueChange = { viewModel.addComment.value = it },
-                    label = { Text("Комментарий (обязательно)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 2
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { viewModel.addMoney(goalId, true) },
-                enabled = viewModel.addAmount.value.toDoubleOrNull() != null && viewModel.addComment.value.isNotBlank()
-            ) { Text("Пополнить") }
-        },
-        dismissButton = { TextButton(onClick = { viewModel.hideAddMoney() }) { Text("Отмена") } }
-    )
 }
