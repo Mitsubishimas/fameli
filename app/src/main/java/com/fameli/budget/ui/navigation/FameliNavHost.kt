@@ -54,6 +54,8 @@ fun FameliNavHost() {
 fun MainScaffold(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    var showAddTaskDialog by remember { mutableStateOf(false) }
+    val plannerViewModel: PlannerViewModel = hiltViewModel()
 
     Scaffold(
         bottomBar = {
@@ -89,13 +91,30 @@ fun MainScaffold(navController: NavHostController) {
                     label = { Text("Ещё") }
                 )
             }
+        },
+        floatingActionButton = {
+            // FAB есть на всех вкладках кроме Settings
+            if (currentRoute != Screen.Settings.route) {
+                when (currentRoute) {
+                    Screen.Planner.route -> {
+                        FloatingActionButton(onClick = { showAddTaskDialog = true }) {
+                            Icon(Icons.Filled.Add, "Добавить задачу")
+                        }
+                    }
+                    else -> {
+                        FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) {
+                            Icon(Icons.Filled.Add, "Добавить")
+                        }
+                    }
+                }
+            }
         }
     ) { padding ->
         Box(Modifier.padding(padding)) {
             when (currentRoute) {
                 Screen.Dashboard.route -> DashboardScreen()
                 Screen.Statistics.route -> StatisticsScreen()
-                Screen.Planner.route -> PlannerScreen(hiltViewModel(), false) {}
+                Screen.Planner.route -> PlannerScreen(plannerViewModel, showAddTaskDialog) { showAddTaskDialog = false }
                 Screen.Goals.route -> GoalScreen()
                 Screen.AddTransaction.route -> AddTransactionScreen(navController)
                 Screen.Categories.route -> CategoriesScreen()
