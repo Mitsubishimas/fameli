@@ -27,7 +27,7 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { Text("📅 Планы", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) }
         if (tasks.isEmpty()) {
-            item { Card(Modifier.fillMaxWidth()) { Text("Нет задач. Нажмите +", modifier = Modifier.padding(24.dp)) } }
+            item { Card(Modifier.fillMaxWidth()) { Text("Нет задач", modifier = Modifier.padding(24.dp)) } }
         }
         items(tasks) { task ->
             Card(Modifier.fillMaxWidth()) {
@@ -35,7 +35,6 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
                     Checkbox(checked = task.isCompleted, onCheckedChange = { viewModel.toggleComplete(task) })
                     Column(Modifier.weight(1f)) {
                         Text(task.title, fontWeight = FontWeight.Medium)
-                        if (task.description.isNotBlank()) Text(task.description, style = MaterialTheme.typography.bodySmall)
                         Text("🕐 ${task.time} | 👤 ${task.createdBy}", style = MaterialTheme.typography.labelSmall)
                     }
                     IconButton(onClick = { viewModel.deleteTask(task) }) { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) }
@@ -45,6 +44,7 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
         item { Spacer(Modifier.height(72.dp)) }
     }
 
+    // Диалог добавления
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
@@ -53,13 +53,9 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(taskTitle, { taskTitle = it }, label = { Text("Название") }, modifier = Modifier.fillMaxWidth())
                     OutlinedTextField(taskDesc, { taskDesc = it }, label = { Text("Описание") }, modifier = Modifier.fillMaxWidth())
-                    
-                    // Выбор времени
                     OutlinedButton(onClick = { showTimePicker = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text("🕐 ${viewModel.newTaskTime.value.ifBlank { "12:00" }}")
+                        Text("🕐 ${viewModel.newTaskTime.value}")
                     }
-                    
-                    // Выбор даты
                     OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
                         Text("📅 ${SimpleDateFormat("dd.MM.yyyy", Locale("ru")).format(Date(viewModel.selectedDate.value))}")
                     }
@@ -76,8 +72,9 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
         )
     }
 
+    // DatePicker
     if (showDatePicker) {
-        val dp = rememberDatePickerState()
+        val dp = rememberDatePickerState(initialSelectedDateMillis = viewModel.selectedDate.value)
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = { TextButton(onClick = { dp.selectedDateMillis?.let { viewModel.setSelectedDate(it) }; showDatePicker = false }) { Text("OK") } },
@@ -85,19 +82,20 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
         ) { DatePicker(dp) }
     }
 
+    // TimePicker
     if (showTimePicker) {
         val tp = rememberTimePickerState()
-        Dialog(onDismissRequest = { showTimePicker = false }) {
-            Card {
-                Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    TimePicker(tp)
-                    Spacer(Modifier.height(8.dp))
-                    Button(onClick = {
-                        viewModel.newTaskTime.value = "${tp.hour}:${tp.minute.toString().padStart(2, '0')}"
-                        showTimePicker = false
-                    }) { Text("OK") }
-                }
-            }
-        }
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text("Выберите время") },
+            text = { TimePicker(tp) },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.newTaskTime.value = "${tp.hour}:${tp.minute.toString().padStart(2, '0')}"
+                    showTimePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("Отмена") } }
+        )
     }
 }
