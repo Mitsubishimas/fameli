@@ -3,8 +3,6 @@ package com.fameli.budget.ui.screens.settings
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,7 +22,6 @@ fun SettingsScreen(
     settingsVM: SettingsViewModel = hiltViewModel(),
     familyVM: FamilyViewModel = hiltViewModel()
 ) {
-    val updateStatus by settingsVM.updateStatus.collectAsState()
     val familyId by familyVM.familyId.collectAsState()
     val isLoading by familyVM.isLoading.collectAsState()
     var joinCode by remember { mutableStateOf("") }
@@ -32,7 +29,6 @@ fun SettingsScreen(
 
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         
-        // СЕМЬЯ
         item { Text("Семья", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
             Card(Modifier.fillMaxWidth()) {
@@ -60,7 +56,6 @@ fun SettingsScreen(
             }
         }
 
-        // АККАУНТ
         item { Text("Аккаунт", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
             Card(Modifier.fillMaxWidth()) {
@@ -70,20 +65,13 @@ fun SettingsScreen(
             }
         }
 
-        // ОБНОВЛЕНИЯ
         item { Text("Обновления", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     Text("Версия: ${settingsVM.currentVersion}")
-                    when (val s = updateStatus) {
-                        is UpdateStatus.Checking -> Text("Проверка...")
-                        is UpdateStatus.UpdateAvailable -> Text("Доступна версия ${s.version}", fontWeight = FontWeight.Bold)
-                        is UpdateStatus.UpToDate -> Text("Актуально", color = MaterialTheme.colorScheme.primary)
-                        is UpdateStatus.Error -> Text(s.message, color = MaterialTheme.colorScheme.error)
-                        else -> {}
-                    }
-                    OutlinedButton(onClick = { settingsVM.checkForUpdates() }, modifier = Modifier.fillMaxWidth()) {
+                    Spacer(Modifier.height(8.dp))
+                    Button(onClick = { settingsVM.checkForUpdates() }, modifier = Modifier.fillMaxWidth()) {
                         Text("Проверить обновления")
                     }
                 }
