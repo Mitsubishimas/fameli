@@ -1,7 +1,11 @@
 package com.fameli.budget.ui.screens.settings
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -13,70 +17,76 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fameli.budget.ui.screens.family.FamilyViewModel
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
-    val updateStatus by viewModel.updateStatus.collectAsState()
+fun SettingsScreen(
+    settingsVM: SettingsViewModel = hiltViewModel(),
+    familyVM: FamilyViewModel = hiltViewModel()
+) {
+    val updateStatus by settingsVM.updateStatus.collectAsState()
+    val familyId by familyVM.familyId.collectAsState()
+    val isLoading by familyVM.isLoading.collectAsState()
+    var joinCode by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         
-        item {
-            Text("Аккаунт", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
+        // СЕМЬЯ
+        item { Text("👨‍👩‍👧‍👦 Семья", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Button(onClick = { viewModel.logout() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-                        Icon(Icons.Filled.Logout, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Выйти из аккаунта")
+                    if (familyId == null) {
+                        Button(onClick = { familyVM.createFamily() }, modifier = Modifier.fillMaxWidth(), enabled = !isLoading) {
+                            Text("Создать семейную группу")
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(joinCode, { joinCode = it }, label = { Text("Код семьи") }, modifier = Modifier.fillMaxWidth())
+                        Button(onClick = { familyVM.joinFamily(joinCode); joinCode = "" }, modifier = Modifier.fillMaxWidth(), enabled = joinCode.isNotBlank()) {
+                            Text("Присоединиться")
+                        }
+                    } else {
+                        Text("✅ Семья активна", fontWeight = FontWeight.Bold)
+                        Text("Код: ${familyId!!.take(12)}...")
+                        IconButton(onClick = {
+                            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            cm.setPrimaryClip(ClipData.newPlainText("code", familyId))
+                            Toast.makeText(context, "Код скопирован", Toast.LENGTH_SHORT).show()
+                        }) { Icon(Icons.Filled.ContentCopy, "Копировать") }
+                        OutlinedButton(onClick = { familyVM.leaveFamily() }, modifier = Modifier.fillMaxWidth()) { Text("Покинуть семью") }
                     }
                 }
             }
         }
 
+        // АККАУНТ
+        item { Text("Аккаунт", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
-            Text("Обновления", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Card(Modifier.fillMaxWidth()) {
+                Button(onClick = { settingsVM.logout() }, modifier = Modifier.padding(16.dp).fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                    Text("Выйти")
+                }
+            }
         }
+
+        // ОБНОВЛЕНИЯ
+        item { Text("Обновления", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Версия: ${viewModel.currentVersion}")
-                    Spacer(Modifier.height(8.dp))
-                    
+                    Text("Версия: ${settingsVM.currentVersion}")
                     when (val s = updateStatus) {
-                        is UpdateStatus.Checking -> Row {
-                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Проверка...")
-                        }
+                        is UpdateStatus.Checking -> Text("Проверка...")
                         is UpdateStatus.UpdateAvailable -> {
-                            Text("Доступна версия ${s.version}", fontWeight = FontWeight.Bold)
-                            Button(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(s.url))) }, modifier = Modifier.fillMaxWidth()) {
-                                Text("Скачать обновление")
-                            }
+                            Text("Доступна ${s.version}", fontWeight = FontWeight.Bold)
+                            Button(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(s.url))) }, modifier = Modifier.fillMaxWidth()) { Text("Скачать") }
                         }
-                        is UpdateStatus.UpToDate -> Text("У вас последняя версия", color = MaterialTheme.colorScheme.primary)
+                        is UpdateStatus.UpToDate -> Text("✅ Актуально")
                         is UpdateStatus.Error -> Text(s.message, color = MaterialTheme.colorScheme.error)
                         else -> {}
                     }
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedButton(onClick = { viewModel.checkForUpdates() }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Проверить обновления")
-                    }
-                }
-            }
-        }
-
-        item {
-            Text("О приложении", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-        item {
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Text("Семейный бюджет", fontWeight = FontWeight.Bold)
-                    Text("Версия ${viewModel.currentVersion}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedButton(onClick = { settingsVM.checkForUpdates() }, modifier = Modifier.fillMaxWidth()) { Text("Проверить обновления") }
                 }
             }
         }

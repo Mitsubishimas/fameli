@@ -19,16 +19,15 @@ import com.fameli.budget.ui.screens.settings.*
 import com.fameli.budget.ui.screens.statistics.*
 import com.fameli.budget.ui.screens.transaction.*
 
-sealed class Screen(val route: String, val title: String) {
-    object Auth : Screen("auth", "Вход")
-    object Dashboard : Screen("dashboard", "Главная")
-    object Statistics : Screen("statistics", "Статистика")
-    object Planner : Screen("planner", "Планы")
-    object Goals : Screen("goals", "Цели")
-    object AddTransaction : Screen("add_transaction", "Добавить")
-    object Categories : Screen("categories", "Категории")
-    object Family : Screen("family", "Семья")
-    object Settings : Screen("settings", "Ещё")
+sealed class Screen(val route: String) {
+    object Auth : Screen("auth")
+    object Dashboard : Screen("dashboard")
+    object Statistics : Screen("statistics")
+    object Planner : Screen("planner")
+    object Goals : Screen("goals")
+    object AddTransaction : Screen("add_transaction")
+    object Categories : Screen("categories")
+    object Settings : Screen("settings")
 }
 
 @Composable
@@ -45,7 +44,6 @@ fun FameliNavHost() {
         composable(Screen.Goals.route) { MainScaffold(navController) }
         composable(Screen.AddTransaction.route) { MainScaffold(navController) }
         composable(Screen.Categories.route) { MainScaffold(navController) }
-        composable(Screen.Family.route) { MainScaffold(navController) }
         composable(Screen.Settings.route) { MainScaffold(navController) }
     }
 }
@@ -54,8 +52,10 @@ fun FameliNavHost() {
 fun MainScaffold(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    var showAddTaskDialog by remember { mutableStateOf(false) }
+    val goalViewModel: GoalViewModel = hiltViewModel()
     val plannerViewModel: PlannerViewModel = hiltViewModel()
+    var showGoalDialog by remember { mutableStateOf(false) }
+    var showTaskDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -65,6 +65,12 @@ fun MainScaffold(navController: NavHostController) {
                     onClick = { navController.navigate(Screen.Dashboard.route) { popUpTo(0); launchSingleTop = true } },
                     icon = { Icon(Icons.Filled.Home, "Главная") },
                     label = { Text("Главная") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == Screen.Statistics.route,
+                    onClick = { navController.navigate(Screen.Statistics.route) { popUpTo(0); launchSingleTop = true } },
+                    icon = { Icon(Icons.Filled.PieChart, "Аналитика") },
+                    label = { Text("Аналитика") }
                 )
                 NavigationBarItem(
                     selected = currentRoute == Screen.Goals.route,
@@ -79,12 +85,6 @@ fun MainScaffold(navController: NavHostController) {
                     label = { Text("Планы") }
                 )
                 NavigationBarItem(
-                    selected = currentRoute == Screen.Family.route,
-                    onClick = { navController.navigate(Screen.Family.route) { popUpTo(0); launchSingleTop = true } },
-                    icon = { Icon(Icons.Filled.People, "Семья") },
-                    label = { Text("Семья") }
-                )
-                NavigationBarItem(
                     selected = currentRoute == Screen.Settings.route,
                     onClick = { navController.navigate(Screen.Settings.route) { popUpTo(0); launchSingleTop = true } },
                     icon = { Icon(Icons.Filled.Settings, "Ещё") },
@@ -93,18 +93,26 @@ fun MainScaffold(navController: NavHostController) {
             }
         },
         floatingActionButton = {
-            // FAB есть на всех вкладках кроме Settings
-            if (currentRoute != Screen.Settings.route) {
-                when (currentRoute) {
-                    Screen.Planner.route -> {
-                        FloatingActionButton(onClick = { showAddTaskDialog = true }) {
-                            Icon(Icons.Filled.Add, "Добавить задачу")
-                        }
+            when (currentRoute) {
+                Screen.Planner.route -> {
+                    FloatingActionButton(onClick = { showTaskDialog = true }) {
+                        Icon(Icons.Filled.Add, "Добавить задачу")
                     }
-                    else -> {
-                        FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) {
-                            Icon(Icons.Filled.Add, "Добавить")
-                        }
+                }
+                Screen.Goals.route -> {
+                    FloatingActionButton(onClick = { showGoalDialog = true }) {
+                        Icon(Icons.Filled.Add, "Добавить цель")
+                    }
+                }
+                Screen.Statistics.route -> {
+                    // Нет FAB
+                }
+                Screen.Settings.route -> {
+                    // Нет FAB
+                }
+                else -> {
+                    FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) {
+                        Icon(Icons.Filled.Add, "Добавить")
                     }
                 }
             }
@@ -114,11 +122,10 @@ fun MainScaffold(navController: NavHostController) {
             when (currentRoute) {
                 Screen.Dashboard.route -> DashboardScreen()
                 Screen.Statistics.route -> StatisticsScreen()
-                Screen.Planner.route -> PlannerScreen(plannerViewModel, showAddTaskDialog) { showAddTaskDialog = false }
-                Screen.Goals.route -> GoalScreen()
+                Screen.Planner.route -> PlannerScreen(plannerViewModel, showTaskDialog) { showTaskDialog = false }
+                Screen.Goals.route -> GoalScreen(goalViewModel, showGoalDialog) { showGoalDialog = false }
                 Screen.AddTransaction.route -> AddTransactionScreen(navController)
                 Screen.Categories.route -> CategoriesScreen()
-                Screen.Family.route -> FamilyScreen()
                 Screen.Settings.route -> SettingsScreen()
             }
         }
