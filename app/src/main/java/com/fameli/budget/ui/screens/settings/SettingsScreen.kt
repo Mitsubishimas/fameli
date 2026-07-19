@@ -33,7 +33,7 @@ fun SettingsScreen(
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         
         // СЕМЬЯ
-        item { Text("👨‍👩‍👧‍👦 Семья", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+        item { Text("Семья", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
@@ -47,7 +47,7 @@ fun SettingsScreen(
                             Text("Присоединиться")
                         }
                     } else {
-                        Text("✅ Семья активна", fontWeight = FontWeight.Bold)
+                        Text("Семья активна", fontWeight = FontWeight.Bold)
                         Text("Код: ${familyId!!.take(12)}...")
                         IconButton(onClick = {
                             val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -78,15 +78,14 @@ fun SettingsScreen(
                     Text("Версия: ${settingsVM.currentVersion}")
                     when (val s = updateStatus) {
                         is UpdateStatus.Checking -> Text("Проверка...")
-                        is UpdateStatus.UpdateAvailable -> {
-                            Text("Доступна ${s.version}", fontWeight = FontWeight.Bold)
-                            Button(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(s.url))) }, modifier = Modifier.fillMaxWidth()) { Text("Скачать") }
-                        }
-                        is UpdateStatus.UpToDate -> Text("✅ Актуально")
+                        is UpdateStatus.UpdateAvailable -> Text("Доступна версия ${s.version}", fontWeight = FontWeight.Bold)
+                        is UpdateStatus.UpToDate -> Text("Актуально", color = MaterialTheme.colorScheme.primary)
                         is UpdateStatus.Error -> Text(s.message, color = MaterialTheme.colorScheme.error)
                         else -> {}
                     }
-                    OutlinedButton(onClick = { settingsVM.checkForUpdates() }, modifier = Modifier.fillMaxWidth()) { Text("Проверить обновления") }
+                    OutlinedButton(onClick = { settingsVM.checkForUpdates() }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Проверить обновления")
+                    }
                 }
             }
         }
