@@ -1,6 +1,5 @@
 package com.fameli.budget.ui.screens.planner;
 
-import android.app.Application;
 import com.fameli.budget.data.local.dao.TaskDao;
 import com.fameli.budget.firebase.FirebaseAuthRepository;
 import dagger.internal.DaggerGenerated;
@@ -25,31 +24,28 @@ import javax.inject.Provider;
     "cast"
 })
 public final class PlannerViewModel_Factory implements Factory<PlannerViewModel> {
-  private final Provider<Application> applicationProvider;
-
   private final Provider<TaskDao> taskDaoProvider;
 
   private final Provider<FirebaseAuthRepository> authRepositoryProvider;
 
-  public PlannerViewModel_Factory(Provider<Application> applicationProvider,
-      Provider<TaskDao> taskDaoProvider, Provider<FirebaseAuthRepository> authRepositoryProvider) {
-    this.applicationProvider = applicationProvider;
+  public PlannerViewModel_Factory(Provider<TaskDao> taskDaoProvider,
+      Provider<FirebaseAuthRepository> authRepositoryProvider) {
     this.taskDaoProvider = taskDaoProvider;
     this.authRepositoryProvider = authRepositoryProvider;
   }
 
   @Override
   public PlannerViewModel get() {
-    return newInstance(applicationProvider.get(), taskDaoProvider.get(), authRepositoryProvider.get());
+    return newInstance(taskDaoProvider.get(), authRepositoryProvider.get());
   }
 
-  public static PlannerViewModel_Factory create(Provider<Application> applicationProvider,
-      Provider<TaskDao> taskDaoProvider, Provider<FirebaseAuthRepository> authRepositoryProvider) {
-    return new PlannerViewModel_Factory(applicationProvider, taskDaoProvider, authRepositoryProvider);
+  public static PlannerViewModel_Factory create(Provider<TaskDao> taskDaoProvider,
+      Provider<FirebaseAuthRepository> authRepositoryProvider) {
+    return new PlannerViewModel_Factory(taskDaoProvider, authRepositoryProvider);
   }
 
-  public static PlannerViewModel newInstance(Application application, TaskDao taskDao,
+  public static PlannerViewModel newInstance(TaskDao taskDao,
       FirebaseAuthRepository authRepository) {
-    return new PlannerViewModel(application, taskDao, authRepository);
+    return new PlannerViewModel(taskDao, authRepository);
   }
 }

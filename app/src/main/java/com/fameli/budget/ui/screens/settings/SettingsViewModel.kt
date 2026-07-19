@@ -1,13 +1,10 @@
 package com.fameli.budget.ui.screens.settings
 
 import android.content.Context
-import android.util.Log
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fameli.budget.BuildConfig
-import com.fameli.budget.data.local.dao.CategoryDao
-import com.fameli.budget.data.local.entity.CategoryEntity
-import com.fameli.budget.data.local.entity.CategoryType
 import com.fameli.budget.firebase.FirebaseAuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -15,8 +12,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import java.net.HttpURLConnection
 import java.net.URL
-import java.util.UUID
 import javax.inject.Inject
 
 sealed class UpdateStatus {
@@ -30,22 +28,29 @@ sealed class UpdateStatus {
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val authRepository: FirebaseAuthRepository,
-    private val categoryDao: CategoryDao
+    private val authRepository: FirebaseAuthRepository
 ) : ViewModel() {
     val updateStatus = MutableStateFlow<UpdateStatus>(UpdateStatus.Idle)
     val currentVersion: String = BuildConfig.VERSION_NAME
 
-    fun addCategory(name: String, type: CategoryType, icon: String) = viewModelScope.launch {
-        categoryDao.insert(CategoryEntity(cloudId = UUID.randomUUID().toString(), name = name, type = type, icon = icon))
-    }
+    private val prefs: SharedPreferences = context.getSharedPreferences("fameli_prefs", Context.MODE_PRIVATE)
+    private val json = Json { ignoreUnknownKeys = true }
 
     fun checkForUpdates() = viewModelScope.launch {
         updateStatus.value = UpdateStatus.Checking
         try {
             val latestVersion = fetchLatestVersion()
-            if (latestVersion != null && latestVersion != currentVersion) {
-                updateStatus.value = UpdateStatus.UpdateAvailable(latestVersion, "https://github.com/Mitsubishimas/fameli/releases/latest")
+            
+            if (latestVersion == null) {
+                updateStatus.value = UpdateStatus.Error("Нет ответа от сервера")
+                return@launch
+            }
+
+            if (isVersionNewer(latestVersion, currentVersion)) {
+                updateStatus.value = UpdateStatus.UpdateAvailable(
+                    version = latestVersion,
+                    url = "https://github.com/Mitsubishimas/fameli/releases/latest"
+                )
             } else {
                 updateStatus.value = UpdateStatus.UpToDate
             }
@@ -56,11 +61,36 @@ class SettingsViewModel @Inject constructor(
 
     private suspend fun fetchLatestVersion(): String? = withContext(Dispatchers.IO) {
         try {
-            val json = URL("https://api.github.com/repos/Mitsubishimas/fameli/releases/latest").readText()
-            val tagStart = json.indexOf("\"tag_name\":\"") + 12
-            val tagEnd = json.indexOf("\"", tagStart)
-            json.substring(tagStart, tagEnd).removePrefix("v")
-        } catch (e: Exception) { null }
+            val url = URL("https://api.github.com/repos/Mitsubishimas/fameli/releases/latest")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+
+            val responseText = connection.inputStream.bufferedReader().readText()
+            connection.disconnect()
+
+            val release = json.decodeFromString<com.fameli.budget.data.remote.GitHubRelease>(responseText)
+            
+            if (release.draft) return@withContext null
+            
+            release.tag_name.removePrefix("v")
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun isVersionNewer(latest: String, current: String): Boolean {
+        val latestParts = latest.split(".").map { it.toIntOrNull() ?: 0 }
+        val currentParts = current.split(".").map { it.toIntOrNull() ?: 0 }
+        
+        for (i in 0 until maxOf(latestParts.size, currentParts.size)) {
+            val l = latestParts.getOrElse(i) { 0 }
+            val c = currentParts.getOrElse(i) { 0 }
+            if (l > c) return true
+            if (l < c) return false
+        }
+        return false
     }
 
     fun logout() = viewModelScope.launch { authRepository.signOut() }
