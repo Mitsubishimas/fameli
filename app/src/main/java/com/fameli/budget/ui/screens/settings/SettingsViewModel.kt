@@ -9,7 +9,8 @@ import com.fameli.budget.firebase.FirebaseAuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -25,6 +26,11 @@ sealed class UpdateStatus {
     data class Error(val message: String) : UpdateStatus()
 }
 
+data class GitHubRelease(
+    val tag_name: String,
+    val draft: Boolean = false
+)
+
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -33,7 +39,6 @@ class SettingsViewModel @Inject constructor(
     val updateStatus = MutableStateFlow<UpdateStatus>(UpdateStatus.Idle)
     val currentVersion: String = BuildConfig.VERSION_NAME
 
-    private val prefs: SharedPreferences = context.getSharedPreferences("fameli_prefs", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
 
     fun checkForUpdates() = viewModelScope.launch {
@@ -70,7 +75,7 @@ class SettingsViewModel @Inject constructor(
             val responseText = connection.inputStream.bufferedReader().readText()
             connection.disconnect()
 
-            val release = json.decodeFromString<com.fameli.budget.data.remote.GitHubRelease>(responseText)
+            val release = json.decodeFromString<GitHubRelease>(responseText)
             
             if (release.draft) return@withContext null
             

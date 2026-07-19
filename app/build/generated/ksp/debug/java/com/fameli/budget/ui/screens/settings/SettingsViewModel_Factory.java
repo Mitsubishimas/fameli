@@ -1,7 +1,6 @@
 package com.fameli.budget.ui.screens.settings;
 
 import android.content.Context;
-import com.fameli.budget.data.local.dao.CategoryDao;
 import com.fameli.budget.firebase.FirebaseAuthRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -29,29 +28,24 @@ public final class SettingsViewModel_Factory implements Factory<SettingsViewMode
 
   private final Provider<FirebaseAuthRepository> authRepositoryProvider;
 
-  private final Provider<CategoryDao> categoryDaoProvider;
-
   public SettingsViewModel_Factory(Provider<Context> contextProvider,
-      Provider<FirebaseAuthRepository> authRepositoryProvider,
-      Provider<CategoryDao> categoryDaoProvider) {
+      Provider<FirebaseAuthRepository> authRepositoryProvider) {
     this.contextProvider = contextProvider;
     this.authRepositoryProvider = authRepositoryProvider;
-    this.categoryDaoProvider = categoryDaoProvider;
   }
 
   @Override
   public SettingsViewModel get() {
-    return newInstance(contextProvider.get(), authRepositoryProvider.get(), categoryDaoProvider.get());
+    return newInstance(contextProvider.get(), authRepositoryProvider.get());
   }
 
   public static SettingsViewModel_Factory create(Provider<Context> contextProvider,
-      Provider<FirebaseAuthRepository> authRepositoryProvider,
-      Provider<CategoryDao> categoryDaoProvider) {
-    return new SettingsViewModel_Factory(contextProvider, authRepositoryProvider, categoryDaoProvider);
+      Provider<FirebaseAuthRepository> authRepositoryProvider) {
+    return new SettingsViewModel_Factory(contextProvider, authRepositoryProvider);
   }
 
   public static SettingsViewModel newInstance(Context context,
-      FirebaseAuthRepository authRepository, CategoryDao categoryDao) {
-    return new SettingsViewModel(context, authRepository, categoryDao);
+      FirebaseAuthRepository authRepository) {
+    return new SettingsViewModel(context, authRepository);
   }
 }
