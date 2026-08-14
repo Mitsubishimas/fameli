@@ -12,14 +12,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.fameli.budget.data.local.entity.ShoppingItemEntity
 
 @Composable
-fun ShoppingScreen(viewModel: ShoppingViewModel = hiltViewModel()) {
+fun ShoppingScreen(
+    viewModel: ShoppingViewModel,
+    showAddDialog: Boolean = false,
+    onDismiss: () -> Unit = {}
+) {
     val items by viewModel.items.collectAsState()
-    val showAdd by viewModel.showAddDialog.collectAsState()
+    val internalShowAdd by viewModel.showAddDialog.collectAsState()
     val newName by viewModel.newItemName.collectAsState()
+    val showDialog = showAddDialog || internalShowAdd
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -30,18 +34,15 @@ fun ShoppingScreen(viewModel: ShoppingViewModel = hiltViewModel()) {
             items(items) { item -> ShoppingItemCard(item, viewModel) }
             item { Spacer(Modifier.height(72.dp)) }
         }
-        FloatingActionButton(onClick = { viewModel.showAdd() }, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
-            Icon(Icons.Filled.Add, "Добавить")
-        }
     }
 
-    if (showAdd) {
+    if (showDialog) {
         AlertDialog(
-            onDismissRequest = { viewModel.hideAdd() },
+            onDismissRequest = { viewModel.hideAdd(); onDismiss() },
             title = { Text("Новая покупка") },
             text = { OutlinedTextField(newName, { viewModel.newItemName.value = it }, label = { Text("Что купить?") }, modifier = Modifier.fillMaxWidth()) },
-            confirmButton = { Button(onClick = { viewModel.addItem() }, enabled = newName.isNotBlank()) { Text("Добавить") } },
-            dismissButton = { TextButton(onClick = { viewModel.hideAdd() }) { Text("Отмена") } }
+            confirmButton = { Button(onClick = { viewModel.addItem(); onDismiss() }, enabled = newName.isNotBlank()) { Text("Добавить") } },
+            dismissButton = { TextButton(onClick = { viewModel.hideAdd(); onDismiss() }) { Text("Отмена") } }
         )
     }
 }

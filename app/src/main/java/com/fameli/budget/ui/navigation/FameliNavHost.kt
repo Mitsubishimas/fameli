@@ -16,6 +16,7 @@ import com.fameli.budget.ui.screens.planner.*
 import com.fameli.budget.ui.screens.settings.*
 import com.fameli.budget.ui.screens.shopping.*
 import com.fameli.budget.ui.screens.statistics.*
+import com.fameli.budget.ui.screens.transaction.*
 
 sealed class Screen(val route: String) {
     object Auth : Screen("auth")
@@ -24,6 +25,7 @@ sealed class Screen(val route: String) {
     object Planner : Screen("planner")
     object Goals : Screen("goals")
     object Shopping : Screen("shopping")
+    object AddTransaction : Screen("add_transaction")
     object Settings : Screen("settings")
 }
 
@@ -40,6 +42,7 @@ fun FameliNavHost() {
         composable(Screen.Planner.route) { MainScaffold(navController) }
         composable(Screen.Goals.route) { MainScaffold(navController) }
         composable(Screen.Shopping.route) { MainScaffold(navController) }
+        composable(Screen.AddTransaction.route) { MainScaffold(navController) }
         composable(Screen.Settings.route) { MainScaffold(navController) }
     }
 }
@@ -48,12 +51,12 @@ fun FameliNavHost() {
 fun MainScaffold(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    var showTaskDialog by remember { mutableStateOf(false) }
-    var showGoalDialog by remember { mutableStateOf(false) }
-    var showShoppingDialog by remember { mutableStateOf(false) }
-    val plannerVM: PlannerViewModel = hiltViewModel()
     val goalVM: GoalViewModel = hiltViewModel()
+    val plannerVM: PlannerViewModel = hiltViewModel()
     val shoppingVM: ShoppingViewModel = hiltViewModel()
+    var showGoalDialog by remember { mutableStateOf(false) }
+    var showTaskDialog by remember { mutableStateOf(false) }
+    var showShoppingDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -98,18 +101,11 @@ fun MainScaffold(navController: NavHostController) {
         },
         floatingActionButton = {
             when (currentRoute) {
-                Screen.Planner.route -> {
-                    FloatingActionButton(onClick = { showTaskDialog = true }) { Icon(Icons.Filled.Add, "Задача") }
-                }
-                Screen.Goals.route -> {
-                    FloatingActionButton(onClick = { showGoalDialog = true }) { Icon(Icons.Filled.Add, "Цель") }
-                }
-                Screen.Shopping.route -> {
-                    FloatingActionButton(onClick = { showShoppingDialog = true }) { Icon(Icons.Filled.Add, "Покупка") }
-                }
-                else -> {
-                    FloatingActionButton(onClick = { navController.navigate(Screen.Dashboard.route) }) { Icon(Icons.Filled.Add, "Добавить") }
-                }
+                Screen.Planner.route -> FloatingActionButton(onClick = { showTaskDialog = true }) { Icon(Icons.Filled.Add, "Задача") }
+                Screen.Goals.route -> FloatingActionButton(onClick = { showGoalDialog = true }) { Icon(Icons.Filled.Add, "Цель") }
+                Screen.Shopping.route -> FloatingActionButton(onClick = { showShoppingDialog = true }) { Icon(Icons.Filled.Add, "Покупка") }
+                Screen.Dashboard.route -> FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) { Icon(Icons.Filled.Add, "Добавить") }
+                else -> {}
             }
         }
     ) { padding ->
@@ -119,7 +115,8 @@ fun MainScaffold(navController: NavHostController) {
                 Screen.Statistics.route -> StatisticsScreen()
                 Screen.Planner.route -> PlannerScreen(plannerVM, showTaskDialog) { showTaskDialog = false }
                 Screen.Goals.route -> GoalScreen(goalVM, showGoalDialog) { showGoalDialog = false }
-                Screen.Shopping.route -> ShoppingScreen(shoppingVM)
+                Screen.Shopping.route -> ShoppingScreen(shoppingVM, showShoppingDialog) { showShoppingDialog = false }
+                Screen.AddTransaction.route -> AddTransactionScreen(navController)
                 Screen.Settings.route -> SettingsScreen()
             }
         }
