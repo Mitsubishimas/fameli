@@ -1,7 +1,6 @@
 package com.fameli.budget;
 
 import com.fameli.budget.data.local.FameliDatabase;
-import com.fameli.budget.data.repository.FamilySyncRepository;
 import dagger.MembersInjector;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.InjectedFieldSignature;
@@ -25,33 +24,21 @@ import javax.inject.Provider;
 public final class FameliApp_MembersInjector implements MembersInjector<FameliApp> {
   private final Provider<FameliDatabase> databaseProvider;
 
-  private final Provider<FamilySyncRepository> familySyncRepositoryProvider;
-
-  public FameliApp_MembersInjector(Provider<FameliDatabase> databaseProvider,
-      Provider<FamilySyncRepository> familySyncRepositoryProvider) {
+  public FameliApp_MembersInjector(Provider<FameliDatabase> databaseProvider) {
     this.databaseProvider = databaseProvider;
-    this.familySyncRepositoryProvider = familySyncRepositoryProvider;
   }
 
-  public static MembersInjector<FameliApp> create(Provider<FameliDatabase> databaseProvider,
-      Provider<FamilySyncRepository> familySyncRepositoryProvider) {
-    return new FameliApp_MembersInjector(databaseProvider, familySyncRepositoryProvider);
+  public static MembersInjector<FameliApp> create(Provider<FameliDatabase> databaseProvider) {
+    return new FameliApp_MembersInjector(databaseProvider);
   }
 
   @Override
   public void injectMembers(FameliApp instance) {
     injectDatabase(instance, databaseProvider.get());
-    injectFamilySyncRepository(instance, familySyncRepositoryProvider.get());
   }
 
   @InjectedFieldSignature("com.fameli.budget.FameliApp.database")
   public static void injectDatabase(FameliApp instance, FameliDatabase database) {
     instance.database = database;
-  }
-
-  @InjectedFieldSignature("com.fameli.budget.FameliApp.familySyncRepository")
-  public static void injectFamilySyncRepository(FameliApp instance,
-      FamilySyncRepository familySyncRepository) {
-    instance.familySyncRepository = familySyncRepository;
   }
 }

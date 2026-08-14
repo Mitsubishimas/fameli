@@ -5,6 +5,7 @@ import android.os.CancellationSignal;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.CoroutinesRoom;
+import androidx.room.EntityDeletionOrUpdateAdapter;
 import androidx.room.EntityInsertionAdapter;
 import androidx.room.RoomDatabase;
 import androidx.room.RoomSQLiteQuery;
@@ -38,6 +39,8 @@ public final class CategoryDao_Impl implements CategoryDao {
 
   private final EntityInsertionAdapter<CategoryEntity> __insertionAdapterOfCategoryEntity;
 
+  private final EntityDeletionOrUpdateAdapter<CategoryEntity> __updateAdapterOfCategoryEntity;
+
   private final SharedSQLiteStatement __preparedStmtOfSoftDelete;
 
   public CategoryDao_Impl(@NonNull final RoomDatabase __db) {
@@ -65,6 +68,30 @@ public final class CategoryDao_Impl implements CategoryDao {
         statement.bindLong(9, entity.getLastModified());
       }
     };
+    this.__updateAdapterOfCategoryEntity = new EntityDeletionOrUpdateAdapter<CategoryEntity>(__db) {
+      @Override
+      @NonNull
+      protected String createQuery() {
+        return "UPDATE OR ABORT `categories` SET `id` = ?,`cloudId` = ?,`name` = ?,`type` = ?,`icon` = ?,`color` = ?,`isDefault` = ?,`isDeleted` = ?,`lastModified` = ? WHERE `id` = ?";
+      }
+
+      @Override
+      protected void bind(@NonNull final SupportSQLiteStatement statement,
+          @NonNull final CategoryEntity entity) {
+        statement.bindLong(1, entity.getId());
+        statement.bindString(2, entity.getCloudId());
+        statement.bindString(3, entity.getName());
+        statement.bindString(4, __CategoryType_enumToString(entity.getType()));
+        statement.bindString(5, entity.getIcon());
+        statement.bindLong(6, entity.getColor());
+        final int _tmp = entity.isDefault() ? 1 : 0;
+        statement.bindLong(7, _tmp);
+        final int _tmp_1 = entity.isDeleted() ? 1 : 0;
+        statement.bindLong(8, _tmp_1);
+        statement.bindLong(9, entity.getLastModified());
+        statement.bindLong(10, entity.getId());
+      }
+    };
     this.__preparedStmtOfSoftDelete = new SharedSQLiteStatement(__db) {
       @Override
       @NonNull
@@ -87,6 +114,44 @@ public final class CategoryDao_Impl implements CategoryDao {
           final Long _result = __insertionAdapterOfCategoryEntity.insertAndReturnId(category);
           __db.setTransactionSuccessful();
           return _result;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object insertAll(final List<CategoryEntity> categories,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __insertionAdapterOfCategoryEntity.insert(categories);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object update(final CategoryEntity category,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __updateAdapterOfCategoryEntity.handle(category);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
         } finally {
           __db.endTransaction();
         }
