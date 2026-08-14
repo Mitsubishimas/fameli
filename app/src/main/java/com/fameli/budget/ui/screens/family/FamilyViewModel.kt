@@ -16,6 +16,7 @@ class FamilyViewModel @Inject constructor(
     val familyId = MutableStateFlow<String?>(null)
     val message = MutableStateFlow<String?>(null)
     val isLoading = MutableStateFlow(false)
+    val isSyncing = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
@@ -25,23 +26,15 @@ class FamilyViewModel @Inject constructor(
                     val id = families.first()
                     familyId.value = id
                     repo.startListening(id)
-                    message.value = "Синхронизация активна"
                 }
-            } catch (e: Exception) {
-                message.value = "Ошибка: ${e.message}"
-            }
+            } catch (_: Exception) {}
         }
     }
 
     fun createFamily() = viewModelScope.launch {
         isLoading.value = true
-        message.value = null
         repo.createFamily("Моя семья").fold(
-            onSuccess = { id ->
-                familyId.value = id
-                repo.startListening(id)
-                message.value = "Семья создана"
-            },
+            onSuccess = { id -> familyId.value = id; repo.startListening(id) },
             onFailure = { e -> message.value = "Ошибка: ${e.message}" }
         )
         isLoading.value = false
@@ -49,21 +42,31 @@ class FamilyViewModel @Inject constructor(
 
     fun joinFamily(code: String) = viewModelScope.launch {
         isLoading.value = true
-        message.value = null
         repo.joinFamily(code.trim()).fold(
-            onSuccess = {
-                familyId.value = code.trim()
-                repo.startListening(code.trim())
-                message.value = "Вы в семье. Синхронизация включена."
-            },
+            onSuccess = { familyId.value = code.trim(); repo.startListening(code.trim()) },
             onFailure = { e -> message.value = "Ошибка: ${e.message}" }
         )
         isLoading.value = false
     }
 
-    fun leaveFamily() {
-        repo.stopListening()
-        familyId.value = null
-        message.value = "Вы вышли из семьи"
+    fun forceSync() = viewModelScope.launch {
+        val id = familyId.value ?: return@launch
+        isSyncing.value = true
+        message.value = "Синхронизация..."
+        
+        // Сначала отправляем локальные данные в облако
+        repo.forceSyncToCloud(id).fold(
+            onSuccess = {
+                // Потом загружаем из облака
+                repo.forceSyncFromCloud(id).fold(
+                    onSuccess = { message.value = "Синхронизация завершена ✅" },
+                    onFailure = { e -> message.value = "Ошибка загрузки: ${e.message}" }
+                )
+            },
+            onFailure = { e -> message.value = "Ошибка отправки: ${e.message}" }
+        )
+        isSyncing.value = false
     }
+
+    fun leaveFamily() { repo.stopListening(); familyId.value = null; message.value = null }
 }

@@ -23,7 +23,8 @@ fun SettingsScreen(
     familyVM: FamilyViewModel = hiltViewModel()
 ) {
     val familyId by familyVM.familyId.collectAsState()
-    val isLoading by familyVM.isLoading.collectAsState()
+    val message by familyVM.message.collectAsState()
+    val isSyncing by familyVM.isSyncing.collectAsState()
     var joinCode by remember { mutableStateOf("") }
     val context = LocalContext.current
 
@@ -34,14 +35,10 @@ fun SettingsScreen(
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     if (familyId == null) {
-                        Button(onClick = { familyVM.createFamily() }, modifier = Modifier.fillMaxWidth(), enabled = !isLoading) {
-                            Text("Создать семейную группу")
-                        }
+                        Button(onClick = { familyVM.createFamily() }, modifier = Modifier.fillMaxWidth()) { Text("Создать семейную группу") }
                         Spacer(Modifier.height(8.dp))
                         OutlinedTextField(joinCode, { joinCode = it }, label = { Text("Код семьи") }, modifier = Modifier.fillMaxWidth())
-                        Button(onClick = { familyVM.joinFamily(joinCode); joinCode = "" }, modifier = Modifier.fillMaxWidth(), enabled = joinCode.isNotBlank()) {
-                            Text("Присоединиться")
-                        }
+                        Button(onClick = { familyVM.joinFamily(joinCode); joinCode = "" }, modifier = Modifier.fillMaxWidth(), enabled = joinCode.isNotBlank()) { Text("Присоединиться") }
                     } else {
                         Text("Семья активна", fontWeight = FontWeight.Bold)
                         Text("Код: ${familyId!!.take(12)}...")
@@ -50,6 +47,29 @@ fun SettingsScreen(
                             cm.setPrimaryClip(ClipData.newPlainText("code", familyId))
                             Toast.makeText(context, "Код скопирован", Toast.LENGTH_SHORT).show()
                         }) { Icon(Icons.Filled.ContentCopy, "Копировать") }
+                        
+                        Spacer(Modifier.height(8.dp))
+                        
+                        // Кнопка принудительной синхронизации
+                        Button(
+                            onClick = { familyVM.forceSync() },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isSyncing
+                        ) {
+                            if (isSyncing) {
+                                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Синхронизация...")
+                            } else {
+                                Icon(Icons.Filled.Sync, null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Синхронизировать сейчас")
+                            }
+                        }
+                        
+                        message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                        
+                        Spacer(Modifier.height(8.dp))
                         OutlinedButton(onClick = { familyVM.leaveFamily() }, modifier = Modifier.fillMaxWidth()) { Text("Покинуть семью") }
                     }
                 }
@@ -71,9 +91,7 @@ fun SettingsScreen(
                 Column(Modifier.padding(16.dp)) {
                     Text("Версия: ${settingsVM.currentVersion}")
                     Spacer(Modifier.height(8.dp))
-                    Button(onClick = { settingsVM.checkForUpdates() }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Проверить обновления")
-                    }
+                    Button(onClick = { settingsVM.checkForUpdates() }, modifier = Modifier.fillMaxWidth()) { Text("Проверить обновления") }
                 }
             }
         }
