@@ -17,6 +17,8 @@ import com.fameli.budget.data.local.dao.CategoryDao;
 import com.fameli.budget.data.local.dao.CategoryDao_Impl;
 import com.fameli.budget.data.local.dao.GoalDao;
 import com.fameli.budget.data.local.dao.GoalDao_Impl;
+import com.fameli.budget.data.local.dao.ShoppingDao;
+import com.fameli.budget.data.local.dao.ShoppingDao_Impl;
 import com.fameli.budget.data.local.dao.TaskDao;
 import com.fameli.budget.data.local.dao.TaskDao_Impl;
 import com.fameli.budget.data.local.dao.TransactionDao;
@@ -46,10 +48,12 @@ public final class FameliDatabase_Impl extends FameliDatabase {
 
   private volatile GoalDao _goalDao;
 
+  private volatile ShoppingDao _shoppingDao;
+
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(3) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(4) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `transactions` (`localId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `categoryId` INTEGER NOT NULL, `amount` REAL NOT NULL, `currency` TEXT NOT NULL, `date` INTEGER NOT NULL, `note` TEXT, `isDeleted` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL)");
@@ -58,8 +62,9 @@ public final class FameliDatabase_Impl extends FameliDatabase {
         db.execSQL("CREATE TABLE IF NOT EXISTS `tasks` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT NOT NULL, `date` INTEGER NOT NULL, `time` TEXT NOT NULL, `createdBy` TEXT NOT NULL, `createdByUid` TEXT NOT NULL, `isCompleted` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `goals` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT NOT NULL, `targetAmount` REAL NOT NULL, `currentAmount` REAL NOT NULL, `createdAt` INTEGER NOT NULL, `deadline` INTEGER, `isCompleted` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `goal_transactions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `goalId` INTEGER NOT NULL, `amount` REAL NOT NULL, `comment` TEXT NOT NULL, `userName` TEXT NOT NULL, `userUid` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `shopping_items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `name` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `isPurchased` INTEGER NOT NULL, `purchasedByUid` TEXT NOT NULL, `purchasedByName` TEXT NOT NULL, `purchasedAt` INTEGER NOT NULL, `createdByUid` TEXT NOT NULL, `createdByName` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '781848ab4488a9b302e5a811acf75f49')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0e8582a0b3296cc16ee0df2c29e20cee')");
       }
 
       @Override
@@ -70,6 +75,7 @@ public final class FameliDatabase_Impl extends FameliDatabase {
         db.execSQL("DROP TABLE IF EXISTS `tasks`");
         db.execSQL("DROP TABLE IF EXISTS `goals`");
         db.execSQL("DROP TABLE IF EXISTS `goal_transactions`");
+        db.execSQL("DROP TABLE IF EXISTS `shopping_items`");
         final List<? extends RoomDatabase.Callback> _callbacks = mCallbacks;
         if (_callbacks != null) {
           for (RoomDatabase.Callback _callback : _callbacks) {
@@ -230,9 +236,31 @@ public final class FameliDatabase_Impl extends FameliDatabase {
                   + " Expected:\n" + _infoGoalTransactions + "\n"
                   + " Found:\n" + _existingGoalTransactions);
         }
+        final HashMap<String, TableInfo.Column> _columnsShoppingItems = new HashMap<String, TableInfo.Column>(12);
+        _columnsShoppingItems.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("cloudId", new TableInfo.Column("cloudId", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("name", new TableInfo.Column("name", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("quantity", new TableInfo.Column("quantity", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("isPurchased", new TableInfo.Column("isPurchased", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("purchasedByUid", new TableInfo.Column("purchasedByUid", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("purchasedByName", new TableInfo.Column("purchasedByName", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("purchasedAt", new TableInfo.Column("purchasedAt", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("createdByUid", new TableInfo.Column("createdByUid", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("createdByName", new TableInfo.Column("createdByName", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("createdAt", new TableInfo.Column("createdAt", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsShoppingItems.put("isDeleted", new TableInfo.Column("isDeleted", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        final HashSet<TableInfo.ForeignKey> _foreignKeysShoppingItems = new HashSet<TableInfo.ForeignKey>(0);
+        final HashSet<TableInfo.Index> _indicesShoppingItems = new HashSet<TableInfo.Index>(0);
+        final TableInfo _infoShoppingItems = new TableInfo("shopping_items", _columnsShoppingItems, _foreignKeysShoppingItems, _indicesShoppingItems);
+        final TableInfo _existingShoppingItems = TableInfo.read(db, "shopping_items");
+        if (!_infoShoppingItems.equals(_existingShoppingItems)) {
+          return new RoomOpenHelper.ValidationResult(false, "shopping_items(com.fameli.budget.data.local.entity.ShoppingItemEntity).\n"
+                  + " Expected:\n" + _infoShoppingItems + "\n"
+                  + " Found:\n" + _existingShoppingItems);
+        }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "781848ab4488a9b302e5a811acf75f49", "5c29be515d3aa753ed688c14bfc5c444");
+    }, "0e8582a0b3296cc16ee0df2c29e20cee", "aa58eedf7f70ee9bbaff0009f1695d23");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;
@@ -243,7 +271,7 @@ public final class FameliDatabase_Impl extends FameliDatabase {
   protected InvalidationTracker createInvalidationTracker() {
     final HashMap<String, String> _shadowTablesMap = new HashMap<String, String>(0);
     final HashMap<String, Set<String>> _viewTables = new HashMap<String, Set<String>>(0);
-    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "transactions","categories","budgets","tasks","goals","goal_transactions");
+    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "transactions","categories","budgets","tasks","goals","goal_transactions","shopping_items");
   }
 
   @Override
@@ -258,6 +286,7 @@ public final class FameliDatabase_Impl extends FameliDatabase {
       _db.execSQL("DELETE FROM `tasks`");
       _db.execSQL("DELETE FROM `goals`");
       _db.execSQL("DELETE FROM `goal_transactions`");
+      _db.execSQL("DELETE FROM `shopping_items`");
       super.setTransactionSuccessful();
     } finally {
       super.endTransaction();
@@ -277,6 +306,7 @@ public final class FameliDatabase_Impl extends FameliDatabase {
     _typeConvertersMap.put(BudgetDao.class, BudgetDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(TaskDao.class, TaskDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(GoalDao.class, GoalDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(ShoppingDao.class, ShoppingDao_Impl.getRequiredConverters());
     return _typeConvertersMap;
   }
 
@@ -361,6 +391,20 @@ public final class FameliDatabase_Impl extends FameliDatabase {
           _goalDao = new GoalDao_Impl(this);
         }
         return _goalDao;
+      }
+    }
+  }
+
+  @Override
+  public ShoppingDao shoppingDao() {
+    if (_shoppingDao != null) {
+      return _shoppingDao;
+    } else {
+      synchronized(this) {
+        if(_shoppingDao == null) {
+          _shoppingDao = new ShoppingDao_Impl(this);
+        }
+        return _shoppingDao;
       }
     }
   }

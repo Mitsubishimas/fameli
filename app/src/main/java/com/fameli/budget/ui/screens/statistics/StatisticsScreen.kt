@@ -1,21 +1,18 @@
 package com.fameli.budget.ui.screens.statistics
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
-import com.patrykandpatrick.vico.compose.chart.Chart
-import com.patrykandpatrick.vico.compose.chart.column.columnChart
-import com.patrykandpatrick.vico.compose.chart.pie.pieChart
-import com.patrykandpatrick.vico.core.entry.entryModelOf
 import java.text.NumberFormat
 import java.util.*
 
@@ -37,11 +34,10 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
             }
         }
 
-        // Итого
         item {
             Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Итого за период", fontWeight = FontWeight.Bold)
+                    Text("Итого", fontWeight = FontWeight.Bold)
                     Text("Доходы: +${format(totalIncome)}", color = MaterialTheme.colorScheme.primary)
                     Text("Расходы: -${format(totalExpense)}", color = MaterialTheme.colorScheme.error)
                     Text("Баланс: ${format(totalIncome - totalExpense)}", fontWeight = FontWeight.Bold)
@@ -49,69 +45,57 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
             }
         }
 
-        // Круговая диаграмма расходов
         if (expenses.isNotEmpty()) {
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
                         Text("Расходы по категориям", fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(8.dp))
-                        val pieModel = entryModelOf(*expenses.map { it.total.toFloat() }.toTypedArray())
-                        Chart(
-                            chart = pieChart(),
-                            model = pieModel,
-                            modifier = Modifier.fillMaxWidth().height(180.dp)
-                        )
+                        val maxVal = expenses.maxOf { it.total }
+                        expenses.forEach { e ->
+                            Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Text(e.categoryName, modifier = Modifier.width(100.dp), style = MaterialTheme.typography.bodySmall)
+                                Box(
+                                    Modifier
+                                        .weight(1f)
+                                        .height(16.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(Color(0xFFE0E0E0))
+                                ) {
+                                    Box(
+                                        Modifier
+                                            .fillMaxHeight()
+                                            .fillMaxWidth((e.total / maxVal).toFloat().coerceIn(0.05f, 1f))
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(MaterialTheme.colorScheme.error)
+                                    )
+                                }
+                                Text(format(e.total), modifier = Modifier.width(80.dp), style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // Столбчатая диаграмма доходов
-        if (incomes.isNotEmpty()) {
-            item {
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text("Доходы по категориям", fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(8.dp))
-                        val maxIncome = incomes.maxOf { it.total }
-                        val colModel = entryModelOf(*incomes.map { (it.total / maxIncome).toFloat() }.toTypedArray())
-                        Chart(
-                            chart = columnChart(),
-                            model = colModel,
-                            startAxis = rememberStartAxis(),
-                            bottomAxis = rememberBottomAxis(),
-                            modifier = Modifier.fillMaxWidth().height(180.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        // Список расходов
         item { Text("Расходы", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) }
         items(expenses) { e ->
             Card(Modifier.fillMaxWidth()) {
                 Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(e.categoryName)
-                    Text(format(e.total))
+                    Text(e.categoryName); Text(format(e.total))
                 }
             }
         }
 
-        // Список доходов
         item { Text("Доходы", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
         items(incomes) { e ->
             Card(Modifier.fillMaxWidth()) {
                 Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(e.categoryName)
-                    Text(format(e.total))
+                    Text(e.categoryName); Text(format(e.total))
                 }
             }
         }
     }
 }
 
-private fun format(amount: Double): String {
-    return NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(amount)
-}
+private fun format(amount: Double): String = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(amount)

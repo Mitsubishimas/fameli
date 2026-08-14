@@ -12,6 +12,7 @@ import com.fameli.budget.ui.screens.family.FamilyViewModel_HiltModules;
 import com.fameli.budget.ui.screens.goals.GoalViewModel_HiltModules;
 import com.fameli.budget.ui.screens.planner.PlannerViewModel_HiltModules;
 import com.fameli.budget.ui.screens.settings.SettingsViewModel_HiltModules;
+import com.fameli.budget.ui.screens.shopping.ShoppingViewModel_HiltModules;
 import com.fameli.budget.ui.screens.statistics.StatisticsViewModel_HiltModules;
 import com.fameli.budget.ui.screens.transaction.AddTransactionViewModel_HiltModules;
 import com.fameli.budget.widget.BudgetWidgetProvider_GeneratedInjector;
@@ -183,6 +184,7 @@ public final class FameliApp_HiltComponents {
           HiltWrapper_SavedStateHandleModule.class,
           PlannerViewModel_HiltModules.KeyModule.class,
           SettingsViewModel_HiltModules.KeyModule.class,
+          ShoppingViewModel_HiltModules.KeyModule.class,
           StatisticsViewModel_HiltModules.KeyModule.class
       }
   )
@@ -228,6 +230,7 @@ public final class FameliApp_HiltComponents {
           HiltWrapper_HiltViewModelFactory_ViewModelModule.class,
           PlannerViewModel_HiltModules.BindsModule.class,
           SettingsViewModel_HiltModules.BindsModule.class,
+          ShoppingViewModel_HiltModules.BindsModule.class,
           StatisticsViewModel_HiltModules.BindsModule.class
       }
   )
