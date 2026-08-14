@@ -15,6 +15,15 @@ class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth)
 
     init { auth.addAuthStateListener { _currentUser.value = it.currentUser } }
 
+    fun getUserName(): String {
+        val user = auth.currentUser ?: return "Я"
+        return when {
+            user.displayName.isNullOrBlank().not() -> user.displayName!!
+            user.email.isNullOrBlank().not() -> user.email!!.substringBefore("@")
+            else -> "Пользователь"
+        }
+    }
+
     suspend fun signIn(email: String, password: String): Result<FirebaseUser> = try {
         Result.success(auth.signInWithEmailAndPassword(email, password).await().user!!)
     } catch (e: Exception) { Result.failure(e) }
@@ -33,5 +42,5 @@ class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth)
     } catch (e: Exception) { Result.failure(e) }
 
     fun signOut() { auth.signOut() }
-    fun getUserId() = auth.currentUser?.uid
+    fun getUserId(): String? = auth.currentUser?.uid
 }

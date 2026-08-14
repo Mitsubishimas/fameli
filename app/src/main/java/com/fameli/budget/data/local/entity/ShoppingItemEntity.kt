@@ -1,0 +1,20 @@
+package com.fameli.budget.data.local.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "shopping_items")
+data class ShoppingItemEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val cloudId: String = "",
+    val name: String,
+    val quantity: Int = 1,
+    val isPurchased: Boolean = false,
+    val purchasedByUid: String = "",
+    val purchasedByName: String = "",
+    val purchasedAt: Long = 0,
+    val createdByUid: String = "",
+    val createdByName: String = "",
+    val createdAt: Long = System.currentTimeMillis(),
+    val isDeleted: Boolean = false
+)

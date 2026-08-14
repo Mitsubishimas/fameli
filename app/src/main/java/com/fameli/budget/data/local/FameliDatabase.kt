@@ -12,9 +12,10 @@ import com.fameli.budget.data.local.entity.*
         BudgetEntity::class,
         TaskEntity::class,
         GoalEntity::class,
-        GoalTransactionEntity::class
+        GoalTransactionEntity::class,
+        ShoppingItemEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class FameliDatabase : RoomDatabase() {
@@ -23,4 +24,5 @@ abstract class FameliDatabase : RoomDatabase() {
     abstract fun budgetDao(): BudgetDao
     abstract fun taskDao(): TaskDao
     abstract fun goalDao(): GoalDao
+    abstract fun shoppingDao(): ShoppingDao
 }

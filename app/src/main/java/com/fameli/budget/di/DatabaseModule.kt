@@ -21,9 +21,10 @@ object DatabaseModule {
             .fallbackToDestructiveMigration()
             .build()
 
-    @Provides fun provideTransactionDao(db: FameliDatabase) = db.transactionDao()
-    @Provides fun provideCategoryDao(db: FameliDatabase) = db.categoryDao()
-    @Provides fun provideBudgetDao(db: FameliDatabase) = db.budgetDao()
-    @Provides fun provideTaskDao(db: FameliDatabase) = db.taskDao()
-    @Provides fun provideGoalDao(db: FameliDatabase) = db.goalDao()
+    @Provides fun provideTransactionDao(db: FameliDatabase): TransactionDao = db.transactionDao()
+    @Provides fun provideCategoryDao(db: FameliDatabase): CategoryDao = db.categoryDao()
+    @Provides fun provideBudgetDao(db: FameliDatabase): BudgetDao = db.budgetDao()
+    @Provides fun provideTaskDao(db: FameliDatabase): TaskDao = db.taskDao()
+    @Provides fun provideGoalDao(db: FameliDatabase): GoalDao = db.goalDao()
+    @Provides fun provideShoppingDao(db: FameliDatabase): ShoppingDao = db.shoppingDao()
 }
