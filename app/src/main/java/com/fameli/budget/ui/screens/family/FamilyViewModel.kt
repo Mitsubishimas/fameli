@@ -1,6 +1,5 @@
 package com.fameli.budget.ui.screens.family
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fameli.budget.data.repository.FamilySyncRepository
@@ -23,11 +22,13 @@ class FamilyViewModel @Inject constructor(
             try {
                 val families = repo.getMyFamilies()
                 if (families.isNotEmpty()) {
-                    familyId.value = families.first()
-                    repo.startListening(families.first())
+                    val id = families.first()
+                    familyId.value = id
+                    repo.startListening(id)
+                    message.value = "Синхронизация активна"
                 }
             } catch (e: Exception) {
-                Log.e("FAMILY", "Init error: ${e.message}")
+                message.value = "Ошибка: ${e.message}"
             }
         }
     }
@@ -41,10 +42,7 @@ class FamilyViewModel @Inject constructor(
                 repo.startListening(id)
                 message.value = "Семья создана"
             },
-            onFailure = { e ->
-                message.value = "Ошибка: ${e.message}"
-                Log.e("FAMILY", "Create error: ${e.message}")
-            }
+            onFailure = { e -> message.value = "Ошибка: ${e.message}" }
         )
         isLoading.value = false
     }
@@ -56,11 +54,9 @@ class FamilyViewModel @Inject constructor(
             onSuccess = {
                 familyId.value = code.trim()
                 repo.startListening(code.trim())
-                message.value = "Вы в семье"
+                message.value = "Вы в семье. Синхронизация включена."
             },
-            onFailure = { e ->
-                message.value = "Ошибка: ${e.message}"
-            }
+            onFailure = { e -> message.value = "Ошибка: ${e.message}" }
         )
         isLoading.value = false
     }
@@ -68,6 +64,6 @@ class FamilyViewModel @Inject constructor(
     fun leaveFamily() {
         repo.stopListening()
         familyId.value = null
-        message.value = null
+        message.value = "Вы вышли из семьи"
     }
 }
