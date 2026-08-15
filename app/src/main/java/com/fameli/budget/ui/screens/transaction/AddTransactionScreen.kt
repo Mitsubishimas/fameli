@@ -13,6 +13,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.fameli.budget.ui.screens.family.FamilyViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,95 +23,38 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
     val isExpense by viewModel.isExpense.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val selected by viewModel.selectedCategory.collectAsState()
+    val familyVM: FamilyViewModel = hiltViewModel()
+    val familyId by familyVM.familyId.collectAsState()
 
     Scaffold(
-        topBar = { 
+        topBar = {
             TopAppBar(
                 title = { Text("Добавить") },
-                navigationIcon = { 
-                    IconButton(onClick = { navController.navigateUp() }) { 
-                        Icon(Icons.Filled.ArrowBack, "Назад") 
-                    } 
-                }
-            ) 
+                navigationIcon = { IconButton(onClick = { navController.navigateUp() }) { Icon(Icons.Filled.ArrowBack, null) } }
+            )
         }
     ) { p ->
-        Column(
-            Modifier.fillMaxSize().padding(p).padding(16.dp), 
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Тип операции
-            Text("Тип операции", style = MaterialTheme.typography.titleSmall)
+        Column(Modifier.fillMaxSize().padding(p).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = { viewModel.toggleType(true) },
-                    modifier = Modifier.weight(1f),
-                    colors = if (isExpense) ButtonDefaults.buttonColors() 
-                             else ButtonDefaults.outlinedButtonColors()
-                ) {
-                    Text("Расход")
-                }
-                Button(
-                    onClick = { viewModel.toggleType(false) },
-                    modifier = Modifier.weight(1f),
-                    colors = if (!isExpense) ButtonDefaults.buttonColors() 
-                             else ButtonDefaults.outlinedButtonColors()
-                ) {
-                    Text("Доход")
+                Button(onClick = { viewModel.toggleType(true) }, modifier = Modifier.weight(1f)) { Text("Расход") }
+                Button(onClick = { viewModel.toggleType(false) }, modifier = Modifier.weight(1f)) { Text("Доход") }
+            }
+            OutlinedTextField(amount, { viewModel.updateAmount(it) }, label = { Text("Сумма") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+            
+            Text("Категория")
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(categories) { c ->
+                    SuggestionChip(onClick = { viewModel.selectCategory(c) }, label = { Text("${c.icon} ${c.name}") })
                 }
             }
-
-            // Сумма
-            OutlinedTextField(
-                value = amount,
-                onValueChange = { viewModel.updateAmount(it) },
-                label = { Text("Сумма (₽)") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true
-            )
-
-            // Категории
-            Text("Категория", style = MaterialTheme.typography.titleSmall)
-            if (categories.isEmpty()) {
-                Text("Нет категорий. Добавьте в разделе 'Категории'", 
-                     style = MaterialTheme.typography.bodySmall,
-                     color = MaterialTheme.colorScheme.error)
-            } else {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(categories) { c ->
-                        SuggestionChip(
-                            onClick = { viewModel.selectCategory(c) },
-                            label = { Text("${c.icon} ${c.name}") },
-                            colors = if (selected?.id == c.id) 
-                                SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                                )
-                            else SuggestionChipDefaults.suggestionChipColors()
-                        )
-                    }
-                }
-            }
-
-            // Заметка
-            OutlinedTextField(
-                value = note,
-                onValueChange = { viewModel.updateNote(it) },
-                label = { Text("Заметка (необязательно)") },
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = 3
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Кнопка сохранить
+            
+            OutlinedTextField(note, { viewModel.updateNote(it) }, label = { Text("Заметка") }, modifier = Modifier.fillMaxWidth())
+            
             Button(
-                onClick = { viewModel.save(); navController.navigateUp() },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                enabled = amount.isNotBlank() && (amount.toDoubleOrNull() ?: 0.0) > 0 && selected != null
-            ) {
-                Text("Сохранить", style = MaterialTheme.typography.titleMedium)
-            }
+                onClick = { viewModel.save(familyId); navController.navigateUp() },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = amount.isNotBlank() && selected != null
+            ) { Text("Сохранить") }
         }
     }
 }

@@ -118,3 +118,20 @@ class FamilySyncRepository @Inject constructor(
 
     fun stopListening() { listeners.forEach { it.remove() }; listeners.clear() }
 }
+
+// Дополнительные методы для синхронизации отдельных элементов
+suspend fun syncTransaction(familyId: String, txn: TransactionEntity) {
+    try {
+        firestore.collection("families/$familyId/transactions").document(txn.cloudId).set(txn).await()
+    } catch (e: Exception) {
+        Log.e("FAMILY_SYNC", "syncTransaction error: ${e.message}")
+    }
+}
+
+suspend fun syncShoppingItem(familyId: String, item: ShoppingItemEntity) {
+    try {
+        firestore.collection("families/$familyId/shopping").document(item.cloudId).set(item).await()
+    } catch (e: Exception) {
+        Log.e("FAMILY_SYNC", "syncShoppingItem error: ${e.message}")
+    }
+}
