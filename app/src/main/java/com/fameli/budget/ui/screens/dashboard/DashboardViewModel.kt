@@ -7,6 +7,7 @@ import com.fameli.budget.data.local.entity.TransactionEntity
 import com.fameli.budget.data.model.MonthlyBalance
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
@@ -19,4 +20,8 @@ class DashboardViewModel @Inject constructor(private val dao: TransactionDao) : 
 
     val balance: StateFlow<MonthlyBalance> = dao.getMonthlyBalance(start, end).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MonthlyBalance(0.0, 0.0))
     val transactions: StateFlow<List<TransactionEntity>> = dao.getBetween(start, end).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun deleteTransaction(txn: TransactionEntity) = viewModelScope.launch {
+        dao.softDelete(txn.localId)
+    }
 }
