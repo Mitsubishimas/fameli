@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -19,36 +18,27 @@ import java.io.File
 import java.net.URL
 
 object UpdateChecker {
-    private const val CURRENT_VERSION = "v1.2.5"
+    private const val CURRENT_VERSION = "v1.2.6"
     private const val REPO = "Mitsubishimas/fameli"
 
     fun check(context: Context, showDialog: Boolean = false) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val prefs: SharedPreferences = context.getSharedPreferences("fameli_update", Context.MODE_PRIVATE)
-                val lastCheck: Long = prefs.getLong("last_update_check", 0)
-                val weekInMillis: Long = 7 * 24 * 60 * 60 * 1000L
+                // Читаем версию из version.txt (всегда работает)
+                val latestVersion: String = URL("https://raw.githubusercontent.com/$REPO/main/version.txt")
+                    .readText()
+                    .trim()
+                    .removePrefix("v")
 
-                if (!showDialog && (System.currentTimeMillis() - lastCheck) < weekInMillis) {
-                    return@launch
-                }
-
-                val json: String = URL("https://api.github.com/repos/$REPO/releases/latest").readText()
-                val tagStart: Int = json.indexOf("\"tag_name\":\"") + 12
-                val tagEnd: Int = json.indexOf("\"", tagStart)
-                val serverVersion: String = json.substring(tagStart, tagEnd)
-                
-                prefs.edit().putLong("last_update_check", System.currentTimeMillis()).apply()
-
-                if (isNewVersion(CURRENT_VERSION, serverVersion)) {
-                    withContext(Dispatchers.Main) {
-                        showUpdateDialog(context, serverVersion)
-                    }
-                } else {
-                    if (showDialog) {
+                if (latestVersion.isNotEmpty() && latestVersion != CURRENT_VERSION.removePrefix("v")) {
+                    if (isNewVersion(CURRENT_VERSION, "v$latestVersion")) {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "У вас последняя версия ($CURRENT_VERSION)", Toast.LENGTH_SHORT).show()
+                            showUpdateDialog(context, latestVersion)
                         }
+                    }
+                } else if (showDialog) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "У вас последняя версия ($CURRENT_VERSION)", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
@@ -63,22 +53,20 @@ object UpdateChecker {
 
     private fun isNewVersion(current: String, server: String): Boolean {
         return try {
-            val cur = current.replace("v", "").split(".").map { it.toInt() }
-            val srv = server.replace("v", "").split(".").map { it.toInt() }
+            val cur = current.removePrefix("v").split(".").map { it.toInt() }
+            val srv = server.removePrefix("v").split(".").map { it.toInt() }
             for (i in 0 until minOf(cur.size, srv.size)) {
                 if (srv[i] > cur[i]) return true
                 if (srv[i] < cur[i]) return false
             }
             srv.size > cur.size
-        } catch (e: Exception) {
-            false
-        }
+        } catch (e: Exception) { false }
     }
 
     private fun showUpdateDialog(context: Context, version: String) {
         AlertDialog.Builder(context)
             .setTitle("Доступно обновление")
-            .setMessage("Новая версия: $version\nТекущая: $CURRENT_VERSION\n\nСкачать и установить?")
+            .setMessage("Новая версия: $version\nТекущая: $CURRENT_VERSION")
             .setPositiveButton("Скачать") { _, _ -> downloadAndInstall(context) }
             .setNegativeButton("Позже", null)
             .setCancelable(false)
@@ -91,9 +79,7 @@ object UpdateChecker {
             if (file.exists()) file.delete()
 
             val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val request = DownloadManager.Request(
-                Uri.parse("https://github.com/$REPO/releases/latest/download/app-debug.apk")
-            )
+            val request = DownloadManager.Request(Uri.parse("https://github.com/$REPO/releases/latest/download/app-debug.apk"))
             request.setTitle("Fameli")
             request.setDescription("Скачивание обновления...")
             request.setDestinationUri(Uri.fromFile(file))
@@ -116,7 +102,6 @@ object UpdateChecker {
             } else {
                 context.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
             }
-
             Toast.makeText(context, "Загрузка началась...", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(context, "Ошибка загрузки", Toast.LENGTH_SHORT).show()
@@ -130,13 +115,11 @@ object UpdateChecker {
             } else {
                 Uri.fromFile(file)
             }
-
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "application/vnd.android.package-archive")
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-
             context.startActivity(intent)
         } catch (e: Exception) {
             Toast.makeText(context, "Ошибка установки", Toast.LENGTH_SHORT).show()
