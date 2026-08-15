@@ -18,7 +18,7 @@ import java.io.File
 import java.net.URL
 
 object UpdateChecker {
-    private const val CURRENT_VERSION = "v1.2.6"
+    private const val CURRENT_VERSION = "v1.2.7"
     private const val REPO = "Mitsubishimas/fameli"
 
     fun check(context: Context, showDialog: Boolean = false) {
