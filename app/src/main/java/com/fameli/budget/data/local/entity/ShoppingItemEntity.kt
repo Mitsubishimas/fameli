@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class ShoppingItemEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val cloudId: String = "",
-    val name: String,
+    val name: String = "",
     val quantity: Int = 1,
     val isPurchased: Boolean = false,
     val purchasedByUid: String = "",
@@ -17,4 +17,6 @@ data class ShoppingItemEntity(
     val createdByName: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val isDeleted: Boolean = false
-)
+) {
+    constructor() : this(id = 0, cloudId = "", name = "")
+}
