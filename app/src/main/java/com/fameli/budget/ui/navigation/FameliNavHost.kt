@@ -10,6 +10,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.*
 import androidx.navigation.compose.*
 import com.fameli.budget.ui.screens.auth.*
+import com.fameli.budget.ui.screens.categories.*
 import com.fameli.budget.ui.screens.dashboard.*
 import com.fameli.budget.ui.screens.goals.*
 import com.fameli.budget.ui.screens.planner.*
@@ -26,6 +27,7 @@ sealed class Screen(val route: String) {
     object Goals : Screen("goals")
     object Shopping : Screen("shopping")
     object Planner : Screen("planner")
+    object Categories : Screen("categories")
     object Settings : Screen("settings")
 }
 
@@ -43,6 +45,7 @@ fun FameliNavHost() {
         composable(Screen.Goals.route) { MainScaffold(navController) }
         composable(Screen.Shopping.route) { MainScaffold(navController) }
         composable(Screen.Planner.route) { MainScaffold(navController) }
+        composable(Screen.Categories.route) { MainScaffold(navController) }
         composable(Screen.Settings.route) { MainScaffold(navController) }
     }
 }
@@ -61,51 +64,17 @@ fun MainScaffold(navController: NavHostController) {
     Scaffold(
         bottomBar = {
             NavigationBar {
-                NavigationBarItem(
-                    selected = currentRoute == Screen.Statistics.route,
-                    onClick = { navController.navigate(Screen.Statistics.route) { popUpTo(0); launchSingleTop = true } },
-                    icon = { Icon(Icons.Filled.PieChart, "Аналитика") },
-                    label = { Text("Аналитика") }
-                )
-                NavigationBarItem(
-                    selected = currentRoute == Screen.Dashboard.route,
-                    onClick = { navController.navigate(Screen.Dashboard.route) { popUpTo(0); launchSingleTop = true } },
-                    icon = { Icon(Icons.Filled.List, "Транзакции") },
-                    label = { Text("Транзакции") }
-                )
-                NavigationBarItem(
-                    selected = currentRoute == Screen.Goals.route,
-                    onClick = { navController.navigate(Screen.Goals.route) { popUpTo(0); launchSingleTop = true } },
-                    icon = { Icon(Icons.Filled.Flag, "Цели") },
-                    label = { Text("Цели") }
-                )
-                NavigationBarItem(
-                    selected = currentRoute == Screen.Shopping.route,
-                    onClick = { navController.navigate(Screen.Shopping.route) { popUpTo(0); launchSingleTop = true } },
-                    icon = { Icon(Icons.Filled.ShoppingCart, "Покупки") },
-                    label = { Text("Покупки") }
-                )
-                NavigationBarItem(
-                    selected = currentRoute == Screen.Planner.route,
-                    onClick = { navController.navigate(Screen.Planner.route) { popUpTo(0); launchSingleTop = true } },
-                    icon = { Icon(Icons.Filled.CalendarMonth, "Планы") },
-                    label = { Text("Планы") }
-                )
-                NavigationBarItem(
-                    selected = currentRoute == Screen.Settings.route,
-                    onClick = { navController.navigate(Screen.Settings.route) { popUpTo(0); launchSingleTop = true } },
-                    icon = { Icon(Icons.Filled.Settings, "Ещё") },
-                    label = { Text("Ещё") }
-                )
+                NavigationBarItem(selected = currentRoute == Screen.Statistics.route, onClick = { navController.navigate(Screen.Statistics.route) { popUpTo(0); launchSingleTop = true } }, icon = { Icon(Icons.Filled.PieChart, "Аналитика") }, label = { Text("Аналитика") })
+                NavigationBarItem(selected = currentRoute == Screen.Dashboard.route, onClick = { navController.navigate(Screen.Dashboard.route) { popUpTo(0); launchSingleTop = true } }, icon = { Icon(Icons.Filled.List, "Транзакции") }, label = { Text("Транзакции") })
+                NavigationBarItem(selected = currentRoute == Screen.Goals.route, onClick = { navController.navigate(Screen.Goals.route) { popUpTo(0); launchSingleTop = true } }, icon = { Icon(Icons.Filled.Flag, "Цели") }, label = { Text("Цели") })
+                NavigationBarItem(selected = currentRoute == Screen.Shopping.route, onClick = { navController.navigate(Screen.Shopping.route) { popUpTo(0); launchSingleTop = true } }, icon = { Icon(Icons.Filled.ShoppingCart, "Покупки") }, label = { Text("Покупки") })
+                NavigationBarItem(selected = currentRoute == Screen.Planner.route, onClick = { navController.navigate(Screen.Planner.route) { popUpTo(0); launchSingleTop = true } }, icon = { Icon(Icons.Filled.CalendarMonth, "Планы") }, label = { Text("Планы") })
+                NavigationBarItem(selected = currentRoute == Screen.Settings.route, onClick = { navController.navigate(Screen.Settings.route) { popUpTo(0); launchSingleTop = true } }, icon = { Icon(Icons.Filled.Settings, "Ещё") }, label = { Text("Ещё") })
             }
         },
         floatingActionButton = {
             when (currentRoute) {
-                Screen.Dashboard.route -> {
-                    FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) {
-                        Icon(Icons.Filled.Add, "Добавить транзакцию")
-                    }
-                }
+                Screen.Dashboard.route -> FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) { Icon(Icons.Filled.Add, "Транзакция") }
                 Screen.Goals.route -> FloatingActionButton(onClick = { showGoalDialog = true }) { Icon(Icons.Filled.Add, "Цель") }
                 Screen.Shopping.route -> FloatingActionButton(onClick = { showShoppingDialog = true }) { Icon(Icons.Filled.Add, "Покупка") }
                 Screen.Planner.route -> FloatingActionButton(onClick = { showTaskDialog = true }) { Icon(Icons.Filled.Add, "Задача") }
@@ -121,7 +90,8 @@ fun MainScaffold(navController: NavHostController) {
                 Screen.Goals.route -> GoalScreen(goalVM, showGoalDialog) { showGoalDialog = false }
                 Screen.Shopping.route -> ShoppingScreen(shoppingVM, showShoppingDialog) { showShoppingDialog = false }
                 Screen.Planner.route -> PlannerScreen(plannerVM, showTaskDialog) { showTaskDialog = false }
-                Screen.Settings.route -> SettingsScreen()
+                Screen.Categories.route -> CategoriesScreen()
+                Screen.Settings.route -> SettingsScreen(onNavigateToCategories = { navController.navigate(Screen.Categories.route) })
             }
         }
     }

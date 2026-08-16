@@ -20,7 +20,8 @@ import com.fameli.budget.ui.screens.family.FamilyViewModel
 @Composable
 fun SettingsScreen(
     settingsVM: SettingsViewModel = hiltViewModel(),
-    familyVM: FamilyViewModel = hiltViewModel()
+    familyVM: FamilyViewModel = hiltViewModel(),
+    onNavigateToCategories: (() -> Unit)? = null
 ) {
     val familyId by familyVM.familyId.collectAsState()
     val message by familyVM.message.collectAsState()
@@ -30,6 +31,19 @@ fun SettingsScreen(
 
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         
+        // Категории
+        item { Text("Настройки", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Button(onClick = { onNavigateToCategories?.invoke() }, modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                    Icon(Icons.Filled.Category, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Категории")
+                }
+            }
+        }
+
+        // Семья
         item { Text("Семья", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
             Card(Modifier.fillMaxWidth()) {
@@ -48,43 +62,27 @@ fun SettingsScreen(
                             Toast.makeText(context, "Код скопирован", Toast.LENGTH_SHORT).show()
                         }) { Icon(Icons.Filled.ContentCopy, "Копировать") }
                         
-                        Spacer(Modifier.height(8.dp))
-                        
-                        // Кнопка принудительной синхронизации
-                        Button(
-                            onClick = { familyVM.forceSync() },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = !isSyncing
-                        ) {
-                            if (isSyncing) {
-                                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Синхронизация...")
-                            } else {
-                                Icon(Icons.Filled.Sync, null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Синхронизировать сейчас")
-                            }
+                        Button(onClick = { familyVM.forceSync() }, modifier = Modifier.fillMaxWidth(), enabled = !isSyncing) {
+                            if (isSyncing) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(8.dp)) }
+                            Text("Синхронизировать")
                         }
-                        
                         message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                         
-                        Spacer(Modifier.height(8.dp))
                         OutlinedButton(onClick = { familyVM.leaveFamily() }, modifier = Modifier.fillMaxWidth()) { Text("Покинуть семью") }
                     }
                 }
             }
         }
 
+        // Аккаунт
         item { Text("Аккаунт", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
             Card(Modifier.fillMaxWidth()) {
-                Button(onClick = { settingsVM.logout() }, modifier = Modifier.padding(16.dp).fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-                    Text("Выйти")
-                }
+                Button(onClick = { settingsVM.logout() }, modifier = Modifier.padding(16.dp).fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Выйти") }
             }
         }
 
+        // Обновления
         item { Text("Обновления", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
             Card(Modifier.fillMaxWidth()) {

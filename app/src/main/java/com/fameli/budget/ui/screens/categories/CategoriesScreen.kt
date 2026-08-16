@@ -22,12 +22,22 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = hiltViewModel()) {
     val newIcon by viewModel.newIcon.collectAsState()
     val newType by viewModel.newType.collectAsState()
 
-    LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Text("Расходы", style = MaterialTheme.typography.titleMedium) }
-        items(expenses) { c -> CategoryItem(c, viewModel) }
-        item { Text("Доходы", style = MaterialTheme.typography.titleMedium) }
-        items(incomes) { c -> CategoryItem(c, viewModel) }
-        item { Spacer(Modifier.height(72.dp)) }
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            item { Text("Расходы", style = MaterialTheme.typography.titleMedium) }
+            items(expenses) { c -> CategoryItem(c, viewModel) }
+            item { Text("Доходы", style = MaterialTheme.typography.titleMedium) }
+            items(incomes) { c -> CategoryItem(c, viewModel) }
+            item { Spacer(Modifier.height(72.dp)) }
+        }
+
+        // КНОПКА ДОБАВЛЕНИЯ
+        FloatingActionButton(
+            onClick = { viewModel.showAdd() },
+            modifier = Modifier.align(androidx.compose.ui.Alignment.BottomEnd).padding(16.dp)
+        ) {
+            Icon(Icons.Filled.Add, "Добавить категорию")
+        }
     }
 
     if (showAdd) {
