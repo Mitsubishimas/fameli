@@ -49,7 +49,7 @@ public final class TransactionDao_Impl implements TransactionDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR IGNORE INTO `transactions` (`localId`,`cloudId`,`categoryId`,`amount`,`currency`,`date`,`note`,`isDeleted`,`lastModified`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?)";
+        return "INSERT OR IGNORE INTO `transactions` (`localId`,`cloudId`,`type`,`amount`,`categoryId`,`categoryName`,`note`,`date`,`isDeleted`,`lastModified`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -57,25 +57,22 @@ public final class TransactionDao_Impl implements TransactionDao {
           @NonNull final TransactionEntity entity) {
         statement.bindLong(1, entity.getLocalId());
         statement.bindString(2, entity.getCloudId());
-        statement.bindLong(3, entity.getCategoryId());
+        statement.bindString(3, entity.getType());
         statement.bindDouble(4, entity.getAmount());
-        statement.bindString(5, entity.getCurrency());
-        statement.bindLong(6, entity.getDate());
-        if (entity.getNote() == null) {
-          statement.bindNull(7);
-        } else {
-          statement.bindString(7, entity.getNote());
-        }
+        statement.bindLong(5, entity.getCategoryId());
+        statement.bindString(6, entity.getCategoryName());
+        statement.bindString(7, entity.getNote());
+        statement.bindLong(8, entity.getDate());
         final int _tmp = entity.isDeleted() ? 1 : 0;
-        statement.bindLong(8, _tmp);
-        statement.bindLong(9, entity.getLastModified());
+        statement.bindLong(9, _tmp);
+        statement.bindLong(10, entity.getLastModified());
       }
     };
     this.__updateAdapterOfTransactionEntity = new EntityDeletionOrUpdateAdapter<TransactionEntity>(__db) {
       @Override
       @NonNull
       protected String createQuery() {
-        return "UPDATE OR ABORT `transactions` SET `localId` = ?,`cloudId` = ?,`categoryId` = ?,`amount` = ?,`currency` = ?,`date` = ?,`note` = ?,`isDeleted` = ?,`lastModified` = ? WHERE `localId` = ?";
+        return "UPDATE OR ABORT `transactions` SET `localId` = ?,`cloudId` = ?,`type` = ?,`amount` = ?,`categoryId` = ?,`categoryName` = ?,`note` = ?,`date` = ?,`isDeleted` = ?,`lastModified` = ? WHERE `localId` = ?";
       }
 
       @Override
@@ -83,19 +80,16 @@ public final class TransactionDao_Impl implements TransactionDao {
           @NonNull final TransactionEntity entity) {
         statement.bindLong(1, entity.getLocalId());
         statement.bindString(2, entity.getCloudId());
-        statement.bindLong(3, entity.getCategoryId());
+        statement.bindString(3, entity.getType());
         statement.bindDouble(4, entity.getAmount());
-        statement.bindString(5, entity.getCurrency());
-        statement.bindLong(6, entity.getDate());
-        if (entity.getNote() == null) {
-          statement.bindNull(7);
-        } else {
-          statement.bindString(7, entity.getNote());
-        }
+        statement.bindLong(5, entity.getCategoryId());
+        statement.bindString(6, entity.getCategoryName());
+        statement.bindString(7, entity.getNote());
+        statement.bindLong(8, entity.getDate());
         final int _tmp = entity.isDeleted() ? 1 : 0;
-        statement.bindLong(8, _tmp);
-        statement.bindLong(9, entity.getLastModified());
-        statement.bindLong(10, entity.getLocalId());
+        statement.bindLong(9, _tmp);
+        statement.bindLong(10, entity.getLastModified());
+        statement.bindLong(11, entity.getLocalId());
       }
     };
     this.__preparedStmtOfSoftDelete = new SharedSQLiteStatement(__db) {
@@ -183,11 +177,12 @@ public final class TransactionDao_Impl implements TransactionDao {
         try {
           final int _cursorIndexOfLocalId = CursorUtil.getColumnIndexOrThrow(_cursor, "localId");
           final int _cursorIndexOfCloudId = CursorUtil.getColumnIndexOrThrow(_cursor, "cloudId");
-          final int _cursorIndexOfCategoryId = CursorUtil.getColumnIndexOrThrow(_cursor, "categoryId");
+          final int _cursorIndexOfType = CursorUtil.getColumnIndexOrThrow(_cursor, "type");
           final int _cursorIndexOfAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "amount");
-          final int _cursorIndexOfCurrency = CursorUtil.getColumnIndexOrThrow(_cursor, "currency");
-          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfCategoryId = CursorUtil.getColumnIndexOrThrow(_cursor, "categoryId");
+          final int _cursorIndexOfCategoryName = CursorUtil.getColumnIndexOrThrow(_cursor, "categoryName");
           final int _cursorIndexOfNote = CursorUtil.getColumnIndexOrThrow(_cursor, "note");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
           final int _cursorIndexOfLastModified = CursorUtil.getColumnIndexOrThrow(_cursor, "lastModified");
           final List<TransactionEntity> _result = new ArrayList<TransactionEntity>(_cursor.getCount());
@@ -197,27 +192,25 @@ public final class TransactionDao_Impl implements TransactionDao {
             _tmpLocalId = _cursor.getLong(_cursorIndexOfLocalId);
             final String _tmpCloudId;
             _tmpCloudId = _cursor.getString(_cursorIndexOfCloudId);
-            final long _tmpCategoryId;
-            _tmpCategoryId = _cursor.getLong(_cursorIndexOfCategoryId);
+            final String _tmpType;
+            _tmpType = _cursor.getString(_cursorIndexOfType);
             final double _tmpAmount;
             _tmpAmount = _cursor.getDouble(_cursorIndexOfAmount);
-            final String _tmpCurrency;
-            _tmpCurrency = _cursor.getString(_cursorIndexOfCurrency);
+            final long _tmpCategoryId;
+            _tmpCategoryId = _cursor.getLong(_cursorIndexOfCategoryId);
+            final String _tmpCategoryName;
+            _tmpCategoryName = _cursor.getString(_cursorIndexOfCategoryName);
+            final String _tmpNote;
+            _tmpNote = _cursor.getString(_cursorIndexOfNote);
             final long _tmpDate;
             _tmpDate = _cursor.getLong(_cursorIndexOfDate);
-            final String _tmpNote;
-            if (_cursor.isNull(_cursorIndexOfNote)) {
-              _tmpNote = null;
-            } else {
-              _tmpNote = _cursor.getString(_cursorIndexOfNote);
-            }
             final boolean _tmpIsDeleted;
             final int _tmp;
             _tmp = _cursor.getInt(_cursorIndexOfIsDeleted);
             _tmpIsDeleted = _tmp != 0;
             final long _tmpLastModified;
             _tmpLastModified = _cursor.getLong(_cursorIndexOfLastModified);
-            _item = new TransactionEntity(_tmpLocalId,_tmpCloudId,_tmpCategoryId,_tmpAmount,_tmpCurrency,_tmpDate,_tmpNote,_tmpIsDeleted,_tmpLastModified);
+            _item = new TransactionEntity(_tmpLocalId,_tmpCloudId,_tmpType,_tmpAmount,_tmpCategoryId,_tmpCategoryName,_tmpNote,_tmpDate,_tmpIsDeleted,_tmpLastModified);
             _result.add(_item);
           }
           return _result;
@@ -249,11 +242,12 @@ public final class TransactionDao_Impl implements TransactionDao {
         try {
           final int _cursorIndexOfLocalId = CursorUtil.getColumnIndexOrThrow(_cursor, "localId");
           final int _cursorIndexOfCloudId = CursorUtil.getColumnIndexOrThrow(_cursor, "cloudId");
-          final int _cursorIndexOfCategoryId = CursorUtil.getColumnIndexOrThrow(_cursor, "categoryId");
+          final int _cursorIndexOfType = CursorUtil.getColumnIndexOrThrow(_cursor, "type");
           final int _cursorIndexOfAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "amount");
-          final int _cursorIndexOfCurrency = CursorUtil.getColumnIndexOrThrow(_cursor, "currency");
-          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfCategoryId = CursorUtil.getColumnIndexOrThrow(_cursor, "categoryId");
+          final int _cursorIndexOfCategoryName = CursorUtil.getColumnIndexOrThrow(_cursor, "categoryName");
           final int _cursorIndexOfNote = CursorUtil.getColumnIndexOrThrow(_cursor, "note");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
           final int _cursorIndexOfLastModified = CursorUtil.getColumnIndexOrThrow(_cursor, "lastModified");
           final List<TransactionEntity> _result = new ArrayList<TransactionEntity>(_cursor.getCount());
@@ -263,27 +257,25 @@ public final class TransactionDao_Impl implements TransactionDao {
             _tmpLocalId = _cursor.getLong(_cursorIndexOfLocalId);
             final String _tmpCloudId;
             _tmpCloudId = _cursor.getString(_cursorIndexOfCloudId);
-            final long _tmpCategoryId;
-            _tmpCategoryId = _cursor.getLong(_cursorIndexOfCategoryId);
+            final String _tmpType;
+            _tmpType = _cursor.getString(_cursorIndexOfType);
             final double _tmpAmount;
             _tmpAmount = _cursor.getDouble(_cursorIndexOfAmount);
-            final String _tmpCurrency;
-            _tmpCurrency = _cursor.getString(_cursorIndexOfCurrency);
+            final long _tmpCategoryId;
+            _tmpCategoryId = _cursor.getLong(_cursorIndexOfCategoryId);
+            final String _tmpCategoryName;
+            _tmpCategoryName = _cursor.getString(_cursorIndexOfCategoryName);
+            final String _tmpNote;
+            _tmpNote = _cursor.getString(_cursorIndexOfNote);
             final long _tmpDate;
             _tmpDate = _cursor.getLong(_cursorIndexOfDate);
-            final String _tmpNote;
-            if (_cursor.isNull(_cursorIndexOfNote)) {
-              _tmpNote = null;
-            } else {
-              _tmpNote = _cursor.getString(_cursorIndexOfNote);
-            }
             final boolean _tmpIsDeleted;
             final int _tmp;
             _tmp = _cursor.getInt(_cursorIndexOfIsDeleted);
             _tmpIsDeleted = _tmp != 0;
             final long _tmpLastModified;
             _tmpLastModified = _cursor.getLong(_cursorIndexOfLastModified);
-            _item = new TransactionEntity(_tmpLocalId,_tmpCloudId,_tmpCategoryId,_tmpAmount,_tmpCurrency,_tmpDate,_tmpNote,_tmpIsDeleted,_tmpLastModified);
+            _item = new TransactionEntity(_tmpLocalId,_tmpCloudId,_tmpType,_tmpAmount,_tmpCategoryId,_tmpCategoryName,_tmpNote,_tmpDate,_tmpIsDeleted,_tmpLastModified);
             _result.add(_item);
           }
           return _result;
@@ -414,11 +406,12 @@ public final class TransactionDao_Impl implements TransactionDao {
         try {
           final int _cursorIndexOfLocalId = CursorUtil.getColumnIndexOrThrow(_cursor, "localId");
           final int _cursorIndexOfCloudId = CursorUtil.getColumnIndexOrThrow(_cursor, "cloudId");
-          final int _cursorIndexOfCategoryId = CursorUtil.getColumnIndexOrThrow(_cursor, "categoryId");
+          final int _cursorIndexOfType = CursorUtil.getColumnIndexOrThrow(_cursor, "type");
           final int _cursorIndexOfAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "amount");
-          final int _cursorIndexOfCurrency = CursorUtil.getColumnIndexOrThrow(_cursor, "currency");
-          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfCategoryId = CursorUtil.getColumnIndexOrThrow(_cursor, "categoryId");
+          final int _cursorIndexOfCategoryName = CursorUtil.getColumnIndexOrThrow(_cursor, "categoryName");
           final int _cursorIndexOfNote = CursorUtil.getColumnIndexOrThrow(_cursor, "note");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
           final int _cursorIndexOfLastModified = CursorUtil.getColumnIndexOrThrow(_cursor, "lastModified");
           final TransactionEntity _result;
@@ -427,27 +420,25 @@ public final class TransactionDao_Impl implements TransactionDao {
             _tmpLocalId = _cursor.getLong(_cursorIndexOfLocalId);
             final String _tmpCloudId;
             _tmpCloudId = _cursor.getString(_cursorIndexOfCloudId);
-            final long _tmpCategoryId;
-            _tmpCategoryId = _cursor.getLong(_cursorIndexOfCategoryId);
+            final String _tmpType;
+            _tmpType = _cursor.getString(_cursorIndexOfType);
             final double _tmpAmount;
             _tmpAmount = _cursor.getDouble(_cursorIndexOfAmount);
-            final String _tmpCurrency;
-            _tmpCurrency = _cursor.getString(_cursorIndexOfCurrency);
+            final long _tmpCategoryId;
+            _tmpCategoryId = _cursor.getLong(_cursorIndexOfCategoryId);
+            final String _tmpCategoryName;
+            _tmpCategoryName = _cursor.getString(_cursorIndexOfCategoryName);
+            final String _tmpNote;
+            _tmpNote = _cursor.getString(_cursorIndexOfNote);
             final long _tmpDate;
             _tmpDate = _cursor.getLong(_cursorIndexOfDate);
-            final String _tmpNote;
-            if (_cursor.isNull(_cursorIndexOfNote)) {
-              _tmpNote = null;
-            } else {
-              _tmpNote = _cursor.getString(_cursorIndexOfNote);
-            }
             final boolean _tmpIsDeleted;
             final int _tmp;
             _tmp = _cursor.getInt(_cursorIndexOfIsDeleted);
             _tmpIsDeleted = _tmp != 0;
             final long _tmpLastModified;
             _tmpLastModified = _cursor.getLong(_cursorIndexOfLastModified);
-            _result = new TransactionEntity(_tmpLocalId,_tmpCloudId,_tmpCategoryId,_tmpAmount,_tmpCurrency,_tmpDate,_tmpNote,_tmpIsDeleted,_tmpLastModified);
+            _result = new TransactionEntity(_tmpLocalId,_tmpCloudId,_tmpType,_tmpAmount,_tmpCategoryId,_tmpCategoryName,_tmpNote,_tmpDate,_tmpIsDeleted,_tmpLastModified);
           } else {
             _result = null;
           }

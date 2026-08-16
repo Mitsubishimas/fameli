@@ -19,7 +19,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object UpdateChecker {
-    private const val CURRENT_VERSION = "v1.5.7"
+    private const val CURRENT_VERSION = "v1.6.0"
     private const val REPO = "Mitsubishimas/fameli"
 
     fun check(context: Context, showDialog: Boolean = true) {
@@ -35,7 +35,7 @@ object UpdateChecker {
 
                 withContext(Dispatchers.Main) {
                     if (latestVersion.isNotEmpty() && latestVersion != CURRENT_VERSION.removePrefix("v")) {
-                        downloadAndInstall(appContext)
+                        downloadApk(appContext, latestVersion)
                     } else if (showDialog) {
                         Toast.makeText(appContext, "У вас последняя версия", Toast.LENGTH_SHORT).show()
                     }
@@ -48,10 +48,10 @@ object UpdateChecker {
         }
     }
 
-    private fun downloadAndInstall(context: Context) {
+    private fun downloadApk(context: Context, version: String) {
         // Проверяем разрешение на установку
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()) {
-            Toast.makeText(context, "Разрешите установку из неизвестных источников", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Разрешите установку", Toast.LENGTH_LONG).show()
             val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                 data = Uri.parse("package:${context.packageName}")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -64,12 +64,13 @@ object UpdateChecker {
             val file = File(context.externalCacheDir, "Fameli-Update.apk")
             if (file.exists()) file.delete()
 
+            // ПРЯМАЯ ССЫЛКА на файл в релизе
+            val downloadUrl = "https://github.com/$REPO/releases/download/v$version/Fameli_v$version.apk"
+
             val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val request = DownloadManager.Request(
-                Uri.parse("https://github.com/$REPO/releases/latest/download/Fameli_v${CURRENT_VERSION.removePrefix("v")}.apk")
-            )
+            val request = DownloadManager.Request(Uri.parse(downloadUrl))
             request.setTitle("Fameli")
-            request.setDescription("Скачивание обновления...")
+            request.setDescription("Скачивание v$version...")
             request.setDestinationUri(Uri.fromFile(file))
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
@@ -80,7 +81,11 @@ object UpdateChecker {
                     val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                     if (id == downloadId) {
                         ctx.unregisterReceiver(this)
-                        installApk(ctx, file)
+                        if (file.exists() && file.length() > 1000000) { // >1MB
+                            installApk(ctx, file)
+                        } else {
+                            Toast.makeText(ctx, "Файл повреждён", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
             }
@@ -104,7 +109,6 @@ object UpdateChecker {
             } else {
                 Uri.fromFile(file)
             }
-
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "application/vnd.android.package-archive")
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK

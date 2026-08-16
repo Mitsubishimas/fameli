@@ -38,24 +38,23 @@ class AddTransactionViewModel @Inject constructor(
     fun save() = viewModelScope.launch {
         val a = amount.value.toDoubleOrNull() ?: return@launch
         val c = selectedCategory.value ?: return@launch
-        val txn = TransactionEntity(cloudId = UUID.randomUUID().toString(), categoryId = c.id, amount = a, date = System.currentTimeMillis(), note = note.value.ifBlank { null })
+        val type = if (isExpense.value) "EXPENSE" else "INCOME"
+        
+        val txn = TransactionEntity(
+            cloudId = UUID.randomUUID().toString(),
+            type = type,
+            amount = a,
+            categoryId = c.id,
+            categoryName = c.name,
+            note = note.value,
+            date = System.currentTimeMillis()
+        )
         transactionDao.insert(txn)
         amount.value = ""; note.value = ""; selectedCategory.value = null
 
         val fid = familyManager.currentFamilyId
-        if (fid == null) {
-            syncMessage.value = "❌ Нет семьи! Создайте семью"
-            return@launch
-        }
-
-        syncMessage.value = "Отправка в облако..."
-        launch(Dispatchers.IO) {
-            try {
-                familyRepo.syncTransaction(txn)
-                syncMessage.value = "✅ Отправлено в облако"
-            } catch (e: Exception) {
-                syncMessage.value = "❌ Ошибка: ${e.message}"
-            }
+        if (fid != null) {
+            launch(Dispatchers.IO) { familyRepo.syncTransaction(txn) }
         }
     }
 }
