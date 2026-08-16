@@ -9,10 +9,10 @@ interface ShoppingDao {
     @Query("SELECT * FROM shopping_items WHERE isDeleted = 0 ORDER BY isPurchased ASC, createdAt DESC")
     fun getAll(): Flow<List<ShoppingItemEntity>>
 
-    @Query("SELECT * FROM shopping_items WHERE isPurchased = 0 AND isDeleted = 0 ORDER BY createdAt DESC")
-    fun getActive(): Flow<List<ShoppingItemEntity>>
+    @Query("SELECT * FROM shopping_items WHERE cloudId = :cloudId LIMIT 1")
+    suspend fun getByCloudId(cloudId: String): ShoppingItemEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(item: ShoppingItemEntity): Long
 
     @Update

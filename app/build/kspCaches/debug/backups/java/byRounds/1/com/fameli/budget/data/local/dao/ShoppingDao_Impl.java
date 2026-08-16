@@ -1,7 +1,9 @@
 package com.fameli.budget.data.local.dao;
 
 import android.database.Cursor;
+import android.os.CancellationSignal;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.CoroutinesRoom;
 import androidx.room.EntityDeletionOrUpdateAdapter;
 import androidx.room.EntityInsertionAdapter;
@@ -49,7 +51,7 @@ public final class ShoppingDao_Impl implements ShoppingDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `shopping_items` (`id`,`cloudId`,`name`,`quantity`,`isPurchased`,`purchasedByUid`,`purchasedByName`,`purchasedAt`,`createdByUid`,`createdByName`,`createdAt`,`isDeleted`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR IGNORE INTO `shopping_items` (`id`,`cloudId`,`name`,`quantity`,`isPurchased`,`purchasedByUid`,`purchasedByName`,`purchasedAt`,`createdByUid`,`createdByName`,`createdAt`,`isDeleted`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -314,13 +316,17 @@ public final class ShoppingDao_Impl implements ShoppingDao {
   }
 
   @Override
-  public Flow<List<ShoppingItemEntity>> getActive() {
-    final String _sql = "SELECT * FROM shopping_items WHERE isPurchased = 0 AND isDeleted = 0 ORDER BY createdAt DESC";
-    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
-    return CoroutinesRoom.createFlow(__db, false, new String[] {"shopping_items"}, new Callable<List<ShoppingItemEntity>>() {
+  public Object getByCloudId(final String cloudId,
+      final Continuation<? super ShoppingItemEntity> $completion) {
+    final String _sql = "SELECT * FROM shopping_items WHERE cloudId = ? LIMIT 1";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindString(_argIndex, cloudId);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<ShoppingItemEntity>() {
       @Override
-      @NonNull
-      public List<ShoppingItemEntity> call() throws Exception {
+      @Nullable
+      public ShoppingItemEntity call() throws Exception {
         final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
         try {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
@@ -335,9 +341,8 @@ public final class ShoppingDao_Impl implements ShoppingDao {
           final int _cursorIndexOfCreatedByName = CursorUtil.getColumnIndexOrThrow(_cursor, "createdByName");
           final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "createdAt");
           final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
-          final List<ShoppingItemEntity> _result = new ArrayList<ShoppingItemEntity>(_cursor.getCount());
-          while (_cursor.moveToNext()) {
-            final ShoppingItemEntity _item;
+          final ShoppingItemEntity _result;
+          if (_cursor.moveToFirst()) {
             final long _tmpId;
             _tmpId = _cursor.getLong(_cursorIndexOfId);
             final String _tmpCloudId;
@@ -366,20 +371,17 @@ public final class ShoppingDao_Impl implements ShoppingDao {
             final int _tmp_1;
             _tmp_1 = _cursor.getInt(_cursorIndexOfIsDeleted);
             _tmpIsDeleted = _tmp_1 != 0;
-            _item = new ShoppingItemEntity(_tmpId,_tmpCloudId,_tmpName,_tmpQuantity,_tmpIsPurchased,_tmpPurchasedByUid,_tmpPurchasedByName,_tmpPurchasedAt,_tmpCreatedByUid,_tmpCreatedByName,_tmpCreatedAt,_tmpIsDeleted);
-            _result.add(_item);
+            _result = new ShoppingItemEntity(_tmpId,_tmpCloudId,_tmpName,_tmpQuantity,_tmpIsPurchased,_tmpPurchasedByUid,_tmpPurchasedByName,_tmpPurchasedAt,_tmpCreatedByUid,_tmpCreatedByName,_tmpCreatedAt,_tmpIsDeleted);
+          } else {
+            _result = null;
           }
           return _result;
         } finally {
           _cursor.close();
+          _statement.release();
         }
       }
-
-      @Override
-      protected void finalize() {
-        _statement.release();
-      }
-    });
+    }, $completion);
   }
 
   @NonNull

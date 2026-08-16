@@ -1,7 +1,9 @@
 package com.fameli.budget.data.local.dao;
 
 import android.database.Cursor;
+import android.os.CancellationSignal;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.CoroutinesRoom;
 import androidx.room.EntityDeletionOrUpdateAdapter;
 import androidx.room.EntityInsertionAdapter;
@@ -47,7 +49,7 @@ public final class TaskDao_Impl implements TaskDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `tasks` (`id`,`cloudId`,`title`,`description`,`date`,`time`,`createdBy`,`createdByUid`,`isCompleted`,`isDeleted`,`lastModified`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR IGNORE INTO `tasks` (`id`,`cloudId`,`title`,`description`,`date`,`time`,`createdBy`,`createdByUid`,`isCompleted`,`isDeleted`,`lastModified`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -339,17 +341,17 @@ public final class TaskDao_Impl implements TaskDao {
   }
 
   @Override
-  public Flow<List<TaskEntity>> getBetween(final long start, final long end) {
-    final String _sql = "SELECT * FROM tasks WHERE date BETWEEN ? AND ? AND isDeleted = 0 ORDER BY date ASC";
-    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 2);
+  public Object getByCloudId(final String cloudId,
+      final Continuation<? super TaskEntity> $completion) {
+    final String _sql = "SELECT * FROM tasks WHERE cloudId = ? LIMIT 1";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
     int _argIndex = 1;
-    _statement.bindLong(_argIndex, start);
-    _argIndex = 2;
-    _statement.bindLong(_argIndex, end);
-    return CoroutinesRoom.createFlow(__db, false, new String[] {"tasks"}, new Callable<List<TaskEntity>>() {
+    _statement.bindString(_argIndex, cloudId);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<TaskEntity>() {
       @Override
-      @NonNull
-      public List<TaskEntity> call() throws Exception {
+      @Nullable
+      public TaskEntity call() throws Exception {
         final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
         try {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
@@ -363,9 +365,8 @@ public final class TaskDao_Impl implements TaskDao {
           final int _cursorIndexOfIsCompleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isCompleted");
           final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
           final int _cursorIndexOfLastModified = CursorUtil.getColumnIndexOrThrow(_cursor, "lastModified");
-          final List<TaskEntity> _result = new ArrayList<TaskEntity>(_cursor.getCount());
-          while (_cursor.moveToNext()) {
-            final TaskEntity _item;
+          final TaskEntity _result;
+          if (_cursor.moveToFirst()) {
             final long _tmpId;
             _tmpId = _cursor.getLong(_cursorIndexOfId);
             final String _tmpCloudId;
@@ -392,20 +393,17 @@ public final class TaskDao_Impl implements TaskDao {
             _tmpIsDeleted = _tmp_1 != 0;
             final long _tmpLastModified;
             _tmpLastModified = _cursor.getLong(_cursorIndexOfLastModified);
-            _item = new TaskEntity(_tmpId,_tmpCloudId,_tmpTitle,_tmpDescription,_tmpDate,_tmpTime,_tmpCreatedBy,_tmpCreatedByUid,_tmpIsCompleted,_tmpIsDeleted,_tmpLastModified);
-            _result.add(_item);
+            _result = new TaskEntity(_tmpId,_tmpCloudId,_tmpTitle,_tmpDescription,_tmpDate,_tmpTime,_tmpCreatedBy,_tmpCreatedByUid,_tmpIsCompleted,_tmpIsDeleted,_tmpLastModified);
+          } else {
+            _result = null;
           }
           return _result;
         } finally {
           _cursor.close();
+          _statement.release();
         }
       }
-
-      @Override
-      protected void finalize() {
-        _statement.release();
-      }
-    });
+    }, $completion);
   }
 
   @NonNull

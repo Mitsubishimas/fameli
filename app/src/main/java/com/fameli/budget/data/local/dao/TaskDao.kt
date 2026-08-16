@@ -12,10 +12,10 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE date >= :startOfDay AND date < :endOfDay AND isDeleted = 0 ORDER BY time ASC")
     fun getForDate(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>>
 
-    @Query("SELECT * FROM tasks WHERE date BETWEEN :start AND :end AND isDeleted = 0 ORDER BY date ASC")
-    fun getBetween(start: Long, end: Long): Flow<List<TaskEntity>>
+    @Query("SELECT * FROM tasks WHERE cloudId = :cloudId LIMIT 1")
+    suspend fun getByCloudId(cloudId: String): TaskEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(task: TaskEntity): Long
 
     @Update

@@ -30,12 +30,12 @@ interface TransactionDao {
     """)
     fun getMonthlyBalance(start: Long, end: Long): Flow<MonthlyBalance>
 
-    // Проверка на дубликат по cloudId
+    // Проверка по cloudId
     @Query("SELECT * FROM transactions WHERE cloudId = :cloudId LIMIT 1")
     suspend fun getByCloudId(cloudId: String): TransactionEntity?
 
-    // Вставка без дублирования
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // Вставка только если нет
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(transaction: TransactionEntity): Long
 
     // Обновление
@@ -45,16 +45,4 @@ interface TransactionDao {
     // Мягкое удаление
     @Query("UPDATE transactions SET isDeleted = 1 WHERE localId = :id")
     suspend fun softDelete(id: Long)
-
-    // Полное удаление
-    @Query("DELETE FROM transactions WHERE localId = :id")
-    suspend fun hardDelete(id: Long)
-
-    // Проверка на дубликат по всем полям
-    @Query("""
-        SELECT * FROM transactions 
-        WHERE categoryId = :categoryId AND amount = :amount AND date = :date AND isDeleted = 0
-        LIMIT 1
-    """)
-    suspend fun findDuplicate(categoryId: Long, amount: Double, date: Long): TransactionEntity?
 }
