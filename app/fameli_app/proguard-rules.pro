@@ -1,4 +1,0 @@
--keep class com.google.firebase.** { *; }
--dontwarn com.google.firebase.**
--keep class io.ktor.** { *; }
--keepattributes *Annotation*
