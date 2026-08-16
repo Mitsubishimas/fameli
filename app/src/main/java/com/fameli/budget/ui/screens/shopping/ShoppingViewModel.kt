@@ -7,6 +7,7 @@ import com.fameli.budget.data.local.entity.ShoppingItemEntity
 import com.fameli.budget.data.repository.FamilySyncRepository
 import com.fameli.budget.firebase.FirebaseAuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -19,9 +20,7 @@ class ShoppingViewModel @Inject constructor(
     private val familyRepo: FamilySyncRepository
 ) : ViewModel() {
 
-    val items: StateFlow<List<ShoppingItemEntity>> = shoppingDao.getAll()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
+    val items: StateFlow<List<ShoppingItemEntity>> = shoppingDao.getAll().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val showAddDialog = MutableStateFlow(false)
     val newItemName = MutableStateFlow("")
 
@@ -33,20 +32,33 @@ class ShoppingViewModel @Inject constructor(
         if (name.isBlank()) return@launch
         val item = ShoppingItemEntity(cloudId = UUID.randomUUID().toString(), name = name, createdByUid = authRepository.getUserId() ?: "", createdByName = authRepository.getUserName())
         shoppingDao.insert(item)
-        val families = familyRepo.getMyFamilies()
-        if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), item)
         hideAdd()
+        launch(Dispatchers.IO) {
+            try {
+                val families = familyRepo.getMyFamilies()
+                if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), item)
+            } catch (_: Exception) {}
+        }
     }
 
     fun togglePurchased(item: ShoppingItemEntity) = viewModelScope.launch {
-        val families = familyRepo.getMyFamilies()
         if (item.isPurchased) {
             shoppingDao.markUnpurchased(item.id)
-            if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), item.copy(isPurchased = false))
+            launch(Dispatchers.IO) {
+                try {
+                    val families = familyRepo.getMyFamilies()
+                    if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), item.copy(isPurchased = false))
+                } catch (_: Exception) {}
+            }
         } else {
             shoppingDao.markPurchased(item.id, authRepository.getUserId() ?: "", authRepository.getUserName())
             val updated = item.copy(isPurchased = true, purchasedByUid = authRepository.getUserId() ?: "", purchasedByName = authRepository.getUserName())
-            if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), updated)
+            launch(Dispatchers.IO) {
+                try {
+                    val families = familyRepo.getMyFamilies()
+                    if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), updated)
+                } catch (_: Exception) {}
+            }
         }
     }
 

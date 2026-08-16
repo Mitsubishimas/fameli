@@ -5,10 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.fameli.budget.data.local.dao.*
 import com.fameli.budget.data.local.entity.*
 import com.fameli.budget.data.repository.FamilySyncRepository
-import com.fameli.budget.firebase.FirebaseAuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 
@@ -16,8 +17,7 @@ import javax.inject.Inject
 class AddTransactionViewModel @Inject constructor(
     private val transactionDao: TransactionDao,
     private val categoryDao: CategoryDao,
-    private val familyRepo: FamilySyncRepository,
-    private val authRepository: FirebaseAuthRepository
+    private val familyRepo: FamilySyncRepository
 ) : ViewModel() {
     val amount = MutableStateFlow("")
     val note = MutableStateFlow("")
@@ -37,14 +37,17 @@ class AddTransactionViewModel @Inject constructor(
         val a = amount.value.toDoubleOrNull() ?: return@launch
         val c = selectedCategory.value ?: return@launch
         val txn = TransactionEntity(cloudId = UUID.randomUUID().toString(), categoryId = c.id, amount = a, date = System.currentTimeMillis(), note = note.value.ifBlank { null })
+        
+        // Локальное сохранение — быстро
         transactionDao.insert(txn)
-        
-        // Получаем familyId через репозиторий
-        val families = familyRepo.getMyFamilies()
-        if (families.isNotEmpty()) {
-            familyRepo.syncTransaction(families.first(), txn)
-        }
-        
         amount.value = ""; note.value = ""; selectedCategory.value = null
+        
+        // Синхронизация в фоновом потоке
+        launch(Dispatchers.IO) {
+            try {
+                val families = familyRepo.getMyFamilies()
+                if (families.isNotEmpty()) familyRepo.syncTransaction(families.first(), txn)
+            } catch (_: Exception) {}
+        }
     }
 }

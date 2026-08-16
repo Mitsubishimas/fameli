@@ -7,6 +7,7 @@ import com.fameli.budget.data.local.entity.TaskEntity
 import com.fameli.budget.data.repository.FamilySyncRepository
 import com.fameli.budget.firebase.FirebaseAuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -21,12 +22,8 @@ class PlannerViewModel @Inject constructor(
 
     val selectedDate = MutableStateFlow(System.currentTimeMillis())
     val newTaskTime = MutableStateFlow("12:00")
-    
-    // Все задачи за месяц (для календаря)
-    val monthTasks: StateFlow<List<TaskEntity>> = taskDao.getAll()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val monthTasks: StateFlow<List<TaskEntity>> = taskDao.getAll().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Задачи на выбранную дату
     val tasks: StateFlow<List<TaskEntity>> = selectedDate.flatMapLatest { date ->
         val cal = Calendar.getInstance().apply { timeInMillis = date }
         cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0)
@@ -41,14 +38,22 @@ class PlannerViewModel @Inject constructor(
     fun addTask(title: String, description: String) = viewModelScope.launch {
         val task = TaskEntity(cloudId = UUID.randomUUID().toString(), title = title, description = description, date = selectedDate.value, time = newTaskTime.value, createdBy = authRepository.getUserName(), createdByUid = authRepository.getUserId() ?: "")
         taskDao.insert(task)
-        val families = familyRepo.getMyFamilies()
-        if (families.isNotEmpty()) familyRepo.syncTask(families.first(), task)
+        launch(Dispatchers.IO) {
+            try {
+                val families = familyRepo.getMyFamilies()
+                if (families.isNotEmpty()) familyRepo.syncTask(families.first(), task)
+            } catch (_: Exception) {}
+        }
     }
 
     fun toggleComplete(task: TaskEntity) = viewModelScope.launch {
         taskDao.toggleComplete(task.id, !task.isCompleted)
-        val families = familyRepo.getMyFamilies()
-        if (families.isNotEmpty()) familyRepo.syncTask(families.first(), task.copy(isCompleted = !task.isCompleted))
+        launch(Dispatchers.IO) {
+            try {
+                val families = familyRepo.getMyFamilies()
+                if (families.isNotEmpty()) familyRepo.syncTask(families.first(), task.copy(isCompleted = !task.isCompleted))
+            } catch (_: Exception) {}
+        }
     }
 
     fun deleteTask(task: TaskEntity) = viewModelScope.launch { taskDao.softDelete(task.id) }
