@@ -1,6 +1,5 @@
 package com.fameli.budget.ui.screens.transaction
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fameli.budget.data.local.dao.*
@@ -25,6 +24,7 @@ class AddTransactionViewModel @Inject constructor(
     val note = MutableStateFlow("")
     val isExpense = MutableStateFlow(true)
     val selectedCategory = MutableStateFlow<CategoryEntity?>(null)
+    val syncMessage = MutableStateFlow("")
 
     val categories: StateFlow<List<CategoryEntity>> = isExpense.flatMapLatest { exp ->
         categoryDao.getByType(if (exp) CategoryType.EXPENSE else CategoryType.INCOME)
@@ -41,16 +41,20 @@ class AddTransactionViewModel @Inject constructor(
         val txn = TransactionEntity(cloudId = UUID.randomUUID().toString(), categoryId = c.id, amount = a, date = System.currentTimeMillis(), note = note.value.ifBlank { null })
         transactionDao.insert(txn)
         amount.value = ""; note.value = ""; selectedCategory.value = null
-        
-        // Отправляем в облако с логированием
+
+        val fid = familyManager.currentFamilyId
+        if (fid == null) {
+            syncMessage.value = "❌ Нет семьи! Создайте семью"
+            return@launch
+        }
+
+        syncMessage.value = "Отправка в облако..."
         launch(Dispatchers.IO) {
-            val fid = familyManager.currentFamilyId
-            Log.d("SYNC", "Family ID: $fid")
-            if (fid != null) {
+            try {
                 familyRepo.syncTransaction(txn)
-                Log.d("SYNC", "Transaction sent: ${txn.cloudId}")
-            } else {
-                Log.e("SYNC", "No family ID - transaction NOT sent!")
+                syncMessage.value = "✅ Отправлено в облако"
+            } catch (e: Exception) {
+                syncMessage.value = "❌ Ошибка: ${e.message}"
             }
         }
     }

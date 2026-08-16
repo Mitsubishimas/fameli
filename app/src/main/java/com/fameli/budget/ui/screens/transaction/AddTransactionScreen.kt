@@ -13,7 +13,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.fameli.budget.ui.screens.family.FamilyViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,8 +22,7 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
     val isExpense by viewModel.isExpense.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val selected by viewModel.selectedCategory.collectAsState()
-    val familyVM: FamilyViewModel = hiltViewModel()
-    val familyId by familyVM.familyId.collectAsState()
+    val syncMessage by viewModel.syncMessage.collectAsState()
 
     Scaffold(
         topBar = {
@@ -49,6 +47,11 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
             }
             
             OutlinedTextField(note, { viewModel.updateNote(it) }, label = { Text("Заметка") }, modifier = Modifier.fillMaxWidth())
+            
+            // Показываем статус синхронизации
+            if (syncMessage.isNotBlank()) {
+                Text(syncMessage, color = if (syncMessage.startsWith("❌")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+            }
             
             Button(
                 onClick = { viewModel.save(); navController.navigateUp() },
