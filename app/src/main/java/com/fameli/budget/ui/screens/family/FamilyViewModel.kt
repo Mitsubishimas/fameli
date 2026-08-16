@@ -16,7 +16,6 @@ class FamilyViewModel @Inject constructor(
     private val familyManager: FamilyManager
 ) : ViewModel() {
 
-    // Сразу берём ID из SharedPreferences
     val familyId = MutableStateFlow(familyManager.currentFamilyId)
     val message = MutableStateFlow<String?>(null)
     val isLoading = MutableStateFlow(false)
@@ -56,9 +55,16 @@ class FamilyViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val fid = familyManager.currentFamilyId ?: return@launch
             isSyncing.value = true
-            repo.syncAllFromCloud().fold(
-                onSuccess = { message.value = "Готово" },
-                onFailure = { e -> message.value = "Ошибка: ${e.message}" }
+            message.value = "Отправка в облако..."
+            repo.syncAllLocalToCloud().fold(
+                onSuccess = {
+                    message.value = "Отправлено. Загрузка из облака..."
+                    repo.syncAllFromCloud().fold(
+                        onSuccess = { message.value = "✅ Синхронизация завершена" },
+                        onFailure = { e -> message.value = "Ошибка загрузки: ${e.message}" }
+                    )
+                },
+                onFailure = { e -> message.value = "Ошибка отправки: ${e.message}" }
             )
             isSyncing.value = false
         }
