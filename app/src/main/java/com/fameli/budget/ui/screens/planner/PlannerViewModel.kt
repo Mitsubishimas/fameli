@@ -21,7 +21,12 @@ class PlannerViewModel @Inject constructor(
 
     val selectedDate = MutableStateFlow(System.currentTimeMillis())
     val newTaskTime = MutableStateFlow("12:00")
+    
+    // Все задачи за месяц (для календаря)
+    val monthTasks: StateFlow<List<TaskEntity>> = taskDao.getAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Задачи на выбранную дату
     val tasks: StateFlow<List<TaskEntity>> = selectedDate.flatMapLatest { date ->
         val cal = Calendar.getInstance().apply { timeInMillis = date }
         cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0)

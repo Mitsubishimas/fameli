@@ -14,12 +14,25 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(private val dao: TransactionDao) : ViewModel() {
+    
+    // Текущий месяц (автоматически новый при смене месяца)
     private val now = LocalDate.now()
-    private val start = now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
-    private val end = now.plusMonths(1).withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000 - 1
+    private val startOfCurrentMonth = now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
+    private val endOfCurrentMonth = now.plusMonths(1).withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000 - 1
+    
+    // Прошлый месяц (архив)
+    private val startOfLastMonth = now.minusMonths(1).withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
+    private val endOfLastMonth = now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000 - 1
 
-    val balance: StateFlow<MonthlyBalance> = dao.getMonthlyBalance(start, end).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MonthlyBalance(0.0, 0.0))
-    val transactions: StateFlow<List<TransactionEntity>> = dao.getBetween(start, end).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val balance: StateFlow<MonthlyBalance> = dao.getMonthlyBalance(startOfCurrentMonth, endOfCurrentMonth)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MonthlyBalance(0.0, 0.0))
+    
+    val transactions: StateFlow<List<TransactionEntity>> = dao.getBetween(startOfCurrentMonth, endOfCurrentMonth)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Архив прошлого месяца
+    val archiveBalance: StateFlow<MonthlyBalance> = dao.getMonthlyBalance(startOfLastMonth, endOfLastMonth)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MonthlyBalance(0.0, 0.0))
 
     fun deleteTransaction(txn: TransactionEntity) = viewModelScope.launch {
         dao.softDelete(txn.localId)
