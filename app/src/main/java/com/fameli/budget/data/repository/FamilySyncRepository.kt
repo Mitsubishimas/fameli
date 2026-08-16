@@ -117,21 +117,3 @@ class FamilySyncRepository @Inject constructor(
     fun stopListening() { listeners.forEach { it.remove() }; listeners.clear() }
 }
 
-// Вспомогательные методы для проверки дубликатов
-suspend fun insertTransactionIfNew(txn: TransactionEntity) {
-    if (transactionDao.getByCloudId(txn.cloudId) == null) {
-        transactionDao.insert(txn)
-    }
-}
-
-suspend fun insertTaskIfNew(task: TaskEntity) {
-    if (taskDao.getByCloudId(task.cloudId) == null) {
-        taskDao.insert(task)
-    }
-}
-
-suspend fun insertShoppingIfNew(item: ShoppingItemEntity) {
-    if (shoppingDao.getByCloudId(item.cloudId) == null) {
-        shoppingDao.insert(item)
-    }
-}
