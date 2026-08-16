@@ -2,6 +2,7 @@ package com.fameli.budget.ui.screens.transaction;
 
 import com.fameli.budget.data.local.dao.CategoryDao;
 import com.fameli.budget.data.local.dao.TransactionDao;
+import com.fameli.budget.data.repository.FamilyManager;
 import com.fameli.budget.data.repository.FamilySyncRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -31,27 +32,31 @@ public final class AddTransactionViewModel_Factory implements Factory<AddTransac
 
   private final Provider<FamilySyncRepository> familyRepoProvider;
 
+  private final Provider<FamilyManager> familyManagerProvider;
+
   public AddTransactionViewModel_Factory(Provider<TransactionDao> transactionDaoProvider,
-      Provider<CategoryDao> categoryDaoProvider,
-      Provider<FamilySyncRepository> familyRepoProvider) {
+      Provider<CategoryDao> categoryDaoProvider, Provider<FamilySyncRepository> familyRepoProvider,
+      Provider<FamilyManager> familyManagerProvider) {
     this.transactionDaoProvider = transactionDaoProvider;
     this.categoryDaoProvider = categoryDaoProvider;
     this.familyRepoProvider = familyRepoProvider;
+    this.familyManagerProvider = familyManagerProvider;
   }
 
   @Override
   public AddTransactionViewModel get() {
-    return newInstance(transactionDaoProvider.get(), categoryDaoProvider.get(), familyRepoProvider.get());
+    return newInstance(transactionDaoProvider.get(), categoryDaoProvider.get(), familyRepoProvider.get(), familyManagerProvider.get());
   }
 
   public static AddTransactionViewModel_Factory create(
       Provider<TransactionDao> transactionDaoProvider, Provider<CategoryDao> categoryDaoProvider,
-      Provider<FamilySyncRepository> familyRepoProvider) {
-    return new AddTransactionViewModel_Factory(transactionDaoProvider, categoryDaoProvider, familyRepoProvider);
+      Provider<FamilySyncRepository> familyRepoProvider,
+      Provider<FamilyManager> familyManagerProvider) {
+    return new AddTransactionViewModel_Factory(transactionDaoProvider, categoryDaoProvider, familyRepoProvider, familyManagerProvider);
   }
 
   public static AddTransactionViewModel newInstance(TransactionDao transactionDao,
-      CategoryDao categoryDao, FamilySyncRepository familyRepo) {
-    return new AddTransactionViewModel(transactionDao, categoryDao, familyRepo);
+      CategoryDao categoryDao, FamilySyncRepository familyRepo, FamilyManager familyManager) {
+    return new AddTransactionViewModel(transactionDao, categoryDao, familyRepo, familyManager);
   }
 }

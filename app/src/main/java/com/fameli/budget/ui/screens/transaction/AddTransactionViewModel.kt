@@ -1,9 +1,11 @@
 package com.fameli.budget.ui.screens.transaction
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fameli.budget.data.local.dao.*
 import com.fameli.budget.data.local.entity.*
+import com.fameli.budget.data.repository.FamilyManager
 import com.fameli.budget.data.repository.FamilySyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +18,8 @@ import javax.inject.Inject
 class AddTransactionViewModel @Inject constructor(
     private val transactionDao: TransactionDao,
     private val categoryDao: CategoryDao,
-    private val familyRepo: FamilySyncRepository
+    private val familyRepo: FamilySyncRepository,
+    private val familyManager: FamilyManager
 ) : ViewModel() {
     val amount = MutableStateFlow("")
     val note = MutableStateFlow("")
@@ -38,7 +41,17 @@ class AddTransactionViewModel @Inject constructor(
         val txn = TransactionEntity(cloudId = UUID.randomUUID().toString(), categoryId = c.id, amount = a, date = System.currentTimeMillis(), note = note.value.ifBlank { null })
         transactionDao.insert(txn)
         amount.value = ""; note.value = ""; selectedCategory.value = null
-        // Отправляем в облако в фоне
-        launch(Dispatchers.IO) { familyRepo.syncTransaction(txn) }
+        
+        // Отправляем в облако с логированием
+        launch(Dispatchers.IO) {
+            val fid = familyManager.currentFamilyId
+            Log.d("SYNC", "Family ID: $fid")
+            if (fid != null) {
+                familyRepo.syncTransaction(txn)
+                Log.d("SYNC", "Transaction sent: ${txn.cloudId}")
+            } else {
+                Log.e("SYNC", "No family ID - transaction NOT sent!")
+            }
+        }
     }
 }
