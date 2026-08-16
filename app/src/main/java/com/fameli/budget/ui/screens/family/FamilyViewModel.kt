@@ -29,7 +29,7 @@ class FamilyViewModel @Inject constructor(
                 repo.startListening()
                 repo.syncAllFromCloud().fold(
                     onSuccess = { message.value = "Данные загружены" },
-                    onFailure = { }
+                    onFailure = { message.value = "Ошибка: ${it.message}" }
                 )
             }
         }
@@ -39,10 +39,7 @@ class FamilyViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             isLoading.value = true
             repo.createFamily("Моя семья").fold(
-                onSuccess = { id ->
-                    familyId.value = id
-                    repo.startListening()
-                },
+                onSuccess = { id -> familyId.value = id; repo.startListening() },
                 onFailure = { e -> message.value = "Ошибка: ${e.message}" }
             )
             isLoading.value = false

@@ -7,6 +7,9 @@ import android.os.Build
 import com.fameli.budget.data.local.FameliDatabase
 import com.fameli.budget.data.local.entity.CategoryEntity
 import com.fameli.budget.data.local.entity.CategoryType
+import com.fameli.budget.data.repository.FamilyManager
+import com.fameli.budget.data.repository.FamilySyncRepository
+import com.fameli.budget.firebase.FirebaseAuthRepository
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +21,9 @@ import javax.inject.Inject
 class FameliApp : Application() {
     
     @Inject lateinit var database: FameliDatabase
+    @Inject lateinit var familySyncRepository: FamilySyncRepository
+    @Inject lateinit var familyManager: FamilyManager
+    @Inject lateinit var authRepository: FirebaseAuthRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -33,13 +39,12 @@ class FameliApp : Application() {
         
         CoroutineScope(Dispatchers.IO).launch {
             addDefaultCategories()
+            loadFamily()
         }
     }
     
     private suspend fun addDefaultCategories() {
         val dao = database.categoryDao()
-        
-        // Проверяем есть ли уже категории
         val existing = dao.getAll().first()
         if (existing.isNotEmpty()) return
         
@@ -53,7 +58,16 @@ class FameliApp : Application() {
             CategoryEntity(name = "Зарплата", type = CategoryType.INCOME, icon = "💼", color = 0xFF009688, isDefault = true),
             CategoryEntity(name = "Подарки", type = CategoryType.INCOME, icon = "🎁", color = 0xFFFF5722, isDefault = true),
         )
-        
         defaultCategories.forEach { dao.insert(it) }
+    }
+    
+    private suspend fun loadFamily() {
+        try {
+            val families = familySyncRepository.getMyFamilies()
+            if (families.isNotEmpty()) {
+                familyManager.currentFamilyId = families.first()
+                familySyncRepository.startListening()
+            }
+        } catch (_: Exception) {}
     }
 }
