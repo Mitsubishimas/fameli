@@ -27,7 +27,6 @@ fun FamilyScreen(viewModel: FamilyViewModel = hiltViewModel()) {
 
     // Загружаем семью при открытии
     LaunchedEffect(Unit) {
-        viewModel.loadFamily()
     }
 
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

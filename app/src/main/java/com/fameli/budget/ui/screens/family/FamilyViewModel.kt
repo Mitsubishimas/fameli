@@ -21,25 +21,16 @@ class FamilyViewModel @Inject constructor(
     val isLoading = MutableStateFlow(false)
     val isSyncing = MutableStateFlow(false)
 
-    fun loadFamily() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val fid = familyManager.currentFamilyId
-            if (fid != null) {
-                familyId.value = fid
-                repo.startListening()
-                repo.syncAllFromCloud().fold(
-                    onSuccess = { message.value = "Данные загружены" },
-                    onFailure = { message.value = "Ошибка: ${it.message}" }
-                )
-            }
-        }
-    }
-
     fun createFamily() {
         viewModelScope.launch(Dispatchers.IO) {
             isLoading.value = true
             repo.createFamily("Моя семья").fold(
-                onSuccess = { id -> familyId.value = id; repo.startListening() },
+                onSuccess = { id ->
+                    familyManager.currentFamilyId = id  // ВАЖНО: сохраняем сразу
+                    familyId.value = id
+                    repo.startListening()
+                    message.value = "Семья создана"
+                },
                 onFailure = { e -> message.value = "Ошибка: ${e.message}" }
             )
             isLoading.value = false
@@ -51,9 +42,10 @@ class FamilyViewModel @Inject constructor(
             isLoading.value = true
             repo.joinFamily(code.trim()).fold(
                 onSuccess = {
+                    familyManager.currentFamilyId = code.trim()  // ВАЖНО
                     familyId.value = code.trim()
                     repo.startListening()
-                    repo.syncAllFromCloud()
+                    message.value = "Вы в семье"
                 },
                 onFailure = { e -> message.value = "Ошибка: ${e.message}" }
             )
@@ -63,8 +55,12 @@ class FamilyViewModel @Inject constructor(
 
     fun forceSync() {
         viewModelScope.launch(Dispatchers.IO) {
+            val fid = familyManager.currentFamilyId
+            if (fid == null) {
+                message.value = "Нет семьи"
+                return@launch
+            }
             isSyncing.value = true
-            message.value = "Синхронизация..."
             repo.syncAllFromCloud().fold(
                 onSuccess = { message.value = "Готово" },
                 onFailure = { e -> message.value = "Ошибка: ${e.message}" }
