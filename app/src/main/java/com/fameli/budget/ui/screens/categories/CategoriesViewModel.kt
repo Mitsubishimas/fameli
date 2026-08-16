@@ -7,6 +7,7 @@ import com.fameli.budget.data.local.entity.CategoryEntity
 import com.fameli.budget.data.local.entity.CategoryType
 import com.fameli.budget.data.repository.FamilySyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -34,8 +35,7 @@ class CategoriesViewModel @Inject constructor(
     fun addCategory() = viewModelScope.launch {
         val cat = CategoryEntity(cloudId = UUID.randomUUID().toString(), name = newName.value, type = newType.value, icon = newIcon.value)
         dao.insert(cat)
-        val families = familyRepo.getMyFamilies()
-        if (families.isNotEmpty()) familyRepo.syncCategory(families.first(), cat)
+        launch(Dispatchers.IO) { familyRepo.syncCategory(cat) }
         hideAdd()
     }
 

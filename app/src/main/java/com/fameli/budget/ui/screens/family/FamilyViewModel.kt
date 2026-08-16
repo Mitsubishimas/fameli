@@ -2,6 +2,7 @@ package com.fameli.budget.ui.screens.family
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fameli.budget.data.repository.FamilyManager
 import com.fameli.budget.data.repository.FamilySyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -11,27 +12,26 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FamilyViewModel @Inject constructor(
-    private val repo: FamilySyncRepository
+    private val repo: FamilySyncRepository,
+    private val familyManager: FamilyManager
 ) : ViewModel() {
 
-    val familyId = MutableStateFlow<String?>(null)
+    val familyId = MutableStateFlow(familyManager.currentFamilyId)
     val message = MutableStateFlow<String?>(null)
     val isLoading = MutableStateFlow(false)
     val isSyncing = MutableStateFlow(false)
 
-    init {
-        // НЕ ВЫЗЫВАЕМ ничего в init — только по запросу
-    }
-
     fun loadFamily() {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val families = repo.getMyFamilies()
-                if (families.isNotEmpty()) {
-                    familyId.value = families.first()
-                    repo.startListening(families.first())
-                }
-            } catch (_: Exception) {}
+            val fid = familyManager.currentFamilyId
+            if (fid != null) {
+                familyId.value = fid
+                repo.startListening()
+                repo.syncAllFromCloud().fold(
+                    onSuccess = { message.value = "Данные загружены" },
+                    onFailure = { }
+                )
+            }
         }
     }
 
@@ -39,7 +39,10 @@ class FamilyViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             isLoading.value = true
             repo.createFamily("Моя семья").fold(
-                onSuccess = { id -> familyId.value = id; repo.startListening(id) },
+                onSuccess = { id ->
+                    familyId.value = id
+                    repo.startListening()
+                },
                 onFailure = { e -> message.value = "Ошибка: ${e.message}" }
             )
             isLoading.value = false
@@ -50,7 +53,11 @@ class FamilyViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             isLoading.value = true
             repo.joinFamily(code.trim()).fold(
-                onSuccess = { familyId.value = code.trim(); repo.startListening(code.trim()) },
+                onSuccess = {
+                    familyId.value = code.trim()
+                    repo.startListening()
+                    repo.syncAllFromCloud()
+                },
                 onFailure = { e -> message.value = "Ошибка: ${e.message}" }
             )
             isLoading.value = false
@@ -59,10 +66,10 @@ class FamilyViewModel @Inject constructor(
 
     fun forceSync() {
         viewModelScope.launch(Dispatchers.IO) {
-            val id = familyId.value ?: return@launch
             isSyncing.value = true
-            repo.syncAllToCloud(id).fold(
-                onSuccess = { message.value = "Синхронизация завершена" },
+            message.value = "Синхронизация..."
+            repo.syncAllFromCloud().fold(
+                onSuccess = { message.value = "Готово" },
                 onFailure = { e -> message.value = "Ошибка: ${e.message}" }
             )
             isSyncing.value = false
@@ -71,6 +78,7 @@ class FamilyViewModel @Inject constructor(
 
     fun leaveFamily() {
         repo.stopListening()
+        familyManager.clear()
         familyId.value = null
         message.value = null
     }

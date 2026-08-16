@@ -33,32 +33,17 @@ class ShoppingViewModel @Inject constructor(
         val item = ShoppingItemEntity(cloudId = UUID.randomUUID().toString(), name = name, createdByUid = authRepository.getUserId() ?: "", createdByName = authRepository.getUserName())
         shoppingDao.insert(item)
         hideAdd()
-        launch(Dispatchers.IO) {
-            try {
-                val families = familyRepo.getMyFamilies()
-                if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), item)
-            } catch (_: Exception) {}
-        }
+        launch(Dispatchers.IO) { familyRepo.syncShoppingItem(item) }
     }
 
     fun togglePurchased(item: ShoppingItemEntity) = viewModelScope.launch {
         if (item.isPurchased) {
             shoppingDao.markUnpurchased(item.id)
-            launch(Dispatchers.IO) {
-                try {
-                    val families = familyRepo.getMyFamilies()
-                    if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), item.copy(isPurchased = false))
-                } catch (_: Exception) {}
-            }
+            launch(Dispatchers.IO) { familyRepo.syncShoppingItem(item.copy(isPurchased = false)) }
         } else {
             shoppingDao.markPurchased(item.id, authRepository.getUserId() ?: "", authRepository.getUserName())
             val updated = item.copy(isPurchased = true, purchasedByUid = authRepository.getUserId() ?: "", purchasedByName = authRepository.getUserName())
-            launch(Dispatchers.IO) {
-                try {
-                    val families = familyRepo.getMyFamilies()
-                    if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), updated)
-                } catch (_: Exception) {}
-            }
+            launch(Dispatchers.IO) { familyRepo.syncShoppingItem(updated) }
         }
     }
 

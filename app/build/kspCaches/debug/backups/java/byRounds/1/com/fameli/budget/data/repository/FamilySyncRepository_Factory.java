@@ -43,11 +43,13 @@ public final class FamilySyncRepository_Factory implements Factory<FamilySyncRep
 
   private final Provider<ShoppingDao> shoppingDaoProvider;
 
+  private final Provider<FamilyManager> familyManagerProvider;
+
   public FamilySyncRepository_Factory(Provider<FirebaseFirestore> firestoreProvider,
       Provider<FirebaseAuthRepository> authRepositoryProvider,
       Provider<TransactionDao> transactionDaoProvider, Provider<CategoryDao> categoryDaoProvider,
       Provider<TaskDao> taskDaoProvider, Provider<GoalDao> goalDaoProvider,
-      Provider<ShoppingDao> shoppingDaoProvider) {
+      Provider<ShoppingDao> shoppingDaoProvider, Provider<FamilyManager> familyManagerProvider) {
     this.firestoreProvider = firestoreProvider;
     this.authRepositoryProvider = authRepositoryProvider;
     this.transactionDaoProvider = transactionDaoProvider;
@@ -55,24 +57,25 @@ public final class FamilySyncRepository_Factory implements Factory<FamilySyncRep
     this.taskDaoProvider = taskDaoProvider;
     this.goalDaoProvider = goalDaoProvider;
     this.shoppingDaoProvider = shoppingDaoProvider;
+    this.familyManagerProvider = familyManagerProvider;
   }
 
   @Override
   public FamilySyncRepository get() {
-    return newInstance(firestoreProvider.get(), authRepositoryProvider.get(), transactionDaoProvider.get(), categoryDaoProvider.get(), taskDaoProvider.get(), goalDaoProvider.get(), shoppingDaoProvider.get());
+    return newInstance(firestoreProvider.get(), authRepositoryProvider.get(), transactionDaoProvider.get(), categoryDaoProvider.get(), taskDaoProvider.get(), goalDaoProvider.get(), shoppingDaoProvider.get(), familyManagerProvider.get());
   }
 
   public static FamilySyncRepository_Factory create(Provider<FirebaseFirestore> firestoreProvider,
       Provider<FirebaseAuthRepository> authRepositoryProvider,
       Provider<TransactionDao> transactionDaoProvider, Provider<CategoryDao> categoryDaoProvider,
       Provider<TaskDao> taskDaoProvider, Provider<GoalDao> goalDaoProvider,
-      Provider<ShoppingDao> shoppingDaoProvider) {
-    return new FamilySyncRepository_Factory(firestoreProvider, authRepositoryProvider, transactionDaoProvider, categoryDaoProvider, taskDaoProvider, goalDaoProvider, shoppingDaoProvider);
+      Provider<ShoppingDao> shoppingDaoProvider, Provider<FamilyManager> familyManagerProvider) {
+    return new FamilySyncRepository_Factory(firestoreProvider, authRepositoryProvider, transactionDaoProvider, categoryDaoProvider, taskDaoProvider, goalDaoProvider, shoppingDaoProvider, familyManagerProvider);
   }
 
   public static FamilySyncRepository newInstance(FirebaseFirestore firestore,
       FirebaseAuthRepository authRepository, TransactionDao transactionDao, CategoryDao categoryDao,
-      TaskDao taskDao, GoalDao goalDao, ShoppingDao shoppingDao) {
-    return new FamilySyncRepository(firestore, authRepository, transactionDao, categoryDao, taskDao, goalDao, shoppingDao);
+      TaskDao taskDao, GoalDao goalDao, ShoppingDao shoppingDao, FamilyManager familyManager) {
+    return new FamilySyncRepository(firestore, authRepository, transactionDao, categoryDao, taskDao, goalDao, shoppingDao, familyManager);
   }
 }

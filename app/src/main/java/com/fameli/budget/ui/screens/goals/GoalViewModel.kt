@@ -8,6 +8,7 @@ import com.fameli.budget.data.local.entity.GoalTransactionEntity
 import com.fameli.budget.data.repository.FamilySyncRepository
 import com.fameli.budget.firebase.FirebaseAuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -35,8 +36,7 @@ class GoalViewModel @Inject constructor(
         val target = targetStr.toDoubleOrNull() ?: return@launch
         val goal = GoalEntity(cloudId = UUID.randomUUID().toString(), title = title, description = desc, targetAmount = target)
         goalDao.insertGoal(goal)
-        val families = familyRepo.getMyFamilies()
-        if (families.isNotEmpty()) familyRepo.syncGoal(families.first(), goal)
+        launch(Dispatchers.IO) { familyRepo.syncGoal(goal) }
         hideAdd()
     }
 
@@ -46,8 +46,7 @@ class GoalViewModel @Inject constructor(
         goalDao.insertTransaction(GoalTransactionEntity(goalId = goalId, amount = amount, comment = comment.ifBlank { "Без комментария" }, userName = authRepository.getUserName(), userUid = authRepository.getUserId() ?: ""))
         val goal = goalDao.getById(goalId) ?: return@launch
         goalDao.updateAmount(goalId, goal.currentAmount + amount)
-        val families = familyRepo.getMyFamilies()
-        if (families.isNotEmpty()) familyRepo.syncGoal(families.first(), goal.copy(currentAmount = goal.currentAmount + amount))
+        launch(Dispatchers.IO) { familyRepo.syncGoal(goal.copy(currentAmount = goal.currentAmount + amount)) }
         hideAddMoney()
     }
 

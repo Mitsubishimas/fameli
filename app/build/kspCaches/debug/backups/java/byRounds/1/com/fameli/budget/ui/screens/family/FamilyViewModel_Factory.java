@@ -1,5 +1,6 @@
 package com.fameli.budget.ui.screens.family;
 
+import com.fameli.budget.data.repository.FamilyManager;
 import com.fameli.budget.data.repository.FamilySyncRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -25,20 +26,26 @@ import javax.inject.Provider;
 public final class FamilyViewModel_Factory implements Factory<FamilyViewModel> {
   private final Provider<FamilySyncRepository> repoProvider;
 
-  public FamilyViewModel_Factory(Provider<FamilySyncRepository> repoProvider) {
+  private final Provider<FamilyManager> familyManagerProvider;
+
+  public FamilyViewModel_Factory(Provider<FamilySyncRepository> repoProvider,
+      Provider<FamilyManager> familyManagerProvider) {
     this.repoProvider = repoProvider;
+    this.familyManagerProvider = familyManagerProvider;
   }
 
   @Override
   public FamilyViewModel get() {
-    return newInstance(repoProvider.get());
+    return newInstance(repoProvider.get(), familyManagerProvider.get());
   }
 
-  public static FamilyViewModel_Factory create(Provider<FamilySyncRepository> repoProvider) {
-    return new FamilyViewModel_Factory(repoProvider);
+  public static FamilyViewModel_Factory create(Provider<FamilySyncRepository> repoProvider,
+      Provider<FamilyManager> familyManagerProvider) {
+    return new FamilyViewModel_Factory(repoProvider, familyManagerProvider);
   }
 
-  public static FamilyViewModel newInstance(FamilySyncRepository repo) {
-    return new FamilyViewModel(repo);
+  public static FamilyViewModel newInstance(FamilySyncRepository repo,
+      FamilyManager familyManager) {
+    return new FamilyViewModel(repo, familyManager);
   }
 }

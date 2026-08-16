@@ -9,7 +9,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 
@@ -37,17 +36,9 @@ class AddTransactionViewModel @Inject constructor(
         val a = amount.value.toDoubleOrNull() ?: return@launch
         val c = selectedCategory.value ?: return@launch
         val txn = TransactionEntity(cloudId = UUID.randomUUID().toString(), categoryId = c.id, amount = a, date = System.currentTimeMillis(), note = note.value.ifBlank { null })
-        
-        // Локальное сохранение — быстро
         transactionDao.insert(txn)
         amount.value = ""; note.value = ""; selectedCategory.value = null
-        
-        // Синхронизация в фоновом потоке
-        launch(Dispatchers.IO) {
-            try {
-                val families = familyRepo.getMyFamilies()
-                if (families.isNotEmpty()) familyRepo.syncTransaction(families.first(), txn)
-            } catch (_: Exception) {}
-        }
+        // Отправляем в облако в фоне
+        launch(Dispatchers.IO) { familyRepo.syncTransaction(txn) }
     }
 }

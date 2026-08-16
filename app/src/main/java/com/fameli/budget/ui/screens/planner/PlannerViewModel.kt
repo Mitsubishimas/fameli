@@ -38,22 +38,12 @@ class PlannerViewModel @Inject constructor(
     fun addTask(title: String, description: String) = viewModelScope.launch {
         val task = TaskEntity(cloudId = UUID.randomUUID().toString(), title = title, description = description, date = selectedDate.value, time = newTaskTime.value, createdBy = authRepository.getUserName(), createdByUid = authRepository.getUserId() ?: "")
         taskDao.insert(task)
-        launch(Dispatchers.IO) {
-            try {
-                val families = familyRepo.getMyFamilies()
-                if (families.isNotEmpty()) familyRepo.syncTask(families.first(), task)
-            } catch (_: Exception) {}
-        }
+        launch(Dispatchers.IO) { familyRepo.syncTask(task) }
     }
 
     fun toggleComplete(task: TaskEntity) = viewModelScope.launch {
         taskDao.toggleComplete(task.id, !task.isCompleted)
-        launch(Dispatchers.IO) {
-            try {
-                val families = familyRepo.getMyFamilies()
-                if (families.isNotEmpty()) familyRepo.syncTask(families.first(), task.copy(isCompleted = !task.isCompleted))
-            } catch (_: Exception) {}
-        }
+        launch(Dispatchers.IO) { familyRepo.syncTask(task.copy(isCompleted = !task.isCompleted)) }
     }
 
     fun deleteTask(task: TaskEntity) = viewModelScope.launch { taskDao.softDelete(task.id) }
