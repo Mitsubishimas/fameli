@@ -10,7 +10,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.*
 import androidx.navigation.compose.*
 import com.fameli.budget.ui.screens.auth.*
-import com.fameli.budget.ui.screens.categories.*
 import com.fameli.budget.ui.screens.dashboard.*
 import com.fameli.budget.ui.screens.goals.*
 import com.fameli.budget.ui.screens.planner.*
@@ -23,6 +22,7 @@ sealed class Screen(val route: String) {
     object Auth : Screen("auth")
     object Statistics : Screen("statistics")
     object Dashboard : Screen("dashboard")
+    object AddTransaction : Screen("add_transaction")
     object Goals : Screen("goals")
     object Shopping : Screen("shopping")
     object Planner : Screen("planner")
@@ -39,6 +39,7 @@ fun FameliNavHost() {
         composable(Screen.Auth.route) { AuthScreen(onSuccess = { navController.navigate(Screen.Statistics.route) { popUpTo(Screen.Auth.route) { inclusive = true } } }) }
         composable(Screen.Statistics.route) { MainScaffold(navController) }
         composable(Screen.Dashboard.route) { MainScaffold(navController) }
+        composable(Screen.AddTransaction.route) { MainScaffold(navController) }
         composable(Screen.Goals.route) { MainScaffold(navController) }
         composable(Screen.Shopping.route) { MainScaffold(navController) }
         composable(Screen.Planner.route) { MainScaffold(navController) }
@@ -53,11 +54,9 @@ fun MainScaffold(navController: NavHostController) {
     val goalVM: GoalViewModel = hiltViewModel()
     val plannerVM: PlannerViewModel = hiltViewModel()
     val shoppingVM: ShoppingViewModel = hiltViewModel()
-    val categoriesVM: CategoriesViewModel = hiltViewModel()
     var showGoalDialog by remember { mutableStateOf(false) }
     var showTaskDialog by remember { mutableStateOf(false) }
     var showShoppingDialog by remember { mutableStateOf(false) }
-    var showCategoryDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -102,10 +101,14 @@ fun MainScaffold(navController: NavHostController) {
         },
         floatingActionButton = {
             when (currentRoute) {
-                Screen.Planner.route -> FloatingActionButton(onClick = { showTaskDialog = true }) { Icon(Icons.Filled.Add, "Задача") }
+                Screen.Dashboard.route -> {
+                    FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) {
+                        Icon(Icons.Filled.Add, "Добавить транзакцию")
+                    }
+                }
                 Screen.Goals.route -> FloatingActionButton(onClick = { showGoalDialog = true }) { Icon(Icons.Filled.Add, "Цель") }
                 Screen.Shopping.route -> FloatingActionButton(onClick = { showShoppingDialog = true }) { Icon(Icons.Filled.Add, "Покупка") }
-                Screen.Dashboard.route -> FloatingActionButton(onClick = { navController.navigate(Screen.Dashboard.route) }) { Icon(Icons.Filled.Add, "Транзакция") }
+                Screen.Planner.route -> FloatingActionButton(onClick = { showTaskDialog = true }) { Icon(Icons.Filled.Add, "Задача") }
                 else -> {}
             }
         }
@@ -114,6 +117,7 @@ fun MainScaffold(navController: NavHostController) {
             when (currentRoute) {
                 Screen.Statistics.route -> StatisticsScreen()
                 Screen.Dashboard.route -> DashboardScreen()
+                Screen.AddTransaction.route -> AddTransactionScreen(navController)
                 Screen.Goals.route -> GoalScreen(goalVM, showGoalDialog) { showGoalDialog = false }
                 Screen.Shopping.route -> ShoppingScreen(shoppingVM, showShoppingDialog) { showShoppingDialog = false }
                 Screen.Planner.route -> PlannerScreen(plannerVM, showTaskDialog) { showTaskDialog = false }
