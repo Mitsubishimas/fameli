@@ -25,10 +25,6 @@ fun FamilyScreen(viewModel: FamilyViewModel = hiltViewModel()) {
     var joinCode by remember { mutableStateOf("") }
     val context = LocalContext.current
 
-    // Загружаем семью при открытии
-    LaunchedEffect(Unit) {
-    }
-
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Семья", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) }
 
