@@ -21,7 +21,7 @@ fun SplashScreen(onFinished: () -> Unit) {
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.alpha(alpha).scale(scale)) {
             Text("💰", style = MaterialTheme.typography.displayLarge)
-            Text("Fameli", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onPrimary)
+            Text("Семейный Бюджет", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }

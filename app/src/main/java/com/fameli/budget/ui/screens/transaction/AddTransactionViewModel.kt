@@ -16,7 +16,8 @@ import javax.inject.Inject
 class AddTransactionViewModel @Inject constructor(
     private val transactionDao: TransactionDao,
     private val categoryDao: CategoryDao,
-    private val familyRepo: FamilySyncRepository
+    private val familyRepo: FamilySyncRepository,
+    private val authRepository: FirebaseAuthRepository
 ) : ViewModel() {
     val amount = MutableStateFlow("")
     val note = MutableStateFlow("")
@@ -32,21 +33,16 @@ class AddTransactionViewModel @Inject constructor(
     fun toggleType(exp: Boolean) { isExpense.value = exp; selectedCategory.value = null }
     fun selectCategory(c: CategoryEntity) { selectedCategory.value = c }
 
-    fun save(familyId: String?) = viewModelScope.launch {
+    fun save() = viewModelScope.launch {
         val a = amount.value.toDoubleOrNull() ?: return@launch
         val c = selectedCategory.value ?: return@launch
-        val txn = TransactionEntity(
-            cloudId = UUID.randomUUID().toString(),
-            categoryId = c.id,
-            amount = a,
-            date = System.currentTimeMillis(),
-            note = note.value.ifBlank { null }
-        )
+        val txn = TransactionEntity(cloudId = UUID.randomUUID().toString(), categoryId = c.id, amount = a, date = System.currentTimeMillis(), note = note.value.ifBlank { null })
         transactionDao.insert(txn)
         
-        // Отправляем в облако если есть семья
-        if (familyId != null) {
-            familyRepo.syncTransaction(familyId, txn)
+        // Получаем familyId через репозиторий
+        val families = familyRepo.getMyFamilies()
+        if (families.isNotEmpty()) {
+            familyRepo.syncTransaction(families.first(), txn)
         }
         
         amount.value = ""; note.value = ""; selectedCategory.value = null

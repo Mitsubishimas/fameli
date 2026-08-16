@@ -427,40 +427,31 @@ public final class DaggerFameliApp_HiltComponents_SingletonC {
 
     @IdentifierNameString
     private static final class LazyClassKeyProvider {
-      static String com_fameli_budget_ui_screens_transaction_AddTransactionViewModel = "com.fameli.budget.ui.screens.transaction.AddTransactionViewModel";
-
-      static String com_fameli_budget_ui_screens_auth_AuthViewModel = "com.fameli.budget.ui.screens.auth.AuthViewModel";
-
-      static String com_fameli_budget_ui_screens_family_FamilyViewModel = "com.fameli.budget.ui.screens.family.FamilyViewModel";
-
-      static String com_fameli_budget_ui_screens_goals_GoalViewModel = "com.fameli.budget.ui.screens.goals.GoalViewModel";
-
       static String com_fameli_budget_ui_screens_planner_PlannerViewModel = "com.fameli.budget.ui.screens.planner.PlannerViewModel";
+
+      static String com_fameli_budget_ui_screens_settings_SettingsViewModel = "com.fameli.budget.ui.screens.settings.SettingsViewModel";
 
       static String com_fameli_budget_ui_screens_statistics_StatisticsViewModel = "com.fameli.budget.ui.screens.statistics.StatisticsViewModel";
 
       static String com_fameli_budget_ui_screens_dashboard_DashboardViewModel = "com.fameli.budget.ui.screens.dashboard.DashboardViewModel";
 
-      static String com_fameli_budget_ui_screens_shopping_ShoppingViewModel = "com.fameli.budget.ui.screens.shopping.ShoppingViewModel";
+      static String com_fameli_budget_ui_screens_auth_AuthViewModel = "com.fameli.budget.ui.screens.auth.AuthViewModel";
 
-      static String com_fameli_budget_ui_screens_settings_SettingsViewModel = "com.fameli.budget.ui.screens.settings.SettingsViewModel";
+      static String com_fameli_budget_ui_screens_family_FamilyViewModel = "com.fameli.budget.ui.screens.family.FamilyViewModel";
 
       static String com_fameli_budget_ui_screens_categories_CategoriesViewModel = "com.fameli.budget.ui.screens.categories.CategoriesViewModel";
 
-      @KeepFieldType
-      AddTransactionViewModel com_fameli_budget_ui_screens_transaction_AddTransactionViewModel2;
+      static String com_fameli_budget_ui_screens_transaction_AddTransactionViewModel = "com.fameli.budget.ui.screens.transaction.AddTransactionViewModel";
 
-      @KeepFieldType
-      AuthViewModel com_fameli_budget_ui_screens_auth_AuthViewModel2;
+      static String com_fameli_budget_ui_screens_goals_GoalViewModel = "com.fameli.budget.ui.screens.goals.GoalViewModel";
 
-      @KeepFieldType
-      FamilyViewModel com_fameli_budget_ui_screens_family_FamilyViewModel2;
-
-      @KeepFieldType
-      GoalViewModel com_fameli_budget_ui_screens_goals_GoalViewModel2;
+      static String com_fameli_budget_ui_screens_shopping_ShoppingViewModel = "com.fameli.budget.ui.screens.shopping.ShoppingViewModel";
 
       @KeepFieldType
       PlannerViewModel com_fameli_budget_ui_screens_planner_PlannerViewModel2;
+
+      @KeepFieldType
+      SettingsViewModel com_fameli_budget_ui_screens_settings_SettingsViewModel2;
 
       @KeepFieldType
       StatisticsViewModel com_fameli_budget_ui_screens_statistics_StatisticsViewModel2;
@@ -469,13 +460,22 @@ public final class DaggerFameliApp_HiltComponents_SingletonC {
       DashboardViewModel com_fameli_budget_ui_screens_dashboard_DashboardViewModel2;
 
       @KeepFieldType
-      ShoppingViewModel com_fameli_budget_ui_screens_shopping_ShoppingViewModel2;
+      AuthViewModel com_fameli_budget_ui_screens_auth_AuthViewModel2;
 
       @KeepFieldType
-      SettingsViewModel com_fameli_budget_ui_screens_settings_SettingsViewModel2;
+      FamilyViewModel com_fameli_budget_ui_screens_family_FamilyViewModel2;
 
       @KeepFieldType
       CategoriesViewModel com_fameli_budget_ui_screens_categories_CategoriesViewModel2;
+
+      @KeepFieldType
+      AddTransactionViewModel com_fameli_budget_ui_screens_transaction_AddTransactionViewModel2;
+
+      @KeepFieldType
+      GoalViewModel com_fameli_budget_ui_screens_goals_GoalViewModel2;
+
+      @KeepFieldType
+      ShoppingViewModel com_fameli_budget_ui_screens_shopping_ShoppingViewModel2;
     }
   }
 
@@ -543,34 +543,34 @@ public final class DaggerFameliApp_HiltComponents_SingletonC {
 
     @IdentifierNameString
     private static final class LazyClassKeyProvider {
-      static String com_fameli_budget_ui_screens_categories_CategoriesViewModel = "com.fameli.budget.ui.screens.categories.CategoriesViewModel";
+      static String com_fameli_budget_ui_screens_planner_PlannerViewModel = "com.fameli.budget.ui.screens.planner.PlannerViewModel";
+
+      static String com_fameli_budget_ui_screens_goals_GoalViewModel = "com.fameli.budget.ui.screens.goals.GoalViewModel";
 
       static String com_fameli_budget_ui_screens_family_FamilyViewModel = "com.fameli.budget.ui.screens.family.FamilyViewModel";
-
-      static String com_fameli_budget_ui_screens_statistics_StatisticsViewModel = "com.fameli.budget.ui.screens.statistics.StatisticsViewModel";
 
       static String com_fameli_budget_ui_screens_transaction_AddTransactionViewModel = "com.fameli.budget.ui.screens.transaction.AddTransactionViewModel";
 
       static String com_fameli_budget_ui_screens_dashboard_DashboardViewModel = "com.fameli.budget.ui.screens.dashboard.DashboardViewModel";
 
-      static String com_fameli_budget_ui_screens_goals_GoalViewModel = "com.fameli.budget.ui.screens.goals.GoalViewModel";
-
       static String com_fameli_budget_ui_screens_shopping_ShoppingViewModel = "com.fameli.budget.ui.screens.shopping.ShoppingViewModel";
 
       static String com_fameli_budget_ui_screens_auth_AuthViewModel = "com.fameli.budget.ui.screens.auth.AuthViewModel";
 
-      static String com_fameli_budget_ui_screens_planner_PlannerViewModel = "com.fameli.budget.ui.screens.planner.PlannerViewModel";
+      static String com_fameli_budget_ui_screens_categories_CategoriesViewModel = "com.fameli.budget.ui.screens.categories.CategoriesViewModel";
+
+      static String com_fameli_budget_ui_screens_statistics_StatisticsViewModel = "com.fameli.budget.ui.screens.statistics.StatisticsViewModel";
 
       static String com_fameli_budget_ui_screens_settings_SettingsViewModel = "com.fameli.budget.ui.screens.settings.SettingsViewModel";
 
       @KeepFieldType
-      CategoriesViewModel com_fameli_budget_ui_screens_categories_CategoriesViewModel2;
+      PlannerViewModel com_fameli_budget_ui_screens_planner_PlannerViewModel2;
+
+      @KeepFieldType
+      GoalViewModel com_fameli_budget_ui_screens_goals_GoalViewModel2;
 
       @KeepFieldType
       FamilyViewModel com_fameli_budget_ui_screens_family_FamilyViewModel2;
-
-      @KeepFieldType
-      StatisticsViewModel com_fameli_budget_ui_screens_statistics_StatisticsViewModel2;
 
       @KeepFieldType
       AddTransactionViewModel com_fameli_budget_ui_screens_transaction_AddTransactionViewModel2;
@@ -579,16 +579,16 @@ public final class DaggerFameliApp_HiltComponents_SingletonC {
       DashboardViewModel com_fameli_budget_ui_screens_dashboard_DashboardViewModel2;
 
       @KeepFieldType
-      GoalViewModel com_fameli_budget_ui_screens_goals_GoalViewModel2;
-
-      @KeepFieldType
       ShoppingViewModel com_fameli_budget_ui_screens_shopping_ShoppingViewModel2;
 
       @KeepFieldType
       AuthViewModel com_fameli_budget_ui_screens_auth_AuthViewModel2;
 
       @KeepFieldType
-      PlannerViewModel com_fameli_budget_ui_screens_planner_PlannerViewModel2;
+      CategoriesViewModel com_fameli_budget_ui_screens_categories_CategoriesViewModel2;
+
+      @KeepFieldType
+      StatisticsViewModel com_fameli_budget_ui_screens_statistics_StatisticsViewModel2;
 
       @KeepFieldType
       SettingsViewModel com_fameli_budget_ui_screens_settings_SettingsViewModel2;
@@ -616,13 +616,13 @@ public final class DaggerFameliApp_HiltComponents_SingletonC {
       public T get() {
         switch (id) {
           case 0: // com.fameli.budget.ui.screens.transaction.AddTransactionViewModel 
-          return (T) new AddTransactionViewModel(singletonCImpl.transactionDao(), singletonCImpl.categoryDao(), singletonCImpl.familySyncRepositoryProvider.get());
+          return (T) new AddTransactionViewModel(singletonCImpl.transactionDao(), singletonCImpl.categoryDao(), singletonCImpl.familySyncRepositoryProvider.get(), singletonCImpl.firebaseAuthRepositoryProvider.get());
 
           case 1: // com.fameli.budget.ui.screens.auth.AuthViewModel 
           return (T) new AuthViewModel(singletonCImpl.firebaseAuthRepositoryProvider.get());
 
           case 2: // com.fameli.budget.ui.screens.categories.CategoriesViewModel 
-          return (T) new CategoriesViewModel(singletonCImpl.categoryDao());
+          return (T) new CategoriesViewModel(singletonCImpl.categoryDao(), singletonCImpl.familySyncRepositoryProvider.get());
 
           case 3: // com.fameli.budget.ui.screens.dashboard.DashboardViewModel 
           return (T) new DashboardViewModel(singletonCImpl.transactionDao());
@@ -631,10 +631,10 @@ public final class DaggerFameliApp_HiltComponents_SingletonC {
           return (T) new FamilyViewModel(singletonCImpl.familySyncRepositoryProvider.get());
 
           case 5: // com.fameli.budget.ui.screens.goals.GoalViewModel 
-          return (T) new GoalViewModel(singletonCImpl.goalDao(), singletonCImpl.firebaseAuthRepositoryProvider.get());
+          return (T) new GoalViewModel(singletonCImpl.goalDao(), singletonCImpl.firebaseAuthRepositoryProvider.get(), singletonCImpl.familySyncRepositoryProvider.get());
 
           case 6: // com.fameli.budget.ui.screens.planner.PlannerViewModel 
-          return (T) new PlannerViewModel(singletonCImpl.taskDao(), singletonCImpl.firebaseAuthRepositoryProvider.get());
+          return (T) new PlannerViewModel(singletonCImpl.taskDao(), singletonCImpl.firebaseAuthRepositoryProvider.get(), singletonCImpl.familySyncRepositoryProvider.get());
 
           case 7: // com.fameli.budget.ui.screens.settings.SettingsViewModel 
           return (T) new SettingsViewModel(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.firebaseAuthRepositoryProvider.get());

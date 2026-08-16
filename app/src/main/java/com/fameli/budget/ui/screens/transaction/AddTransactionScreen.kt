@@ -51,7 +51,7 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
             OutlinedTextField(note, { viewModel.updateNote(it) }, label = { Text("Заметка") }, modifier = Modifier.fillMaxWidth())
             
             Button(
-                onClick = { viewModel.save(familyId); navController.navigateUp() },
+                onClick = { viewModel.save(); navController.navigateUp() },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = amount.isNotBlank() && selected != null
             ) { Text("Сохранить") }

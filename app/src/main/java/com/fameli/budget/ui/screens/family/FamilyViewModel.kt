@@ -19,6 +19,7 @@ class FamilyViewModel @Inject constructor(
     val isSyncing = MutableStateFlow(false)
 
     init {
+        // АВТОСИНХРОНИЗАЦИЯ ПРИ ЗАПУСКЕ
         viewModelScope.launch {
             try {
                 val families = repo.getMyFamilies()
@@ -26,15 +27,24 @@ class FamilyViewModel @Inject constructor(
                     val id = families.first()
                     familyId.value = id
                     repo.startListening(id)
+                    // Автоматически загружаем данные из облака
+                    autoSync(id)
                 }
             } catch (_: Exception) {}
         }
     }
 
+    private suspend fun autoSync(familyId: String) {
+        repo.syncAllFromCloud(familyId).fold(
+            onSuccess = { message.value = "Данные загружены" },
+            onFailure = { }
+        )
+    }
+
     fun createFamily() = viewModelScope.launch {
         isLoading.value = true
         repo.createFamily("Моя семья").fold(
-            onSuccess = { id -> familyId.value = id; repo.startListening(id) },
+            onSuccess = { id -> familyId.value = id; repo.startListening(id); message.value = "Семья создана" },
             onFailure = { e -> message.value = "Ошибка: ${e.message}" }
         )
         isLoading.value = false
@@ -53,17 +63,14 @@ class FamilyViewModel @Inject constructor(
         val id = familyId.value ?: return@launch
         isSyncing.value = true
         message.value = "Синхронизация..."
-        
-        // Сначала отправляем локальные данные в облако
-        repo.forceSyncToCloud(id).fold(
+        repo.syncAllToCloud(id).fold(
             onSuccess = {
-                // Потом загружаем из облака
-                repo.forceSyncFromCloud(id).fold(
-                    onSuccess = { message.value = "Синхронизация завершена ✅" },
-                    onFailure = { e -> message.value = "Ошибка загрузки: ${e.message}" }
+                repo.syncAllFromCloud(id).fold(
+                    onSuccess = { message.value = "Синхронизация завершена" },
+                    onFailure = { e -> message.value = "Ошибка: ${e.message}" }
                 )
             },
-            onFailure = { e -> message.value = "Ошибка отправки: ${e.message}" }
+            onFailure = { e -> message.value = "Ошибка: ${e.message}" }
         )
         isSyncing.value = false
     }

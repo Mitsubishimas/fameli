@@ -1,6 +1,7 @@
 package com.fameli.budget.ui.screens.categories;
 
 import com.fameli.budget.data.local.dao.CategoryDao;
+import com.fameli.budget.data.repository.FamilySyncRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
@@ -25,20 +26,25 @@ import javax.inject.Provider;
 public final class CategoriesViewModel_Factory implements Factory<CategoriesViewModel> {
   private final Provider<CategoryDao> daoProvider;
 
-  public CategoriesViewModel_Factory(Provider<CategoryDao> daoProvider) {
+  private final Provider<FamilySyncRepository> familyRepoProvider;
+
+  public CategoriesViewModel_Factory(Provider<CategoryDao> daoProvider,
+      Provider<FamilySyncRepository> familyRepoProvider) {
     this.daoProvider = daoProvider;
+    this.familyRepoProvider = familyRepoProvider;
   }
 
   @Override
   public CategoriesViewModel get() {
-    return newInstance(daoProvider.get());
+    return newInstance(daoProvider.get(), familyRepoProvider.get());
   }
 
-  public static CategoriesViewModel_Factory create(Provider<CategoryDao> daoProvider) {
-    return new CategoriesViewModel_Factory(daoProvider);
+  public static CategoriesViewModel_Factory create(Provider<CategoryDao> daoProvider,
+      Provider<FamilySyncRepository> familyRepoProvider) {
+    return new CategoriesViewModel_Factory(daoProvider, familyRepoProvider);
   }
 
-  public static CategoriesViewModel newInstance(CategoryDao dao) {
-    return new CategoriesViewModel(dao);
+  public static CategoriesViewModel newInstance(CategoryDao dao, FamilySyncRepository familyRepo) {
+    return new CategoriesViewModel(dao, familyRepo);
   }
 }

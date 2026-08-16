@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.fameli.budget.data.local.dao.GoalDao
 import com.fameli.budget.data.local.entity.GoalEntity
 import com.fameli.budget.data.local.entity.GoalTransactionEntity
+import com.fameli.budget.data.repository.FamilySyncRepository
 import com.fameli.budget.firebase.FirebaseAuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class GoalViewModel @Inject constructor(
     private val goalDao: GoalDao,
-    private val authRepository: FirebaseAuthRepository
+    private val authRepository: FirebaseAuthRepository,
+    private val familyRepo: FamilySyncRepository
 ) : ViewModel() {
 
     val goals = goalDao.getAll().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -31,16 +33,21 @@ class GoalViewModel @Inject constructor(
 
     fun addGoal(title: String, desc: String, targetStr: String) = viewModelScope.launch {
         val target = targetStr.toDoubleOrNull() ?: return@launch
-        goalDao.insertGoal(GoalEntity(cloudId = UUID.randomUUID().toString(), title = title, description = desc, targetAmount = target))
+        val goal = GoalEntity(cloudId = UUID.randomUUID().toString(), title = title, description = desc, targetAmount = target)
+        goalDao.insertGoal(goal)
+        val families = familyRepo.getMyFamilies()
+        if (families.isNotEmpty()) familyRepo.syncGoal(families.first(), goal)
         hideAdd()
     }
 
     fun addMoney(goalId: Long, isAdding: Boolean, amountStr: String, comment: String) = viewModelScope.launch {
         var amount = amountStr.toDoubleOrNull() ?: return@launch
         if (!isAdding) amount = -amount
-        goalDao.insertTransaction(GoalTransactionEntity(goalId = goalId, amount = amount, comment = comment.ifBlank { "Без комментария" }, userName = authRepository.currentUser.value?.email ?: "Я", userUid = authRepository.getUserId() ?: ""))
+        goalDao.insertTransaction(GoalTransactionEntity(goalId = goalId, amount = amount, comment = comment.ifBlank { "Без комментария" }, userName = authRepository.getUserName(), userUid = authRepository.getUserId() ?: ""))
         val goal = goalDao.getById(goalId) ?: return@launch
         goalDao.updateAmount(goalId, goal.currentAmount + amount)
+        val families = familyRepo.getMyFamilies()
+        if (families.isNotEmpty()) familyRepo.syncGoal(families.first(), goal.copy(currentAmount = goal.currentAmount + amount))
         hideAddMoney()
     }
 

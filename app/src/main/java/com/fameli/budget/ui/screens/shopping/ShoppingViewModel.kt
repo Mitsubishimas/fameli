@@ -24,10 +24,6 @@ class ShoppingViewModel @Inject constructor(
 
     val showAddDialog = MutableStateFlow(false)
     val newItemName = MutableStateFlow("")
-    private val _familyId = MutableStateFlow<String?>(null)
-    val familyId: StateFlow<String?> = _familyId
-
-    fun setFamilyId(id: String?) { _familyId.value = id }
 
     fun showAdd() { showAddDialog.value = true; newItemName.value = "" }
     fun hideAdd() { showAddDialog.value = false; newItemName.value = "" }
@@ -35,26 +31,22 @@ class ShoppingViewModel @Inject constructor(
     fun addItem() = viewModelScope.launch {
         val name = newItemName.value.trim()
         if (name.isBlank()) return@launch
-        val item = ShoppingItemEntity(
-            cloudId = UUID.randomUUID().toString(),
-            name = name,
-            createdByUid = authRepository.getUserId() ?: "",
-            createdByName = authRepository.getUserName()
-        )
+        val item = ShoppingItemEntity(cloudId = UUID.randomUUID().toString(), name = name, createdByUid = authRepository.getUserId() ?: "", createdByName = authRepository.getUserName())
         shoppingDao.insert(item)
-        familyId.value?.let { familyRepo.syncShoppingItem(it, item) }
+        val families = familyRepo.getMyFamilies()
+        if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), item)
         hideAdd()
     }
 
     fun togglePurchased(item: ShoppingItemEntity) = viewModelScope.launch {
+        val families = familyRepo.getMyFamilies()
         if (item.isPurchased) {
             shoppingDao.markUnpurchased(item.id)
-            val updated = item.copy(isPurchased = false)
-            familyId.value?.let { familyRepo.syncShoppingItem(it, updated) }
+            if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), item.copy(isPurchased = false))
         } else {
             shoppingDao.markPurchased(item.id, authRepository.getUserId() ?: "", authRepository.getUserName())
             val updated = item.copy(isPurchased = true, purchasedByUid = authRepository.getUserId() ?: "", purchasedByName = authRepository.getUserName())
-            familyId.value?.let { familyRepo.syncShoppingItem(it, updated) }
+            if (families.isNotEmpty()) familyRepo.syncShoppingItem(families.first(), updated)
         }
     }
 
