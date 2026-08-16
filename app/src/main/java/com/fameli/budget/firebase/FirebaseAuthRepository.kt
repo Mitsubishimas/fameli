@@ -2,6 +2,7 @@ package com.fameli.budget.firebase
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.tasks.await
@@ -18,11 +19,19 @@ class FirebaseAuthRepository @Inject constructor(private val auth: FirebaseAuth)
     fun getUserName(): String {
         val user = auth.currentUser ?: return "Я"
         return when {
-            user.displayName.isNullOrBlank().not() -> user.displayName!!
-            user.email.isNullOrBlank().not() -> user.email!!.substringBefore("@")
+            !user.displayName.isNullOrBlank() -> user.displayName!!
+            !user.email.isNullOrBlank() -> user.email!!.substringBefore("@")
             else -> "Пользователь"
         }
     }
+
+    fun getUserEmail(): String = auth.currentUser?.email ?: ""
+
+    suspend fun updateUserName(name: String): Result<Unit> = try {
+        val user = auth.currentUser ?: throw Exception("Не авторизован")
+        user.updateProfile(UserProfileChangeRequest.Builder().setDisplayName(name).build()).await()
+        Result.success(Unit)
+    } catch (e: Exception) { Result.failure(e) }
 
     suspend fun signIn(email: String, password: String): Result<FirebaseUser> = try {
         Result.success(auth.signInWithEmailAndPassword(email, password).await().user!!)

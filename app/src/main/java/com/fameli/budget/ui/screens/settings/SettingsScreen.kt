@@ -15,7 +15,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fameli.budget.firebase.FirebaseAuthRepository
 import com.fameli.budget.ui.screens.family.FamilyViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
@@ -28,11 +30,32 @@ fun SettingsScreen(
     val isSyncing by familyVM.isSyncing.collectAsState()
     var joinCode by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val authRepo: FirebaseAuthRepository = hiltViewModel()
+    var userName by remember { mutableStateOf(authRepo.getUserName()) }
+    var showEditName by remember { mutableStateOf(false) }
 
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         
+        // ПРОФИЛЬ
+        item { Text("Профиль", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Person, null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(userName, fontWeight = FontWeight.Bold)
+                            Text(authRepo.getUserEmail(), style = MaterialTheme.typography.bodySmall)
+                        }
+                        IconButton(onClick = { showEditName = true }) { Icon(Icons.Filled.Edit, "Изменить имя") }
+                    }
+                }
+            }
+        }
+
         // Категории
-        item { Text("Настройки", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+        item { Text("Данные", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
         item {
             Card(Modifier.fillMaxWidth()) {
                 Button(onClick = { onNavigateToCategories?.invoke() }, modifier = Modifier.padding(16.dp).fillMaxWidth()) {
@@ -61,13 +84,11 @@ fun SettingsScreen(
                             cm.setPrimaryClip(ClipData.newPlainText("code", familyId))
                             Toast.makeText(context, "Код скопирован", Toast.LENGTH_SHORT).show()
                         }) { Icon(Icons.Filled.ContentCopy, "Копировать") }
-                        
                         Button(onClick = { familyVM.forceSync() }, modifier = Modifier.fillMaxWidth(), enabled = !isSyncing) {
                             if (isSyncing) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(8.dp)) }
                             Text("Синхронизировать")
                         }
                         message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-                        
                         OutlinedButton(onClick = { familyVM.leaveFamily() }, modifier = Modifier.fillMaxWidth()) { Text("Покинуть семью") }
                     }
                 }
@@ -93,5 +114,26 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    // Диалог изменения имени
+    if (showEditName) {
+        val scope = rememberCoroutineScope()
+        AlertDialog(
+            onDismissRequest = { showEditName = false },
+            title = { Text("Изменить имя") },
+            text = {
+                OutlinedTextField(userName, { userName = it }, label = { Text("Ваше имя") }, modifier = Modifier.fillMaxWidth())
+            },
+            confirmButton = {
+                Button(onClick = {
+                    scope.launch {
+                        authRepo.updateUserName(userName)
+                        showEditName = false
+                    }
+                }, enabled = userName.isNotBlank()) { Text("Сохранить") }
+            },
+            dismissButton = { TextButton(onClick = { showEditName = false }) { Text("Отмена") } }
+        )
     }
 }
