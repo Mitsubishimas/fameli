@@ -28,6 +28,7 @@ import java.lang.Override;
 import java.lang.String;
 import java.lang.SuppressWarnings;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -53,18 +54,21 @@ public final class FameliDatabase_Impl extends FameliDatabase {
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(4) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(5) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `transactions` (`localId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `categoryId` INTEGER NOT NULL, `amount` REAL NOT NULL, `currency` TEXT NOT NULL, `date` INTEGER NOT NULL, `note` TEXT, `isDeleted` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL)");
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_transactions_cloudId` ON `transactions` (`cloudId`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `categories` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `icon` TEXT NOT NULL, `color` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `budgets` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `categoryId` INTEGER, `limitAmount` REAL NOT NULL, `month` TEXT NOT NULL, `alertThreshold` REAL NOT NULL, `isDeleted` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `tasks` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT NOT NULL, `date` INTEGER NOT NULL, `time` TEXT NOT NULL, `createdBy` TEXT NOT NULL, `createdByUid` TEXT NOT NULL, `isCompleted` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL)");
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_tasks_cloudId` ON `tasks` (`cloudId`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `goals` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT NOT NULL, `targetAmount` REAL NOT NULL, `currentAmount` REAL NOT NULL, `createdAt` INTEGER NOT NULL, `deadline` INTEGER, `isCompleted` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `goal_transactions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `goalId` INTEGER NOT NULL, `amount` REAL NOT NULL, `comment` TEXT NOT NULL, `userName` TEXT NOT NULL, `userUid` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `shopping_items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cloudId` TEXT NOT NULL, `name` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `isPurchased` INTEGER NOT NULL, `purchasedByUid` TEXT NOT NULL, `purchasedByName` TEXT NOT NULL, `purchasedAt` INTEGER NOT NULL, `createdByUid` TEXT NOT NULL, `createdByName` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL)");
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_shopping_items_cloudId` ON `shopping_items` (`cloudId`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0e8582a0b3296cc16ee0df2c29e20cee')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '488b807bc8f5e62a8e3dff4771d9f660')");
       }
 
       @Override
@@ -130,7 +134,8 @@ public final class FameliDatabase_Impl extends FameliDatabase {
         _columnsTransactions.put("isDeleted", new TableInfo.Column("isDeleted", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsTransactions.put("lastModified", new TableInfo.Column("lastModified", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysTransactions = new HashSet<TableInfo.ForeignKey>(0);
-        final HashSet<TableInfo.Index> _indicesTransactions = new HashSet<TableInfo.Index>(0);
+        final HashSet<TableInfo.Index> _indicesTransactions = new HashSet<TableInfo.Index>(1);
+        _indicesTransactions.add(new TableInfo.Index("index_transactions_cloudId", true, Arrays.asList("cloudId"), Arrays.asList("ASC")));
         final TableInfo _infoTransactions = new TableInfo("transactions", _columnsTransactions, _foreignKeysTransactions, _indicesTransactions);
         final TableInfo _existingTransactions = TableInfo.read(db, "transactions");
         if (!_infoTransactions.equals(_existingTransactions)) {
@@ -188,7 +193,8 @@ public final class FameliDatabase_Impl extends FameliDatabase {
         _columnsTasks.put("isDeleted", new TableInfo.Column("isDeleted", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsTasks.put("lastModified", new TableInfo.Column("lastModified", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysTasks = new HashSet<TableInfo.ForeignKey>(0);
-        final HashSet<TableInfo.Index> _indicesTasks = new HashSet<TableInfo.Index>(0);
+        final HashSet<TableInfo.Index> _indicesTasks = new HashSet<TableInfo.Index>(1);
+        _indicesTasks.add(new TableInfo.Index("index_tasks_cloudId", true, Arrays.asList("cloudId"), Arrays.asList("ASC")));
         final TableInfo _infoTasks = new TableInfo("tasks", _columnsTasks, _foreignKeysTasks, _indicesTasks);
         final TableInfo _existingTasks = TableInfo.read(db, "tasks");
         if (!_infoTasks.equals(_existingTasks)) {
@@ -250,7 +256,8 @@ public final class FameliDatabase_Impl extends FameliDatabase {
         _columnsShoppingItems.put("createdAt", new TableInfo.Column("createdAt", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsShoppingItems.put("isDeleted", new TableInfo.Column("isDeleted", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysShoppingItems = new HashSet<TableInfo.ForeignKey>(0);
-        final HashSet<TableInfo.Index> _indicesShoppingItems = new HashSet<TableInfo.Index>(0);
+        final HashSet<TableInfo.Index> _indicesShoppingItems = new HashSet<TableInfo.Index>(1);
+        _indicesShoppingItems.add(new TableInfo.Index("index_shopping_items_cloudId", true, Arrays.asList("cloudId"), Arrays.asList("ASC")));
         final TableInfo _infoShoppingItems = new TableInfo("shopping_items", _columnsShoppingItems, _foreignKeysShoppingItems, _indicesShoppingItems);
         final TableInfo _existingShoppingItems = TableInfo.read(db, "shopping_items");
         if (!_infoShoppingItems.equals(_existingShoppingItems)) {
@@ -260,7 +267,7 @@ public final class FameliDatabase_Impl extends FameliDatabase {
         }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "0e8582a0b3296cc16ee0df2c29e20cee", "aa58eedf7f70ee9bbaff0009f1695d23");
+    }, "488b807bc8f5e62a8e3dff4771d9f660", "5de36d8e2b7aeeb34ff317eb5f56cc72");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;

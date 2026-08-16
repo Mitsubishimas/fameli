@@ -1,9 +1,13 @@
 package com.fameli.budget.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "tasks")
+@Entity(
+    tableName = "tasks",
+    indices = [Index(value = ["cloudId"], unique = true)]
+)
 data class TaskEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val cloudId: String = "",
