@@ -52,48 +52,56 @@ class FamilySyncRepository @Inject constructor(
         firestore.collection("families").whereArrayContains("members", userId).get().await().documents.map { it.id }
     } catch (e: Exception) { emptyList() }
 
-    // Отправка одного элемента (используем familyManager)
+    // Отправка в облако
     suspend fun syncTransaction(txn: TransactionEntity) {
         val fid = familyManager.currentFamilyId ?: return
         try { firestore.collection("families/$fid/transactions").document(txn.cloudId).set(txn).await() } catch (e: Exception) {}
     }
+
     suspend fun syncShoppingItem(item: ShoppingItemEntity) {
         val fid = familyManager.currentFamilyId ?: return
         try { firestore.collection("families/$fid/shopping").document(item.cloudId).set(item).await() } catch (e: Exception) {}
     }
+
     suspend fun syncTask(task: TaskEntity) {
         val fid = familyManager.currentFamilyId ?: return
         try { firestore.collection("families/$fid/tasks").document(task.cloudId).set(task).await() } catch (e: Exception) {}
     }
+
     suspend fun syncGoal(goal: GoalEntity) {
         val fid = familyManager.currentFamilyId ?: return
         try { firestore.collection("families/$fid/goals").document(goal.cloudId).set(goal).await() } catch (e: Exception) {}
     }
+
     suspend fun syncCategory(cat: CategoryEntity) {
         val fid = familyManager.currentFamilyId ?: return
         try { firestore.collection("families/$fid/categories").document(cat.cloudId.ifBlank { "cat_${cat.id}" }).set(cat).await() } catch (e: Exception) {}
     }
 
-    // Загрузка всех данных из облака
+    // Загрузка из облака
     suspend fun syncAllFromCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         try {
-            // Транзакции
-            firestore.collection("families/$fid/transactions").get().await().documents.forEach { doc ->
+            val txnSnap = firestore.collection("families/$fid/transactions").get().await()
+            txnSnap.documents.forEach { doc ->
                 doc.toObject(TransactionEntity::class.java)?.let { transactionDao.insert(it) }
             }
-            // Покупки
-            firestore.collection("families/$fid/shopping").get().await().documents.forEach { doc ->
+
+            val shopSnap = firestore.collection("families/$fid/shopping").get().await()
+            shopSnap.documents.forEach { doc ->
                 doc.toObject(ShoppingItemEntity::class.java)?.let { shoppingDao.insert(it) }
             }
-            // Задачи
-            firestore.collection("families/$fid/tasks").get().await().documents.forEach { doc ->
+
+            val taskSnap = firestore.collection("families/$fid/tasks").get().await()
+            taskSnap.documents.forEach { doc ->
                 doc.toObject(TaskEntity::class.java)?.let { taskDao.insert(it) }
             }
-            // Цели
-            firestore.collection("families/$fid/goals").get().await().documents.forEach { doc ->
+
+            val goalSnap = firestore.collection("families/$fid/goals").get().await()
+            goalSnap.documents.forEach { doc ->
                 doc.toObject(GoalEntity::class.java)?.let { goalDao.insertGoal(it) }
             }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "syncAllFromCloud: ${e.message}", e)
@@ -108,12 +116,8 @@ class FamilySyncRepository @Inject constructor(
             listeners.add(firestore.collection("families/$fid/transactions").addSnapshotListener { s, _ ->
                 s?.documents?.forEach { it.toObject(TransactionEntity::class.java)?.let { t -> kotlinx.coroutines.runBlocking { transactionDao.insert(t) } } }
             })
-            listeners.add(firestore.collection("families/$fid/shopping").addSnapshotListener { s, _ ->
-                s?.documents?.forEach { it.toObject(ShoppingItemEntity::class.java)?.let { i -> kotlinx.coroutines.runBlocking { shoppingDao.insert(i) } } }
-            })
         } catch (e: Exception) { Log.e(TAG, "listener: ${e.message}") }
     }
 
     fun stopListening() { listeners.forEach { it.remove() }; listeners.clear() }
 }
-
