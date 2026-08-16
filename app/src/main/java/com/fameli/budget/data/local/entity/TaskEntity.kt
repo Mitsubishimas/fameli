@@ -7,13 +7,15 @@ import androidx.room.PrimaryKey
 data class TaskEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val cloudId: String = "",
-    val title: String,
+    val title: String = "",
     val description: String = "",
-    val date: Long,
-    val time: String = "", // "14:30"
-    val createdBy: String = "", // имя пользователя
-    val createdByUid: String = "", // uid пользователя
+    val date: Long = 0,
+    val time: String = "12:00",
+    val createdBy: String = "",
+    val createdByUid: String = "",
     val isCompleted: Boolean = false,
     val isDeleted: Boolean = false,
     val lastModified: Long = System.currentTimeMillis()
-)
+) {
+    constructor() : this(id = 0, cloudId = "", title = "", date = 0)
+}
