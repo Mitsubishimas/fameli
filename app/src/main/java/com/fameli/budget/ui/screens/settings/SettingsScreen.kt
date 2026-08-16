@@ -15,11 +15,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fameli.budget.ui.screens.family.FamilyViewModel
 
 @Composable
 fun SettingsScreen(
     settingsVM: SettingsViewModel = hiltViewModel(),
-    onNavigateToCategories: (() -> Unit)? = null
+    onNavigateToCategories: (() -> Unit)? = null,
+    onNavigateToFamily: (() -> Unit)? = null
 ) {
     val userName by settingsVM.userName.collectAsState()
     val userEmail by settingsVM.userEmail.collectAsState()
@@ -42,6 +44,18 @@ fun SettingsScreen(
                         }
                         IconButton(onClick = { editName = userName; showEditName = true }) { Icon(Icons.Filled.Edit, "Изменить имя") }
                     }
+                }
+            }
+        }
+
+        // Семья
+        item { Text("Семья", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Button(onClick = { onNavigateToFamily?.invoke() }, modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                    Icon(Icons.Filled.People, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Управление семьёй и синхронизация")
                 }
             }
         }

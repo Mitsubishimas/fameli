@@ -12,6 +12,7 @@ import androidx.navigation.compose.*
 import com.fameli.budget.ui.screens.auth.*
 import com.fameli.budget.ui.screens.categories.*
 import com.fameli.budget.ui.screens.dashboard.*
+import com.fameli.budget.ui.screens.family.*
 import com.fameli.budget.ui.screens.goals.*
 import com.fameli.budget.ui.screens.planner.*
 import com.fameli.budget.ui.screens.settings.*
@@ -28,6 +29,7 @@ sealed class Screen(val route: String) {
     object Shopping : Screen("shopping")
     object Planner : Screen("planner")
     object Categories : Screen("categories")
+    object Family : Screen("family")
     object Settings : Screen("settings")
 }
 
@@ -46,6 +48,7 @@ fun FameliNavHost() {
         composable(Screen.Shopping.route) { MainScaffold(navController) }
         composable(Screen.Planner.route) { MainScaffold(navController) }
         composable(Screen.Categories.route) { MainScaffold(navController) }
+        composable(Screen.Family.route) { MainScaffold(navController) }
         composable(Screen.Settings.route) { MainScaffold(navController) }
     }
 }
@@ -91,7 +94,11 @@ fun MainScaffold(navController: NavHostController) {
                 Screen.Shopping.route -> ShoppingScreen(shoppingVM, showShoppingDialog) { showShoppingDialog = false }
                 Screen.Planner.route -> PlannerScreen(plannerVM, showTaskDialog) { showTaskDialog = false }
                 Screen.Categories.route -> CategoriesScreen()
-                Screen.Settings.route -> SettingsScreen(onNavigateToCategories = { navController.navigate(Screen.Categories.route) })
+                Screen.Family.route -> FamilyScreen()
+                Screen.Settings.route -> SettingsScreen(
+                    onNavigateToCategories = { navController.navigate(Screen.Categories.route) },
+                    onNavigateToFamily = { navController.navigate(Screen.Family.route) }
+                )
             }
         }
     }
