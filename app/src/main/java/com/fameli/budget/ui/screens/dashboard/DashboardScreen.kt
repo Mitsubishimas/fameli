@@ -25,19 +25,71 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
     val transactions by viewModel.transactions.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val familyVM: FamilyViewModel = hiltViewModel()
+    val isSyncing by familyVM.isSyncing.collectAsState()
+    val message by familyVM.message.collectAsState()
     var selectedTxn by remember { mutableStateOf<TransactionEntity?>(null) }
 
-    LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         item {
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-                Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Баланс")
-                    Text(NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(balance.totalIncome - balance.totalExpense), style = MaterialTheme.typography.headlineLarge)
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        Text(NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(balance.totalIncome), color = Color(0xFF2E7D32))
-                        Text(NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(balance.totalExpense), color = Color(0xFFC62828))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "Баланс")
+                    Text(
+                        text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalIncome - balance.totalExpense),
+                        style = MaterialTheme.typography.headlineLarge
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Text(
+                            text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalIncome),
+                            color = Color(0xFF2E7D32)
+                        )
+                        Text(
+                            text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalExpense),
+                            color = Color(0xFFC62828)
+                        )
                     }
                 }
+            }
+        }
+
+        item {
+            Button(
+                onClick = { familyVM.forceSync() },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isSyncing
+            ) {
+                if (isSyncing) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "Синхронизация...")
+                } else {
+                    Icon(imageVector = Icons.Filled.Sync, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "Обновить")
+                }
+            }
+        }
+
+        val msg = message
+        if (msg != null) {
+            item {
+                Text(
+                    text = msg,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
 
@@ -47,13 +99,27 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
             val txnColor = if (isIncome) Color(0xFF2E7D32) else Color(0xFFC62828)
             val sign = if (isIncome) "+" else "-"
 
-            Card(Modifier.fillMaxWidth().clickable { selectedTxn = txn }) {
-                Row(Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Card(modifier = Modifier.fillMaxWidth().clickable { selectedTxn = txn }) {
+                Row(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Column {
-                        Text(txn.note.ifBlank { cat?.name ?: "—" }, style = MaterialTheme.typography.bodyLarge)
-                        Text(SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("ru")).format(Date(txn.date)), style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = txn.note.ifBlank { cat?.name ?: "—" },
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("ru")).format(Date(txn.date)),
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
-                    Text("$sign${NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(txn.amount)}", color = txnColor, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = "$sign${NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(txn.amount)}",
+                        color = txnColor,
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
             }
         }
@@ -63,8 +129,20 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
         AlertDialog(
             onDismissRequest = { selectedTxn = null },
             title = { Text("Транзакция") },
-            text = { Column { Text("Сумма: ${NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(txn.amount)}"); Text("Тип: ${txn.type}") } },
-            confirmButton = { Row { TextButton(onClick = { viewModel.deleteTransaction(txn); selectedTxn = null }) { Text("Удалить", color = Color(0xFFC62828)) }; Button(onClick = { selectedTxn = null }) { Text("Закрыть") } } },
+            text = {
+                Column {
+                    Text("Сумма: ${NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(txn.amount)}")
+                    Text("Тип: ${txn.type}")
+                }
+            },
+            confirmButton = {
+                Row {
+                    TextButton(onClick = { viewModel.deleteTransaction(txn); selectedTxn = null }) {
+                        Text("Удалить", color = Color(0xFFC62828))
+                    }
+                    Button(onClick = { selectedTxn = null }) { Text("Закрыть") }
+                }
+            },
             dismissButton = { TextButton(onClick = { selectedTxn = null }) { Text("Отмена") } }
         )
     }

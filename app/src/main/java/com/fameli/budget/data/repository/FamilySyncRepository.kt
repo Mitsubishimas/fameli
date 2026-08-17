@@ -53,74 +53,56 @@ class FamilySyncRepository @Inject constructor(
         firestore.collection("families").whereArrayContains("members", userId).get().await().documents.map { it.id }
     } catch (e: Exception) { emptyList() }
 
-    // Отправка одного элемента
     suspend fun syncTransaction(txn: TransactionEntity) {
         val fid = familyManager.currentFamilyId ?: return
-        try { firestore.collection("families/$fid/transactions").document(txn.cloudId).set(txn).await() } catch (e: Exception) {}
-    }
-    suspend fun syncShoppingItem(item: ShoppingItemEntity) {
-        val fid = familyManager.currentFamilyId ?: return
-        try { firestore.collection("families/$fid/shopping").document(item.cloudId).set(item).await() } catch (e: Exception) {}
-    }
-    suspend fun syncTask(task: TaskEntity) {
-        val fid = familyManager.currentFamilyId ?: return
-        try { firestore.collection("families/$fid/tasks").document(task.cloudId).set(task).await() } catch (e: Exception) {}
-    }
-    suspend fun syncGoal(goal: GoalEntity) {
-        val fid = familyManager.currentFamilyId ?: return
-        try { firestore.collection("families/$fid/goals").document(goal.cloudId).set(goal).await() } catch (e: Exception) {}
-    }
-    suspend fun syncCategory(cat: CategoryEntity) {
-        val fid = familyManager.currentFamilyId ?: return
-        try { firestore.collection("families/$fid/categories").document(cat.cloudId.ifBlank { "cat_${cat.id}" }).set(cat).await() } catch (e: Exception) {}
+        try { firestore.collection("families/$fid/transactions").document(txn.cloudId).set(txn).await() } catch (e: Exception) { Log.e(TAG, "txn: ${e.message}") }
     }
 
-    // ОТПРАВИТЬ ВСЕ ЛОКАЛЬНЫЕ ДАННЫЕ В ОБЛАКО
+    suspend fun syncShoppingItem(item: ShoppingItemEntity) {
+        val fid = familyManager.currentFamilyId ?: return
+        try { firestore.collection("families/$fid/shopping").document(item.cloudId).set(item).await() } catch (e: Exception) { Log.e(TAG, "shop: ${e.message}") }
+    }
+
+    suspend fun syncTask(task: TaskEntity) {
+        val fid = familyManager.currentFamilyId ?: return
+        try { firestore.collection("families/$fid/tasks").document(task.cloudId).set(task).await() } catch (e: Exception) { Log.e(TAG, "task: ${e.message}") }
+    }
+
+    suspend fun syncGoal(goal: GoalEntity) {
+        val fid = familyManager.currentFamilyId ?: return
+        try { firestore.collection("families/$fid/goals").document(goal.cloudId).set(goal).await() } catch (e: Exception) { Log.e(TAG, "goal: ${e.message}") }
+    }
+
+    suspend fun syncCategory(cat: CategoryEntity) {
+        val fid = familyManager.currentFamilyId ?: return
+        try { firestore.collection("families/$fid/categories").document(cat.cloudId.ifBlank { "cat_${cat.id}" }).set(cat).await() } catch (e: Exception) { Log.e(TAG, "cat: ${e.message}") }
+    }
+
     suspend fun syncAllLocalToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         try {
-            // Транзакции
-            val txns = transactionDao.getAll().first().filter { it.cloudId.isNotEmpty() }
-            txns.forEach { firestore.collection("families/$fid/transactions").document(it.cloudId).set(it).await() }
-            Log.d(TAG, "Отправлено транзакций: ${txns.size}")
-
-            // Покупки
-            val shop = shoppingDao.getAll().first().filter { it.cloudId.isNotEmpty() }
-            shop.forEach { firestore.collection("families/$fid/shopping").document(it.cloudId).set(it).await() }
-            Log.d(TAG, "Отправлено покупок: ${shop.size}")
-
-            // Задачи
-            val tasks = taskDao.getAll().first().filter { it.cloudId.isNotEmpty() }
-            tasks.forEach { firestore.collection("families/$fid/tasks").document(it.cloudId).set(it).await() }
-            Log.d(TAG, "Отправлено задач: ${tasks.size}")
-
-            // Цели
-            val goals = goalDao.getAll().first().filter { it.cloudId.isNotEmpty() }
-            goals.forEach { firestore.collection("families/$fid/goals").document(it.cloudId).set(it).await() }
-            Log.d(TAG, "Отправлено целей: ${goals.size}")
-
+            transactionDao.getAll().first().forEach { syncTransaction(it) }
+            shoppingDao.getAll().first().forEach { syncShoppingItem(it) }
+            taskDao.getAll().first().forEach { syncTask(it) }
+            goalDao.getAll().first().forEach { syncGoal(it) }
             Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e(TAG, "syncAllLocalToCloud: ${e.message}", e)
-            Result.failure(e)
-        }
+        } catch (e: Exception) { Result.failure(e) }
     }
 
-    // Загрузка из облака
     suspend fun syncAllFromCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         try {
             firestore.collection("families/$fid/transactions").get().await().documents.forEach {
-                it.toObject(TransactionEntity::class.java)?.let { t -> transactionDao.insert(t) }
+                try { it.toObject(TransactionEntity::class.java)?.let { t -> transactionDao.insert(t) } } catch (e: Exception) { Log.e(TAG, "deser txn: ${e.message}") }
             }
             firestore.collection("families/$fid/shopping").get().await().documents.forEach {
-                it.toObject(ShoppingItemEntity::class.java)?.let { s -> shoppingDao.insert(s) }
+                try { it.toObject(ShoppingItemEntity::class.java)?.let { s -> shoppingDao.insert(s) } } catch (e: Exception) { Log.e(TAG, "deser shop: ${e.message}") }
             }
             firestore.collection("families/$fid/tasks").get().await().documents.forEach {
-                it.toObject(TaskEntity::class.java)?.let { t -> taskDao.insert(t) }
+                try { it.toObject(TaskEntity::class.java)?.let { t -> taskDao.insert(t) } } catch (e: Exception) { Log.e(TAG, "deser task: ${e.message}") }
             }
             firestore.collection("families/$fid/goals").get().await().documents.forEach {
-                it.toObject(GoalEntity::class.java)?.let { g -> goalDao.insertGoal(g) }
+                try { it.toObject(GoalEntity::class.java)?.let { g -> goalDao.insertGoal(g) } } catch (e: Exception) { Log.e(TAG, "deser goal: ${e.message}") }
             }
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
@@ -130,8 +112,21 @@ class FamilySyncRepository @Inject constructor(
         stopListening()
         val fid = familyManager.currentFamilyId ?: return
         try {
-            listeners.add(firestore.collection("families/$fid/transactions").addSnapshotListener { s, _ ->
-                s?.documents?.forEach { it.toObject(TransactionEntity::class.java)?.let { t -> kotlinx.coroutines.runBlocking { transactionDao.insert(t) } } }
+            listeners.add(firestore.collection("families/$fid/transactions").addSnapshotListener { s, e ->
+                if (e != null) return@addSnapshotListener
+                s?.documents?.forEach { try { it.toObject(TransactionEntity::class.java)?.let { t -> kotlinx.coroutines.runBlocking { transactionDao.insert(t) } } } catch (ex: Exception) {} }
+            })
+            listeners.add(firestore.collection("families/$fid/shopping").addSnapshotListener { s, e ->
+                if (e != null) return@addSnapshotListener
+                s?.documents?.forEach { try { it.toObject(ShoppingItemEntity::class.java)?.let { i -> kotlinx.coroutines.runBlocking { shoppingDao.insert(i) } } } catch (ex: Exception) {} }
+            })
+            listeners.add(firestore.collection("families/$fid/tasks").addSnapshotListener { s, e ->
+                if (e != null) return@addSnapshotListener
+                s?.documents?.forEach { try { it.toObject(TaskEntity::class.java)?.let { t -> kotlinx.coroutines.runBlocking { taskDao.insert(t) } } } catch (ex: Exception) {} }
+            })
+            listeners.add(firestore.collection("families/$fid/goals").addSnapshotListener { s, e ->
+                if (e != null) return@addSnapshotListener
+                s?.documents?.forEach { try { it.toObject(GoalEntity::class.java)?.let { g -> kotlinx.coroutines.runBlocking { goalDao.insertGoal(g) } } } catch (ex: Exception) {} }
             })
         } catch (e: Exception) { Log.e(TAG, "listener: ${e.message}") }
     }
