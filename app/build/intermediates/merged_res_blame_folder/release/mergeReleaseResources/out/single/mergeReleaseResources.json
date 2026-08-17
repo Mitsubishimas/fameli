@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "com.fameli.budget.app-release-83:/drawable_widget_background.xml.flat",
+        "source": "com.fameli.budget.app-main-84:/drawable/widget_background.xml"
+    },
+    {
+        "merged": "com.fameli.budget.app-release-83:/xml_file_paths.xml.flat",
+        "source": "com.fameli.budget.app-main-84:/xml/file_paths.xml"
+    },
+    {
+        "merged": "com.fameli.budget.app-release-83:/layout_widget_budget.xml.flat",
+        "source": "com.fameli.budget.app-main-84:/layout/widget_budget.xml"
+    },
+    {
+        "merged": "com.fameli.budget.app-release-83:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.fameli.budget.app-main-84:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.fameli.budget.app-release-83:/xml_budget_widget_info.xml.flat",
+        "source": "com.fameli.budget.app-main-84:/xml/budget_widget_info.xml"
+    }
+]

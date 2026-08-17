@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fameli.budget.data.local.entity.TransactionEntity
 import com.fameli.budget.ui.screens.family.FamilyViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -29,97 +31,85 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
     val message by familyVM.message.collectAsState()
     var selectedTxn by remember { mutableStateOf<TransactionEntity?>(null) }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+    SwipeRefresh(
+        state = rememberSwipeRefreshState(isRefreshing = isSyncing),
+        onRefresh = { familyVM.forceSync() },
+        modifier = Modifier.fillMaxSize()
     ) {
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "Баланс")
-                    Text(
-                        text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalIncome - balance.totalExpense),
-                        style = MaterialTheme.typography.headlineLarge
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Text(
-                            text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalIncome),
-                            color = Color(0xFF2E7D32)
-                        )
-                        Text(
-                            text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalExpense),
-                            color = Color(0xFFC62828)
-                        )
-                    }
-                }
-            }
-        }
-
-        item {
-            Button(
-                onClick = { familyVM.forceSync() },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isSyncing
-            ) {
-                if (isSyncing) {
-                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Синхронизация...")
-                } else {
-                    Icon(imageVector = Icons.Filled.Sync, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Обновить")
-                }
-            }
-        }
-
-        val msg = message
-        if (msg != null) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             item {
-                Text(
-                    text = msg,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-
-        items(transactions.take(50)) { txn ->
-            val cat = categories.find { it.id == txn.categoryId }
-            val isIncome = cat?.type?.name == "INCOME" || txn.type == "INCOME"
-            val txnColor = if (isIncome) Color(0xFF2E7D32) else Color(0xFFC62828)
-            val sign = if (isIncome) "+" else "-"
-
-            Card(modifier = Modifier.fillMaxWidth().clickable { selectedTxn = txn }) {
-                Row(
-                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
-                    Column {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = "Баланс")
                         Text(
-                            text = txn.note.ifBlank { cat?.name ?: "—" },
-                            style = MaterialTheme.typography.bodyLarge
+                            text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalIncome - balance.totalExpense),
+                            style = MaterialTheme.typography.headlineLarge
                         )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Text(
+                                text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalIncome),
+                                color = Color(0xFF2E7D32)
+                            )
+                            Text(
+                                text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalExpense),
+                                color = Color(0xFFC62828)
+                            )
+                        }
+                    }
+                }
+            }
+
+            val msg = message
+            if (msg != null) {
+                item {
+                    Text(
+                        text = msg,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            items(transactions.take(50)) { txn ->
+                val cat = categories.find { it.id == txn.categoryId }
+                val isIncome = cat?.type?.name == "INCOME" || txn.type == "INCOME"
+                val txnColor = if (isIncome) Color(0xFF2E7D32) else Color(0xFFC62828)
+                val sign = if (isIncome) "+" else "-"
+
+                Card(modifier = Modifier.fillMaxWidth().clickable { selectedTxn = txn }) {
+                    Row(
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = txn.note.ifBlank { cat?.name ?: "—" },
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("ru")).format(Date(txn.date)),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                         Text(
-                            text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("ru")).format(Date(txn.date)),
-                            style = MaterialTheme.typography.bodySmall
+                            text = "$sign${NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(txn.amount)}",
+                            color = txnColor,
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
-                    Text(
-                        text = "$sign${NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(txn.amount)}",
-                        color = txnColor,
-                        style = MaterialTheme.typography.titleMedium
-                    )
                 }
             }
         }
