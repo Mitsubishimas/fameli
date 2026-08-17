@@ -12,7 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.fameli.budget.data.local.entity.ShoppingItemEntity
+import com.fameli.budget.ui.screens.family.FamilyViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
 fun ShoppingScreen(
@@ -21,13 +25,19 @@ fun ShoppingScreen(
     onDismiss: () -> Unit = {}
 ) {
     val items by viewModel.items.collectAsState()
-    val internalShowAdd by viewModel.showAddDialog.collectAsState()
+    val familyVM: FamilyViewModel = hiltViewModel()
+    val isSyncing by familyVM.isSyncing.collectAsState()
+    val showDialog by viewModel.showAddDialog.collectAsState()
     val newName by viewModel.newItemName.collectAsState()
-    val showDialog = showAddDialog || internalShowAdd
+    val dialogVisible = showAddDialog || showDialog
 
-    Box(Modifier.fillMaxSize()) {
+    SwipeRefresh(
+        state = rememberSwipeRefreshState(isRefreshing = isSyncing),
+        onRefresh = { familyVM.forceSync() },
+        modifier = Modifier.fillMaxSize()
+    ) {
         LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item { Text("Список покупок", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) }
+            item { Text("Покупки", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) }
             if (items.isEmpty()) {
                 item { Card(Modifier.fillMaxWidth()) { Text("Список пуст", modifier = Modifier.padding(24.dp)) } }
             }
@@ -36,7 +46,7 @@ fun ShoppingScreen(
         }
     }
 
-    if (showDialog) {
+    if (dialogVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.hideAdd(); onDismiss() },
             title = { Text("Новая покупка") },
