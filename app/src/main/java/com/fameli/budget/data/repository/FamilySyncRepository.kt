@@ -50,7 +50,6 @@ class FamilySyncRepository @Inject constructor(
         firestore.collection("families").whereArrayContains("members", userId).get().await().documents.map { it.id }
     } catch (e: Exception) { emptyList() }
 
-    // ==== ОТПРАВКА ====
     suspend fun syncTransaction(txn: TransactionEntity) {
         val fid = familyManager.currentFamilyId ?: return
         try { firestore.collection("families/$fid/transactions").document(txn.cloudId).set(txn).await() } catch (e: Exception) { Log.e(TAG, "txn: ${e.message}") }
@@ -72,7 +71,6 @@ class FamilySyncRepository @Inject constructor(
         try { firestore.collection("families/$fid/categories").document(cat.cloudId.ifBlank { "cat_${cat.id}" }).set(cat).await() } catch (e: Exception) { Log.e(TAG, "cat: ${e.message}") }
     }
 
-    // ==== ОТПРАВИТЬ ВСЁ ЛОКАЛЬНОЕ ====
     suspend fun syncAllLocalToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         try {
@@ -80,14 +78,19 @@ class FamilySyncRepository @Inject constructor(
             shoppingDao.getAll().first().forEach { syncShoppingItem(it) }
             taskDao.getAll().first().forEach { syncTask(it) }
             goalDao.getAll().first().forEach { syncGoal(it) }
+            categoryDao.getAll().first().forEach { syncCategory(it) }
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
 
-    // ==== ЗАГРУЗИТЬ ИЗ ОБЛАКА (без дублей) ====
     suspend fun syncAllFromCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         try {
+            firestore.collection("families/$fid/categories").get().await().documents.forEach { doc ->
+                doc.toObject(CategoryEntity::class.java)?.let { cat ->
+                    if (categoryDao.getByCloudId(cat.cloudId) == null) categoryDao.insert(cat)
+                }
+            }
             firestore.collection("families/$fid/transactions").get().await().documents.forEach { doc ->
                 doc.toObject(TransactionEntity::class.java)?.let { txn ->
                     if (transactionDao.getByCloudId(txn.cloudId) == null) transactionDao.insert(txn)
@@ -107,11 +110,22 @@ class FamilySyncRepository @Inject constructor(
         } catch (e: Exception) { Result.failure(e) }
     }
 
-    // ==== СЛУШАТЕЛИ ====
     fun startListening() {
         stopListening()
         val fid = familyManager.currentFamilyId ?: return
         try {
+            listeners.add(firestore.collection("families/$fid/categories").addSnapshotListener { s, e ->
+                if (e != null) return@addSnapshotListener
+                s?.documents?.forEach { doc ->
+                    try {
+                        doc.toObject(CategoryEntity::class.java)?.let { cat ->
+                            kotlinx.coroutines.runBlocking {
+                                if (categoryDao.getByCloudId(cat.cloudId) == null) categoryDao.insert(cat)
+                            }
+                        }
+                    } catch (ex: Exception) {}
+                }
+            })
             listeners.add(firestore.collection("families/$fid/transactions").addSnapshotListener { s, e ->
                 if (e != null) return@addSnapshotListener
                 s?.documents?.forEach { doc ->

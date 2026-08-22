@@ -33,8 +33,14 @@ class CategoriesViewModel @Inject constructor(
     fun updateType(t: CategoryType) { newType.value = t }
 
     fun addCategory() = viewModelScope.launch {
-        val cat = CategoryEntity(cloudId = UUID.randomUUID().toString(), name = newName.value, type = newType.value, icon = newIcon.value)
+        val cat = CategoryEntity(
+            cloudId = UUID.randomUUID().toString(),
+            name = newName.value,
+            type = newType.value,
+            icon = newIcon.value
+        )
         dao.insert(cat)
+        // Синхронизация в фоне
         launch(Dispatchers.IO) { familyRepo.syncCategory(cat) }
         hideAdd()
     }
