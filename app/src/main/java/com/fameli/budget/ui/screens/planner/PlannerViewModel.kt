@@ -42,8 +42,9 @@ class PlannerViewModel @Inject constructor(
     }
 
     fun toggleComplete(task: TaskEntity) = viewModelScope.launch {
-        taskDao.toggleComplete(task.id, !task.isCompleted)
-        launch(Dispatchers.IO) { familyRepo.syncTask(task.copy(isCompleted = !task.isCompleted)) }
+        val updated = task.copy(isCompleted = !task.isCompleted)
+        taskDao.update(updated)
+        launch(Dispatchers.IO) { familyRepo.syncTask(updated) }
     }
 
     fun deleteTask(task: TaskEntity) = viewModelScope.launch { taskDao.softDelete(task.id) }

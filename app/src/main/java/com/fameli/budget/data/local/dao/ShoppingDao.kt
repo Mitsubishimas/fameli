@@ -21,7 +21,7 @@ interface ShoppingDao {
     @Query("UPDATE shopping_items SET isPurchased = 1, purchasedByUid = :uid, purchasedByName = :userName, purchasedAt = :timestamp WHERE id = :id")
     suspend fun markPurchased(id: Long, uid: String, userName: String, timestamp: Long = System.currentTimeMillis())
 
-    @Query("UPDATE shopping_items SET isPurchased = 0, purchasedByUid = '', purchasedByName = '', purchasedAt = 0 WHERE id = :id")
+    @Query("UPDATE shopping_items SET isPurchased = 0 WHERE id = :id")
     suspend fun markUnpurchased(id: Long)
 
     @Query("UPDATE shopping_items SET isDeleted = 1 WHERE id = :id")

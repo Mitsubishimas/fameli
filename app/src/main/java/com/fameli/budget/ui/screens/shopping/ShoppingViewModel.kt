@@ -32,19 +32,20 @@ class ShoppingViewModel @Inject constructor(
         if (name.isBlank()) return@launch
         val item = ShoppingItemEntity(cloudId = UUID.randomUUID().toString(), name = name, createdByUid = authRepository.getUserId() ?: "", createdByName = authRepository.getUserName())
         shoppingDao.insert(item)
-        hideAdd()
         launch(Dispatchers.IO) { familyRepo.syncShoppingItem(item) }
+        hideAdd()
     }
 
     fun togglePurchased(item: ShoppingItemEntity) = viewModelScope.launch {
-        if (item.isPurchased) {
-            shoppingDao.markUnpurchased(item.id)
-            launch(Dispatchers.IO) { familyRepo.syncShoppingItem(item.copy(isPurchased = false)) }
+        val updated = if (item.isPurchased) {
+            item.copy(isPurchased = false, purchasedByUid = "", purchasedByName = "", purchasedAt = 0)
         } else {
-            shoppingDao.markPurchased(item.id, authRepository.getUserId() ?: "", authRepository.getUserName())
-            val updated = item.copy(isPurchased = true, purchasedByUid = authRepository.getUserId() ?: "", purchasedByName = authRepository.getUserName())
-            launch(Dispatchers.IO) { familyRepo.syncShoppingItem(updated) }
+            item.copy(isPurchased = true, purchasedByUid = authRepository.getUserId() ?: "", purchasedByName = authRepository.getUserName(), purchasedAt = System.currentTimeMillis())
         }
+        // Обновляем локально
+        shoppingDao.update(updated)
+        // Отправляем в облако
+        launch(Dispatchers.IO) { familyRepo.syncShoppingItem(updated) }
     }
 
     fun deleteItem(item: ShoppingItemEntity) = viewModelScope.launch { shoppingDao.softDelete(item.id) }
