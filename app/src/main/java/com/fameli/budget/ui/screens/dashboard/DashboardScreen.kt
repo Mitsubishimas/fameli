@@ -4,8 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,8 +13,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fameli.budget.data.local.entity.TransactionEntity
 import com.fameli.budget.ui.screens.family.FamilyViewModel
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -25,91 +21,44 @@ import java.util.*
 fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
     val balance by viewModel.balance.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
-    val categories by viewModel.categories.collectAsState()
     val familyVM: FamilyViewModel = hiltViewModel()
-    val isSyncing by familyVM.isSyncing.collectAsState()
-    val message by familyVM.message.collectAsState()
     var selectedTxn by remember { mutableStateOf<TransactionEntity?>(null) }
 
-    SwipeRefresh(
-        state = rememberSwipeRefreshState(isRefreshing = isSyncing),
-        onRefresh = { familyVM.forceSync() },
-        modifier = Modifier.fillMaxSize()
-    ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = "Баланс")
-                        Text(
-                            text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalIncome - balance.totalExpense),
-                            style = MaterialTheme.typography.headlineLarge
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            Text(
-                                text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalIncome),
-                                color = Color(0xFF2E7D32)
-                            )
-                            Text(
-                                text = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(balance.totalExpense),
-                                color = Color(0xFFC62828)
-                            )
-                        }
+    LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Баланс")
+                    Text(NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(balance.totalIncome - balance.totalExpense), style = MaterialTheme.typography.headlineLarge)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        Text(NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(balance.totalIncome), color = Color(0xFF2E7D32))
+                        Text(NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(balance.totalExpense), color = Color(0xFFC62828))
                     }
                 }
             }
+        }
 
-            val msg = message
-            if (msg != null) {
-                item {
-                    Text(
-                        text = msg,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+        item {
+            Button(onClick = { familyVM.forceSync() }, modifier = Modifier.fillMaxWidth()) {
+                Text("Обновить")
             }
+        }
 
-            items(transactions.take(50)) { txn ->
-                val cat = categories.find { it.id == txn.categoryId }
-                val isIncome = cat?.type?.name == "INCOME" || txn.type == "INCOME"
-                val txnColor = if (isIncome) Color(0xFF2E7D32) else Color(0xFFC62828)
-                val sign = if (isIncome) "+" else "-"
+        items(transactions.take(100)) { txn ->
+            val isIncome = txn.type == "INCOME"
+            val txnColor = if (isIncome) Color(0xFF2E7D32) else Color(0xFFC62828)
+            val sign = if (isIncome) "+" else "-"
 
-                Card(modifier = Modifier.fillMaxWidth().clickable { selectedTxn = txn }) {
-                    Row(
-                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = txn.note.ifBlank { cat?.name ?: "—" },
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("ru")).format(Date(txn.date)),
-                                style = MaterialTheme.typography.bodySmall
-                            )
+            Card(Modifier.fillMaxWidth().clickable { selectedTxn = txn }) {
+                Row(Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Column {
+                        Text(txn.note.ifBlank { txn.categoryName.ifBlank { "—" } }, style = MaterialTheme.typography.bodyLarge)
+                        if (txn.categoryName.isNotBlank()) {
+                            Text(txn.categoryName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Text(
-                            text = "$sign${NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(txn.amount)}",
-                            color = txnColor,
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        Text(SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("ru")).format(Date(txn.date)), style = MaterialTheme.typography.bodySmall)
                     }
+                    Text("$sign${NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(txn.amount)}", color = txnColor, style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
@@ -118,11 +67,13 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
     selectedTxn?.let { txn ->
         AlertDialog(
             onDismissRequest = { selectedTxn = null },
-            title = { Text("Транзакция") },
+            title = { Text(txn.categoryName.ifBlank { "Транзакция" }) },
             text = {
                 Column {
-                    Text("Сумма: ${NumberFormat.getCurrencyInstance(Locale("ru", "RU")).format(txn.amount)}")
-                    Text("Тип: ${txn.type}")
+                    Text("Сумма: ${NumberFormat.getCurrencyInstance(Locale("ru","RU")).format(txn.amount)}")
+                    Text("Тип: ${if (txn.type == "INCOME") "Доход" else "Расход"}")
+                    Text("Категория: ${txn.categoryName.ifBlank { "—" }}")
+                    Text("Заметка: ${txn.note.ifBlank { "—" }}")
                 }
             },
             confirmButton = {

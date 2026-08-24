@@ -56,21 +56,25 @@ class FamilySyncRepository @Inject constructor(
         val docId = txn.cloudId.ifBlank { UUID.randomUUID().toString() }
         try { firestore.collection("families/$fid/transactions").document(docId).set(txn.copy(cloudId = docId)).await() } catch (e: Exception) {}
     }
+
     suspend fun syncShoppingItem(item: ShoppingItemEntity) {
         val fid = familyManager.currentFamilyId ?: return
         val docId = item.cloudId.ifBlank { UUID.randomUUID().toString() }
         try { firestore.collection("families/$fid/shopping").document(docId).set(item.copy(cloudId = docId)).await() } catch (e: Exception) {}
     }
+
     suspend fun syncTask(task: TaskEntity) {
         val fid = familyManager.currentFamilyId ?: return
         val docId = task.cloudId.ifBlank { UUID.randomUUID().toString() }
         try { firestore.collection("families/$fid/tasks").document(docId).set(task.copy(cloudId = docId)).await() } catch (e: Exception) {}
     }
+
     suspend fun syncGoal(goal: GoalEntity) {
         val fid = familyManager.currentFamilyId ?: return
         val docId = goal.cloudId.ifBlank { UUID.randomUUID().toString() }
         try { firestore.collection("families/$fid/goals").document(docId).set(goal.copy(cloudId = docId)).await() } catch (e: Exception) {}
     }
+
     suspend fun syncCategory(cat: CategoryEntity) {
         val fid = familyManager.currentFamilyId ?: return
         val docId = cat.cloudId.ifBlank { "cat_${cat.id}" }
@@ -80,11 +84,11 @@ class FamilySyncRepository @Inject constructor(
     suspend fun syncAllLocalToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         try {
+            categoryDao.getAll().first().forEach { syncCategory(it) }
             transactionDao.getAll().first().forEach { syncTransaction(it) }
             shoppingDao.getAll().first().forEach { syncShoppingItem(it) }
             taskDao.getAll().first().forEach { syncTask(it) }
             goalDao.getAll().first().forEach { syncGoal(it) }
-            categoryDao.getAll().first().forEach { syncCategory(it) }
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
@@ -92,17 +96,26 @@ class FamilySyncRepository @Inject constructor(
     suspend fun syncAllFromCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         try {
+            // 1. СНАЧАЛА КАТЕГОРИИ
             firestore.collection("families/$fid/categories").get().await().documents.forEach { doc ->
-                doc.toObject(CategoryEntity::class.java)?.let { cat -> if (categoryDao.getByCloudId(cat.cloudId) == null) categoryDao.insert(cat) }
+                val cat = doc.toObject(CategoryEntity::class.java) ?: return@forEach
+                if (categoryDao.getByCloudId(cat.cloudId) == null) categoryDao.insert(cat)
             }
+
+            // 2. ПОТОМ ТРАНЗАКЦИИ
             firestore.collection("families/$fid/transactions").get().await().documents.forEach { doc ->
-                doc.toObject(TransactionEntity::class.java)?.let { txn -> if (transactionDao.getByCloudId(txn.cloudId) == null) transactionDao.insert(txn) }
+                val txn = doc.toObject(TransactionEntity::class.java) ?: return@forEach
+                if (transactionDao.getByCloudId(txn.cloudId) == null) transactionDao.insert(txn)
             }
+
+            // 3. ОСТАЛЬНОЕ
             firestore.collection("families/$fid/shopping").get().await().documents.forEach { doc ->
-                doc.toObject(ShoppingItemEntity::class.java)?.let { item -> if (shoppingDao.getByCloudId(item.cloudId) == null) shoppingDao.insert(item) }
+                val item = doc.toObject(ShoppingItemEntity::class.java) ?: return@forEach
+                if (shoppingDao.getByCloudId(item.cloudId) == null) shoppingDao.insert(item)
             }
             firestore.collection("families/$fid/tasks").get().await().documents.forEach { doc ->
-                doc.toObject(TaskEntity::class.java)?.let { task -> if (taskDao.getByCloudId(task.cloudId) == null) taskDao.insert(task) }
+                val task = doc.toObject(TaskEntity::class.java) ?: return@forEach
+                if (taskDao.getByCloudId(task.cloudId) == null) taskDao.insert(task)
             }
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
@@ -114,11 +127,15 @@ class FamilySyncRepository @Inject constructor(
         try {
             listeners.add(firestore.collection("families/$fid/categories").addSnapshotListener { s, e ->
                 if (e != null) return@addSnapshotListener
-                s?.documents?.forEach { doc -> try { doc.toObject(CategoryEntity::class.java)?.let { cat -> kotlinx.coroutines.runBlocking { if (categoryDao.getByCloudId(cat.cloudId) == null) categoryDao.insert(cat) } } } catch (ex: Exception) {} }
+                s?.documents?.forEach { doc ->
+                    try { doc.toObject(CategoryEntity::class.java)?.let { cat -> kotlinx.coroutines.runBlocking { if (categoryDao.getByCloudId(cat.cloudId) == null) categoryDao.insert(cat) } } } catch (ex: Exception) {}
+                }
             })
             listeners.add(firestore.collection("families/$fid/transactions").addSnapshotListener { s, e ->
                 if (e != null) return@addSnapshotListener
-                s?.documents?.forEach { doc -> try { doc.toObject(TransactionEntity::class.java)?.let { txn -> kotlinx.coroutines.runBlocking { if (transactionDao.getByCloudId(txn.cloudId) == null) transactionDao.insert(txn) } } } catch (ex: Exception) {} }
+                s?.documents?.forEach { doc ->
+                    try { doc.toObject(TransactionEntity::class.java)?.let { txn -> kotlinx.coroutines.runBlocking { if (transactionDao.getByCloudId(txn.cloudId) == null) transactionDao.insert(txn) } } } catch (ex: Exception) {}
+                }
             })
         } catch (e: Exception) {}
     }

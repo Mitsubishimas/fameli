@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true) val localId: Long = 0,
     val cloudId: String = "",
-    val type: String = "EXPENSE", // INCOME или EXPENSE
+    val type: String = "EXPENSE",
     val amount: Double = 0.0,
     val categoryId: Long = 0,
     val categoryName: String = "",
