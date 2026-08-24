@@ -15,7 +15,7 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE cloudId = :cloudId LIMIT 1")
     suspend fun getByCloudId(cloudId: String): TaskEntity?
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(task: TaskEntity): Long
 
     @Update

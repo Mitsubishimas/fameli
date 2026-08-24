@@ -54,7 +54,7 @@ public final class GoalDao_Impl implements GoalDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `goals` (`id`,`cloudId`,`title`,`description`,`targetAmount`,`currentAmount`,`createdAt`,`deadline`,`isCompleted`,`isDeleted`,`lastModified`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR IGNORE INTO `goals` (`id`,`cloudId`,`title`,`description`,`targetAmount`,`currentAmount`,`createdAt`,`deadline`,`isCompleted`,`isDeleted`,`lastModified`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -370,6 +370,76 @@ public final class GoalDao_Impl implements GoalDao {
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
     int _argIndex = 1;
     _statement.bindLong(_argIndex, id);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<GoalEntity>() {
+      @Override
+      @Nullable
+      public GoalEntity call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfCloudId = CursorUtil.getColumnIndexOrThrow(_cursor, "cloudId");
+          final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
+          final int _cursorIndexOfDescription = CursorUtil.getColumnIndexOrThrow(_cursor, "description");
+          final int _cursorIndexOfTargetAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "targetAmount");
+          final int _cursorIndexOfCurrentAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "currentAmount");
+          final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "createdAt");
+          final int _cursorIndexOfDeadline = CursorUtil.getColumnIndexOrThrow(_cursor, "deadline");
+          final int _cursorIndexOfIsCompleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isCompleted");
+          final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
+          final int _cursorIndexOfLastModified = CursorUtil.getColumnIndexOrThrow(_cursor, "lastModified");
+          final GoalEntity _result;
+          if (_cursor.moveToFirst()) {
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final String _tmpCloudId;
+            _tmpCloudId = _cursor.getString(_cursorIndexOfCloudId);
+            final String _tmpTitle;
+            _tmpTitle = _cursor.getString(_cursorIndexOfTitle);
+            final String _tmpDescription;
+            _tmpDescription = _cursor.getString(_cursorIndexOfDescription);
+            final double _tmpTargetAmount;
+            _tmpTargetAmount = _cursor.getDouble(_cursorIndexOfTargetAmount);
+            final double _tmpCurrentAmount;
+            _tmpCurrentAmount = _cursor.getDouble(_cursorIndexOfCurrentAmount);
+            final long _tmpCreatedAt;
+            _tmpCreatedAt = _cursor.getLong(_cursorIndexOfCreatedAt);
+            final Long _tmpDeadline;
+            if (_cursor.isNull(_cursorIndexOfDeadline)) {
+              _tmpDeadline = null;
+            } else {
+              _tmpDeadline = _cursor.getLong(_cursorIndexOfDeadline);
+            }
+            final boolean _tmpIsCompleted;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfIsCompleted);
+            _tmpIsCompleted = _tmp != 0;
+            final boolean _tmpIsDeleted;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfIsDeleted);
+            _tmpIsDeleted = _tmp_1 != 0;
+            final long _tmpLastModified;
+            _tmpLastModified = _cursor.getLong(_cursorIndexOfLastModified);
+            _result = new GoalEntity(_tmpId,_tmpCloudId,_tmpTitle,_tmpDescription,_tmpTargetAmount,_tmpCurrentAmount,_tmpCreatedAt,_tmpDeadline,_tmpIsCompleted,_tmpIsDeleted,_tmpLastModified);
+          } else {
+            _result = null;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getByCloudId(final String cloudId,
+      final Continuation<? super GoalEntity> $completion) {
+    final String _sql = "SELECT * FROM goals WHERE cloudId = ? LIMIT 1";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindString(_argIndex, cloudId);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
     return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<GoalEntity>() {
       @Override

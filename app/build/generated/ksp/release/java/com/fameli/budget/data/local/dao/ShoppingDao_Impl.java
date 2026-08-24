@@ -51,7 +51,7 @@ public final class ShoppingDao_Impl implements ShoppingDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR IGNORE INTO `shopping_items` (`id`,`cloudId`,`name`,`quantity`,`isPurchased`,`purchasedByUid`,`purchasedByName`,`purchasedAt`,`createdByUid`,`createdByName`,`createdAt`,`isDeleted`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR ABORT INTO `shopping_items` (`id`,`cloudId`,`name`,`quantity`,`isPurchased`,`purchasedByUid`,`purchasedByName`,`purchasedAt`,`createdByUid`,`createdByName`,`createdAt`,`isDeleted`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override

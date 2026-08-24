@@ -41,7 +41,10 @@ class FamilySyncRepository @Inject constructor(
         val doc = firestore.collection("families").document(familyId).get().await()
         if (!doc.exists()) throw Exception("Семья не найдена")
         val members = (doc.get("members") as? List<*>)?.toMutableList() ?: mutableListOf()
-        if (!members.contains(userId)) { members.add(userId); firestore.collection("families").document(familyId).update("members", members).await() }
+        if (!members.contains(userId)) {
+            members.add(userId)
+            firestore.collection("families").document(familyId).update("members", members).await()
+        }
         familyManager.currentFamilyId = familyId
         Result.success(true)
     } catch (e: Exception) { Result.failure(e) }
@@ -51,36 +54,38 @@ class FamilySyncRepository @Inject constructor(
         firestore.collection("families").whereArrayContains("members", userId).get().await().documents.map { it.id }
     } catch (e: Exception) { emptyList() }
 
+    // ========== ОТПРАВКА В ОБЛАКО ==========
     suspend fun syncTransaction(txn: TransactionEntity) {
         val fid = familyManager.currentFamilyId ?: return
         val docId = txn.cloudId.ifBlank { UUID.randomUUID().toString() }
-        try { firestore.collection("families/$fid/transactions").document(docId).set(txn.copy(cloudId = docId)).await() } catch (e: Exception) {}
+        try { firestore.collection("families/$fid/transactions").document(docId).set(txn.copy(cloudId = docId, lastModified = System.currentTimeMillis())).await() } catch (e: Exception) { Log.e(TAG, "txn: ${e.message}") }
     }
 
     suspend fun syncShoppingItem(item: ShoppingItemEntity) {
         val fid = familyManager.currentFamilyId ?: return
         val docId = item.cloudId.ifBlank { UUID.randomUUID().toString() }
-        try { firestore.collection("families/$fid/shopping").document(docId).set(item.copy(cloudId = docId)).await() } catch (e: Exception) {}
+        try { firestore.collection("families/$fid/shopping").document(docId).set(item.copy(cloudId = docId)).await() } catch (e: Exception) { Log.e(TAG, "shop: ${e.message}") }
     }
 
     suspend fun syncTask(task: TaskEntity) {
         val fid = familyManager.currentFamilyId ?: return
         val docId = task.cloudId.ifBlank { UUID.randomUUID().toString() }
-        try { firestore.collection("families/$fid/tasks").document(docId).set(task.copy(cloudId = docId)).await() } catch (e: Exception) {}
+        try { firestore.collection("families/$fid/tasks").document(docId).set(task.copy(cloudId = docId, lastModified = System.currentTimeMillis())).await() } catch (e: Exception) { Log.e(TAG, "task: ${e.message}") }
     }
 
     suspend fun syncGoal(goal: GoalEntity) {
         val fid = familyManager.currentFamilyId ?: return
         val docId = goal.cloudId.ifBlank { UUID.randomUUID().toString() }
-        try { firestore.collection("families/$fid/goals").document(docId).set(goal.copy(cloudId = docId)).await() } catch (e: Exception) {}
+        try { firestore.collection("families/$fid/goals").document(docId).set(goal.copy(cloudId = docId, lastModified = System.currentTimeMillis())).await() } catch (e: Exception) { Log.e(TAG, "goal: ${e.message}") }
     }
 
     suspend fun syncCategory(cat: CategoryEntity) {
         val fid = familyManager.currentFamilyId ?: return
         val docId = cat.cloudId.ifBlank { "cat_${cat.id}" }
-        try { firestore.collection("families/$fid/categories").document(docId).set(cat.copy(cloudId = docId)).await() } catch (e: Exception) {}
+        try { firestore.collection("families/$fid/categories").document(docId).set(cat.copy(cloudId = docId)).await() } catch (e: Exception) { Log.e(TAG, "cat: ${e.message}") }
     }
 
+    // ========== ОТПРАВИТЬ ВСЁ ЛОКАЛЬНОЕ ==========
     suspend fun syncAllLocalToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         try {
@@ -93,51 +98,100 @@ class FamilySyncRepository @Inject constructor(
         } catch (e: Exception) { Result.failure(e) }
     }
 
+    // ========== ЗАГРУЗКА ИЗ ОБЛАКА (UPSERT с lastModified) ==========
     suspend fun syncAllFromCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         try {
-            // 1. СНАЧАЛА КАТЕГОРИИ
+            // Категории
             firestore.collection("families/$fid/categories").get().await().documents.forEach { doc ->
-                val cat = doc.toObject(CategoryEntity::class.java) ?: return@forEach
-                if (categoryDao.getByCloudId(cat.cloudId) == null) categoryDao.insert(cat)
+                val cloudCat = doc.toObject(CategoryEntity::class.java) ?: return@forEach
+                val localCat = categoryDao.getByCloudId(cloudCat.cloudId)
+                if (localCat == null) categoryDao.insert(cloudCat)
+                else if (cloudCat.lastModified > localCat.lastModified) categoryDao.update(cloudCat.copy(id = localCat.id))
             }
 
-            // 2. ПОТОМ ТРАНЗАКЦИИ
+            // Транзакции
             firestore.collection("families/$fid/transactions").get().await().documents.forEach { doc ->
-                val txn = doc.toObject(TransactionEntity::class.java) ?: return@forEach
-                if (transactionDao.getByCloudId(txn.cloudId) == null) transactionDao.insert(txn)
+                val cloudTxn = doc.toObject(TransactionEntity::class.java) ?: return@forEach
+                val localTxn = transactionDao.getByCloudId(cloudTxn.cloudId)
+                if (localTxn == null) transactionDao.insert(cloudTxn)
+                else if (cloudTxn.lastModified > localTxn.lastModified) transactionDao.update(cloudTxn.copy(localId = localTxn.localId))
             }
 
-            // 3. ОСТАЛЬНОЕ
+            // Покупки
             firestore.collection("families/$fid/shopping").get().await().documents.forEach { doc ->
-                val item = doc.toObject(ShoppingItemEntity::class.java) ?: return@forEach
-                if (shoppingDao.getByCloudId(item.cloudId) == null) shoppingDao.insert(item)
+                val cloudItem = doc.toObject(ShoppingItemEntity::class.java) ?: return@forEach
+                val localItem = shoppingDao.getByCloudId(cloudItem.cloudId)
+                if (localItem == null) shoppingDao.insert(cloudItem)
+                else shoppingDao.update(cloudItem.copy(id = localItem.id))
             }
+
+            // Задачи
             firestore.collection("families/$fid/tasks").get().await().documents.forEach { doc ->
-                val task = doc.toObject(TaskEntity::class.java) ?: return@forEach
-                if (taskDao.getByCloudId(task.cloudId) == null) taskDao.insert(task)
+                val cloudTask = doc.toObject(TaskEntity::class.java) ?: return@forEach
+                val localTask = taskDao.getByCloudId(cloudTask.cloudId)
+                if (localTask == null) taskDao.insert(cloudTask)
+                else if (cloudTask.lastModified > localTask.lastModified) taskDao.update(cloudTask.copy(id = localTask.id))
             }
+
+            // Цели
+            firestore.collection("families/$fid/goals").get().await().documents.forEach { doc ->
+                val cloudGoal = doc.toObject(GoalEntity::class.java) ?: return@forEach
+                val localGoal = goalDao.getByCloudId(cloudGoal.cloudId)
+                if (localGoal == null) goalDao.insertGoal(cloudGoal)
+                else if (cloudGoal.lastModified > localGoal.lastModified) goalDao.updateGoal(cloudGoal.copy(id = localGoal.id))
+            }
+
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
 
+    // ========== СЛУШАТЕЛИ ==========
     fun startListening() {
         stopListening()
         val fid = familyManager.currentFamilyId ?: return
         try {
             listeners.add(firestore.collection("families/$fid/categories").addSnapshotListener { s, e ->
                 if (e != null) return@addSnapshotListener
-                s?.documents?.forEach { doc ->
-                    try { doc.toObject(CategoryEntity::class.java)?.let { cat -> kotlinx.coroutines.runBlocking { if (categoryDao.getByCloudId(cat.cloudId) == null) categoryDao.insert(cat) } } } catch (ex: Exception) {}
-                }
+                s?.documents?.forEach { doc -> try {
+                    doc.toObject(CategoryEntity::class.java)?.let { cat -> kotlinx.coroutines.runBlocking {
+                        val local = categoryDao.getByCloudId(cat.cloudId)
+                        if (local == null) categoryDao.insert(cat)
+                        else if (cat.lastModified > local.lastModified) categoryDao.update(cat.copy(id = local.id))
+                    } }
+                } catch (ex: Exception) {} }
             })
             listeners.add(firestore.collection("families/$fid/transactions").addSnapshotListener { s, e ->
                 if (e != null) return@addSnapshotListener
-                s?.documents?.forEach { doc ->
-                    try { doc.toObject(TransactionEntity::class.java)?.let { txn -> kotlinx.coroutines.runBlocking { if (transactionDao.getByCloudId(txn.cloudId) == null) transactionDao.insert(txn) } } } catch (ex: Exception) {}
-                }
+                s?.documents?.forEach { doc -> try {
+                    doc.toObject(TransactionEntity::class.java)?.let { txn -> kotlinx.coroutines.runBlocking {
+                        val local = transactionDao.getByCloudId(txn.cloudId)
+                        if (local == null) transactionDao.insert(txn)
+                        else if (txn.lastModified > local.lastModified) transactionDao.update(txn.copy(localId = local.localId))
+                    } }
+                } catch (ex: Exception) {} }
             })
-        } catch (e: Exception) {}
+            listeners.add(firestore.collection("families/$fid/shopping").addSnapshotListener { s, e ->
+                if (e != null) return@addSnapshotListener
+                s?.documents?.forEach { doc -> try {
+                    doc.toObject(ShoppingItemEntity::class.java)?.let { item -> kotlinx.coroutines.runBlocking {
+                        val local = shoppingDao.getByCloudId(item.cloudId)
+                        if (local == null) shoppingDao.insert(item)
+                        else shoppingDao.update(item.copy(id = local.id))
+                    } }
+                } catch (ex: Exception) {} }
+            })
+            listeners.add(firestore.collection("families/$fid/tasks").addSnapshotListener { s, e ->
+                if (e != null) return@addSnapshotListener
+                s?.documents?.forEach { doc -> try {
+                    doc.toObject(TaskEntity::class.java)?.let { task -> kotlinx.coroutines.runBlocking {
+                        val local = taskDao.getByCloudId(task.cloudId)
+                        if (local == null) taskDao.insert(task)
+                        else if (task.lastModified > local.lastModified) taskDao.update(task.copy(id = local.id))
+                    } }
+                } catch (ex: Exception) {} }
+            })
+        } catch (e: Exception) { Log.e(TAG, "listener: ${e.message}") }
     }
 
     fun stopListening() { listeners.forEach { it.remove() }; listeners.clear() }

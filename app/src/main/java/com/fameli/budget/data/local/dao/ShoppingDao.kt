@@ -12,7 +12,7 @@ interface ShoppingDao {
     @Query("SELECT * FROM shopping_items WHERE cloudId = :cloudId LIMIT 1")
     suspend fun getByCloudId(cloudId: String): ShoppingItemEntity?
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(item: ShoppingItemEntity): Long
 
     @Update

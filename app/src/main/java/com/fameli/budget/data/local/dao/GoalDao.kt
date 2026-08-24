@@ -13,7 +13,10 @@ interface GoalDao {
     @Query("SELECT * FROM goals WHERE id = :id")
     suspend fun getById(id: Long): GoalEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Query("SELECT * FROM goals WHERE cloudId = :cloudId LIMIT 1")
+    suspend fun getByCloudId(cloudId: String): GoalEntity?
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertGoal(goal: GoalEntity): Long
 
     @Update
@@ -28,7 +31,6 @@ interface GoalDao {
     @Query("UPDATE goals SET isDeleted = 1 WHERE id = :id")
     suspend fun softDelete(id: Long)
 
-    // Транзакции целей
     @Query("SELECT * FROM goal_transactions WHERE goalId = :goalId AND isDeleted = 0 ORDER BY timestamp ASC")
     fun getTransactions(goalId: Long): Flow<List<GoalTransactionEntity>>
 
