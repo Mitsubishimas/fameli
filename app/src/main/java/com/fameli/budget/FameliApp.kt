@@ -9,7 +9,6 @@ import com.fameli.budget.data.local.entity.CategoryEntity
 import com.fameli.budget.data.local.entity.CategoryType
 import com.fameli.budget.data.repository.FamilyManager
 import com.fameli.budget.data.repository.FamilySyncRepository
-import com.fameli.budget.firebase.FirebaseAuthRepository
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +22,6 @@ class FameliApp : Application() {
     @Inject lateinit var database: FameliDatabase
     @Inject lateinit var familySyncRepository: FamilySyncRepository
     @Inject lateinit var familyManager: FamilyManager
-    @Inject lateinit var authRepository: FirebaseAuthRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -39,7 +37,7 @@ class FameliApp : Application() {
         
         CoroutineScope(Dispatchers.IO).launch {
             addDefaultCategories()
-            loadFamily()
+            loadFamilyAndSync()
         }
     }
     
@@ -48,25 +46,27 @@ class FameliApp : Application() {
         val existing = dao.getAll().first()
         if (existing.isNotEmpty()) return
         
-        val defaultCategories = listOf(
-            CategoryEntity(name = "Продукты", type = CategoryType.EXPENSE, icon = "🍔", color = 0xFFE91E63, isDefault = true),
-            CategoryEntity(name = "Транспорт", type = CategoryType.EXPENSE, icon = "🚗", color = 0xFF2196F3, isDefault = true),
-            CategoryEntity(name = "Жильё", type = CategoryType.EXPENSE, icon = "🏠", color = 0xFF4CAF50, isDefault = true),
-            CategoryEntity(name = "Развлечения", type = CategoryType.EXPENSE, icon = "🎮", color = 0xFFFF9800, isDefault = true),
-            CategoryEntity(name = "Здоровье", type = CategoryType.EXPENSE, icon = "💊", color = 0xFF9C27B0, isDefault = true),
-            CategoryEntity(name = "Одежда", type = CategoryType.EXPENSE, icon = "👕", color = 0xFF607D8B, isDefault = true),
-            CategoryEntity(name = "Зарплата", type = CategoryType.INCOME, icon = "💼", color = 0xFF009688, isDefault = true),
-            CategoryEntity(name = "Подарки", type = CategoryType.INCOME, icon = "🎁", color = 0xFFFF5722, isDefault = true),
+        val defaults = listOf(
+            CategoryEntity(name = "Продукты", type = CategoryType.EXPENSE, icon = "🍔", isDefault = true),
+            CategoryEntity(name = "Транспорт", type = CategoryType.EXPENSE, icon = "🚗", isDefault = true),
+            CategoryEntity(name = "Жильё", type = CategoryType.EXPENSE, icon = "🏠", isDefault = true),
+            CategoryEntity(name = "Развлечения", type = CategoryType.EXPENSE, icon = "🎮", isDefault = true),
+            CategoryEntity(name = "Здоровье", type = CategoryType.EXPENSE, icon = "💊", isDefault = true),
+            CategoryEntity(name = "Одежда", type = CategoryType.EXPENSE, icon = "👕", isDefault = true),
+            CategoryEntity(name = "Зарплата", type = CategoryType.INCOME, icon = "💼", isDefault = true),
+            CategoryEntity(name = "Подарки", type = CategoryType.INCOME, icon = "🎁", isDefault = true),
         )
-        defaultCategories.forEach { dao.insert(it) }
+        defaults.forEach { dao.insert(it) }
     }
     
-    private suspend fun loadFamily() {
+    private suspend fun loadFamilyAndSync() {
         try {
             val families = familySyncRepository.getMyFamilies()
             if (families.isNotEmpty()) {
                 familyManager.currentFamilyId = families.first()
                 familySyncRepository.startListening()
+                // АВТОЗАГРУЗКА ДАННЫХ ИЗ ОБЛАКА
+                familySyncRepository.syncAllFromCloud()
             }
         } catch (_: Exception) {}
     }
