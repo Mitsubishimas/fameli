@@ -39,7 +39,7 @@ class AddTransactionViewModel @Inject constructor(
         val a = amount.value.toDoubleOrNull() ?: return@launch
         val c = selectedCategory.value ?: return@launch
         val type = if (isExpense.value) "EXPENSE" else "INCOME"
-        
+
         val txn = TransactionEntity(
             cloudId = UUID.randomUUID().toString(),
             type = type,
@@ -49,12 +49,21 @@ class AddTransactionViewModel @Inject constructor(
             note = note.value,
             date = System.currentTimeMillis()
         )
+        
+        // 1. Сохраняем локально
         transactionDao.insert(txn)
         amount.value = ""; note.value = ""; selectedCategory.value = null
 
+        // 2. Отправляем в облако
         val fid = familyManager.currentFamilyId
         if (fid != null) {
-            launch(Dispatchers.IO) { familyRepo.syncTransaction(txn) }
+            syncMessage.value = "Отправка..."
+            launch(Dispatchers.IO) {
+                familyRepo.syncTransaction(txn)
+                syncMessage.value = "✅ Отправлено"
+            }
+        } else {
+            syncMessage.value = "❌ Нет семьи"
         }
     }
 }

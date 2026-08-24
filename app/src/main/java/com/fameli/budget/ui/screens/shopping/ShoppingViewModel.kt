@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fameli.budget.data.local.dao.ShoppingDao
 import com.fameli.budget.data.local.entity.ShoppingItemEntity
+import com.fameli.budget.data.repository.FamilyManager
 import com.fameli.budget.data.repository.FamilySyncRepository
 import com.fameli.budget.firebase.FirebaseAuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +18,8 @@ import javax.inject.Inject
 class ShoppingViewModel @Inject constructor(
     private val shoppingDao: ShoppingDao,
     private val authRepository: FirebaseAuthRepository,
-    private val familyRepo: FamilySyncRepository
+    private val familyRepo: FamilySyncRepository,
+    private val familyManager: FamilyManager
 ) : ViewModel() {
 
     val items: StateFlow<List<ShoppingItemEntity>> = shoppingDao.getAll().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -30,10 +32,20 @@ class ShoppingViewModel @Inject constructor(
     fun addItem() = viewModelScope.launch {
         val name = newItemName.value.trim()
         if (name.isBlank()) return@launch
-        val item = ShoppingItemEntity(cloudId = UUID.randomUUID().toString(), name = name, createdByUid = authRepository.getUserId() ?: "", createdByName = authRepository.getUserName())
+        val item = ShoppingItemEntity(
+            cloudId = UUID.randomUUID().toString(),
+            name = name,
+            createdByUid = authRepository.getUserId() ?: "",
+            createdByName = authRepository.getUserName()
+        )
         shoppingDao.insert(item)
-        launch(Dispatchers.IO) { familyRepo.syncShoppingItem(item) }
         hideAdd()
+        
+        // Отправка в облако
+        val fid = familyManager.currentFamilyId
+        if (fid != null) {
+            launch(Dispatchers.IO) { familyRepo.syncShoppingItem(item) }
+        }
     }
 
     fun togglePurchased(item: ShoppingItemEntity) = viewModelScope.launch {
@@ -42,10 +54,11 @@ class ShoppingViewModel @Inject constructor(
         } else {
             item.copy(isPurchased = true, purchasedByUid = authRepository.getUserId() ?: "", purchasedByName = authRepository.getUserName(), purchasedAt = System.currentTimeMillis())
         }
-        // Обновляем локально
         shoppingDao.update(updated)
-        // Отправляем в облако
-        launch(Dispatchers.IO) { familyRepo.syncShoppingItem(updated) }
+        val fid = familyManager.currentFamilyId
+        if (fid != null) {
+            launch(Dispatchers.IO) { familyRepo.syncShoppingItem(updated) }
+        }
     }
 
     fun deleteItem(item: ShoppingItemEntity) = viewModelScope.launch { shoppingDao.softDelete(item.id) }
