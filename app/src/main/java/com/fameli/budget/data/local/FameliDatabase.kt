@@ -15,7 +15,7 @@ import com.fameli.budget.data.local.entity.*
         GoalTransactionEntity::class,
         ShoppingItemEntity::class
     ],
-    version = 5,
+    version = 8,
     exportSchema = false
 )
 abstract class FameliDatabase : RoomDatabase() {

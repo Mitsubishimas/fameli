@@ -20,6 +20,7 @@ data class ShoppingItemEntity(
     val createdByUid: String = "",
     val createdByName: String = "",
     val createdAt: Long = System.currentTimeMillis(),
+    val lastModified: Long = System.currentTimeMillis(),
     val isDeleted: Boolean = false
 ) {
     constructor() : this(id = 0, cloudId = "", name = "")

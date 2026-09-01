@@ -51,7 +51,7 @@ public final class ShoppingDao_Impl implements ShoppingDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR ABORT INTO `shopping_items` (`id`,`cloudId`,`name`,`quantity`,`isPurchased`,`purchasedByUid`,`purchasedByName`,`purchasedAt`,`createdByUid`,`createdByName`,`createdAt`,`isDeleted`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR ABORT INTO `shopping_items` (`id`,`cloudId`,`name`,`quantity`,`isPurchased`,`purchasedByUid`,`purchasedByName`,`purchasedAt`,`createdByUid`,`createdByName`,`createdAt`,`lastModified`,`isDeleted`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -69,15 +69,16 @@ public final class ShoppingDao_Impl implements ShoppingDao {
         statement.bindString(9, entity.getCreatedByUid());
         statement.bindString(10, entity.getCreatedByName());
         statement.bindLong(11, entity.getCreatedAt());
+        statement.bindLong(12, entity.getLastModified());
         final int _tmp_1 = entity.isDeleted() ? 1 : 0;
-        statement.bindLong(12, _tmp_1);
+        statement.bindLong(13, _tmp_1);
       }
     };
     this.__updateAdapterOfShoppingItemEntity = new EntityDeletionOrUpdateAdapter<ShoppingItemEntity>(__db) {
       @Override
       @NonNull
       protected String createQuery() {
-        return "UPDATE OR ABORT `shopping_items` SET `id` = ?,`cloudId` = ?,`name` = ?,`quantity` = ?,`isPurchased` = ?,`purchasedByUid` = ?,`purchasedByName` = ?,`purchasedAt` = ?,`createdByUid` = ?,`createdByName` = ?,`createdAt` = ?,`isDeleted` = ? WHERE `id` = ?";
+        return "UPDATE OR ABORT `shopping_items` SET `id` = ?,`cloudId` = ?,`name` = ?,`quantity` = ?,`isPurchased` = ?,`purchasedByUid` = ?,`purchasedByName` = ?,`purchasedAt` = ?,`createdByUid` = ?,`createdByName` = ?,`createdAt` = ?,`lastModified` = ?,`isDeleted` = ? WHERE `id` = ?";
       }
 
       @Override
@@ -95,9 +96,10 @@ public final class ShoppingDao_Impl implements ShoppingDao {
         statement.bindString(9, entity.getCreatedByUid());
         statement.bindString(10, entity.getCreatedByName());
         statement.bindLong(11, entity.getCreatedAt());
+        statement.bindLong(12, entity.getLastModified());
         final int _tmp_1 = entity.isDeleted() ? 1 : 0;
-        statement.bindLong(12, _tmp_1);
-        statement.bindLong(13, entity.getId());
+        statement.bindLong(13, _tmp_1);
+        statement.bindLong(14, entity.getId());
       }
     };
     this.__preparedStmtOfMarkPurchased = new SharedSQLiteStatement(__db) {
@@ -267,6 +269,7 @@ public final class ShoppingDao_Impl implements ShoppingDao {
           final int _cursorIndexOfCreatedByUid = CursorUtil.getColumnIndexOrThrow(_cursor, "createdByUid");
           final int _cursorIndexOfCreatedByName = CursorUtil.getColumnIndexOrThrow(_cursor, "createdByName");
           final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "createdAt");
+          final int _cursorIndexOfLastModified = CursorUtil.getColumnIndexOrThrow(_cursor, "lastModified");
           final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
           final List<ShoppingItemEntity> _result = new ArrayList<ShoppingItemEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -295,11 +298,13 @@ public final class ShoppingDao_Impl implements ShoppingDao {
             _tmpCreatedByName = _cursor.getString(_cursorIndexOfCreatedByName);
             final long _tmpCreatedAt;
             _tmpCreatedAt = _cursor.getLong(_cursorIndexOfCreatedAt);
+            final long _tmpLastModified;
+            _tmpLastModified = _cursor.getLong(_cursorIndexOfLastModified);
             final boolean _tmpIsDeleted;
             final int _tmp_1;
             _tmp_1 = _cursor.getInt(_cursorIndexOfIsDeleted);
             _tmpIsDeleted = _tmp_1 != 0;
-            _item = new ShoppingItemEntity(_tmpId,_tmpCloudId,_tmpName,_tmpQuantity,_tmpIsPurchased,_tmpPurchasedByUid,_tmpPurchasedByName,_tmpPurchasedAt,_tmpCreatedByUid,_tmpCreatedByName,_tmpCreatedAt,_tmpIsDeleted);
+            _item = new ShoppingItemEntity(_tmpId,_tmpCloudId,_tmpName,_tmpQuantity,_tmpIsPurchased,_tmpPurchasedByUid,_tmpPurchasedByName,_tmpPurchasedAt,_tmpCreatedByUid,_tmpCreatedByName,_tmpCreatedAt,_tmpLastModified,_tmpIsDeleted);
             _result.add(_item);
           }
           return _result;
@@ -340,6 +345,7 @@ public final class ShoppingDao_Impl implements ShoppingDao {
           final int _cursorIndexOfCreatedByUid = CursorUtil.getColumnIndexOrThrow(_cursor, "createdByUid");
           final int _cursorIndexOfCreatedByName = CursorUtil.getColumnIndexOrThrow(_cursor, "createdByName");
           final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "createdAt");
+          final int _cursorIndexOfLastModified = CursorUtil.getColumnIndexOrThrow(_cursor, "lastModified");
           final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
           final ShoppingItemEntity _result;
           if (_cursor.moveToFirst()) {
@@ -367,11 +373,13 @@ public final class ShoppingDao_Impl implements ShoppingDao {
             _tmpCreatedByName = _cursor.getString(_cursorIndexOfCreatedByName);
             final long _tmpCreatedAt;
             _tmpCreatedAt = _cursor.getLong(_cursorIndexOfCreatedAt);
+            final long _tmpLastModified;
+            _tmpLastModified = _cursor.getLong(_cursorIndexOfLastModified);
             final boolean _tmpIsDeleted;
             final int _tmp_1;
             _tmp_1 = _cursor.getInt(_cursorIndexOfIsDeleted);
             _tmpIsDeleted = _tmp_1 != 0;
-            _result = new ShoppingItemEntity(_tmpId,_tmpCloudId,_tmpName,_tmpQuantity,_tmpIsPurchased,_tmpPurchasedByUid,_tmpPurchasedByName,_tmpPurchasedAt,_tmpCreatedByUid,_tmpCreatedByName,_tmpCreatedAt,_tmpIsDeleted);
+            _result = new ShoppingItemEntity(_tmpId,_tmpCloudId,_tmpName,_tmpQuantity,_tmpIsPurchased,_tmpPurchasedByUid,_tmpPurchasedByName,_tmpPurchasedAt,_tmpCreatedByUid,_tmpCreatedByName,_tmpCreatedAt,_tmpLastModified,_tmpIsDeleted);
           } else {
             _result = null;
           }
