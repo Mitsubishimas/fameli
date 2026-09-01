@@ -1,6 +1,5 @@
 package com.fameli.budget.ui.screens.dashboard;
 
-import com.fameli.budget.data.local.dao.CategoryDao;
 import com.fameli.budget.data.local.dao.TransactionDao;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -26,25 +25,20 @@ import javax.inject.Provider;
 public final class DashboardViewModel_Factory implements Factory<DashboardViewModel> {
   private final Provider<TransactionDao> daoProvider;
 
-  private final Provider<CategoryDao> categoryDaoProvider;
-
-  public DashboardViewModel_Factory(Provider<TransactionDao> daoProvider,
-      Provider<CategoryDao> categoryDaoProvider) {
+  public DashboardViewModel_Factory(Provider<TransactionDao> daoProvider) {
     this.daoProvider = daoProvider;
-    this.categoryDaoProvider = categoryDaoProvider;
   }
 
   @Override
   public DashboardViewModel get() {
-    return newInstance(daoProvider.get(), categoryDaoProvider.get());
+    return newInstance(daoProvider.get());
   }
 
-  public static DashboardViewModel_Factory create(Provider<TransactionDao> daoProvider,
-      Provider<CategoryDao> categoryDaoProvider) {
-    return new DashboardViewModel_Factory(daoProvider, categoryDaoProvider);
+  public static DashboardViewModel_Factory create(Provider<TransactionDao> daoProvider) {
+    return new DashboardViewModel_Factory(daoProvider);
   }
 
-  public static DashboardViewModel newInstance(TransactionDao dao, CategoryDao categoryDao) {
-    return new DashboardViewModel(dao, categoryDao);
+  public static DashboardViewModel newInstance(TransactionDao dao) {
+    return new DashboardViewModel(dao);
   }
 }
