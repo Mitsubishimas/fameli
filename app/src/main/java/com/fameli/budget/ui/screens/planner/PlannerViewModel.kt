@@ -33,12 +33,21 @@ class PlannerViewModel @Inject constructor(
     fun setSelectedDate(date: Long) { selectedDate.value = date }
 
     fun addTask(title: String, description: String) = viewModelScope.launch {
-        val task = TaskEntity(cloudId = UUID.randomUUID().toString(), title = title, description = description, date = selectedDate.value, time = newTaskTime.value, createdBy = authRepository.getUserName(), createdByUid = authRepository.getUserId() ?: "")
+        val task = TaskEntity(
+            cloudId = UUID.randomUUID().toString(),
+            title = title,
+            description = description,
+            date = selectedDate.value,
+            time = newTaskTime.value,
+            createdBy = authRepository.getUserName(),
+            createdByUid = authRepository.getUserId() ?: "",
+            lastModified = System.currentTimeMillis()
+        )
         taskDao.insert(task)
     }
 
     fun toggleComplete(task: TaskEntity) = viewModelScope.launch {
-        taskDao.update(task.copy(isCompleted = !task.isCompleted))
+        taskDao.update(task.copy(isCompleted = !task.isCompleted, lastModified = System.currentTimeMillis()))
     }
 
     fun deleteTask(task: TaskEntity) = viewModelScope.launch { taskDao.softDelete(task.id) }

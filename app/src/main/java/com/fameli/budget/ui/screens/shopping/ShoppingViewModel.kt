@@ -27,16 +27,23 @@ class ShoppingViewModel @Inject constructor(
     fun addItem() = viewModelScope.launch {
         val name = newItemName.value.trim()
         if (name.isBlank()) return@launch
-        shoppingDao.insert(ShoppingItemEntity(cloudId = UUID.randomUUID().toString(), name = name, createdByUid = authRepository.getUserId() ?: "", createdByName = authRepository.getUserName()))
+        shoppingDao.insert(ShoppingItemEntity(
+            cloudId = UUID.randomUUID().toString(),
+            name = name,
+            createdByUid = authRepository.getUserId() ?: "",
+            createdByName = authRepository.getUserName(),
+            lastModified = System.currentTimeMillis()
+        ))
         hideAdd()
     }
 
     fun togglePurchased(item: ShoppingItemEntity) = viewModelScope.launch {
-        if (item.isPurchased) {
-            shoppingDao.update(item.copy(isPurchased = false))
+        val updated = if (item.isPurchased) {
+            item.copy(isPurchased = false, purchasedByUid = "", purchasedByName = "", purchasedAt = 0, lastModified = System.currentTimeMillis())
         } else {
-            shoppingDao.update(item.copy(isPurchased = true, purchasedByUid = authRepository.getUserId() ?: "", purchasedByName = authRepository.getUserName()))
+            item.copy(isPurchased = true, purchasedByUid = authRepository.getUserId() ?: "", purchasedByName = authRepository.getUserName(), purchasedAt = System.currentTimeMillis(), lastModified = System.currentTimeMillis())
         }
+        shoppingDao.update(updated)
     }
 
     fun deleteItem(item: ShoppingItemEntity) = viewModelScope.launch { shoppingDao.softDelete(item.id) }
