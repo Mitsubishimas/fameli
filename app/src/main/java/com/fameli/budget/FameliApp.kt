@@ -15,7 +15,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -62,8 +61,7 @@ class FameliApp : Application() {
         try {
             val families = ApiClient.getFamilies()
             if (families.length() > 0) {
-                val familyId = families.getJSONObject(0).optString("id")
-                familyManager.currentFamilyId = familyId
+                familyManager.currentFamilyId = families.getJSONObject(0).optString("id")
                 familySyncRepository.syncAllFromCloud()
             }
         } catch (_: Exception) {}
