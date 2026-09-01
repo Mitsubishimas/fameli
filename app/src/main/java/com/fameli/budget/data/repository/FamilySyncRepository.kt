@@ -3,6 +3,7 @@ package com.fameli.budget.data.repository
 import com.fameli.budget.data.local.dao.*
 import com.fameli.budget.data.local.entity.*
 import com.fameli.budget.data.remote.ApiClient
+import com.fameli.budget.data.remote.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -19,40 +20,15 @@ class FamilySyncRepository @Inject constructor(
     private val familyManager: FamilyManager
 ) {
 
-    // ========== ОТПРАВКА В ОБЛАКО ==========
+    private fun log(msg: String) = AppLogger.log("SYNC", msg)
+
     suspend fun syncAllLocalToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
+        log("Отправка локальных данных в облако...")
         try {
-            // Категории
-            categoryDao.getAll().first().forEach { cat ->
-                val json = JSONObject().apply {
-                    put("cloud_id", cat.cloudId.ifBlank { "cat_${cat.id}" })
-                    put("family_id", fid)
-                    put("name", cat.name)
-                    put("type", if (cat.type == CategoryType.INCOME) "income" else "expense")
-                    put("icon", cat.icon)
-                    put("last_modified", cat.lastModified)
-                }
-                ApiClient.saveCategory(json)
-            }
-            // Транзакции
-            transactionDao.getAll().first().forEach { txn ->
-                val json = JSONObject().apply {
-                    put("cloud_id", txn.cloudId.ifBlank { "txn_${txn.localId}" })
-                    put("family_id", fid)
-                    put("type", if (txn.type == "INCOME") "income" else "expense")
-                    put("amount", txn.amount)
-                    put("category_name", txn.categoryName)
-                    put("note", txn.note)
-                    put("date", txn.date)
-                    put("last_modified", txn.lastModified)
-                }
-                ApiClient.saveTransaction(json)
-            }
-            // Покупки
             shoppingDao.getAll().first().forEach { item ->
                 val json = JSONObject().apply {
-                    put("cloud_id", item.cloudId.ifBlank { "shop_${item.id}" })
+                    put("cloud_id", item.cloudId)
                     put("family_id", fid)
                     put("name", item.name)
                     put("is_purchased", item.isPurchased)
@@ -62,10 +38,9 @@ class FamilySyncRepository @Inject constructor(
                 }
                 ApiClient.saveShopping(json)
             }
-            // Задачи
             taskDao.getAll().first().forEach { task ->
                 val json = JSONObject().apply {
-                    put("cloud_id", task.cloudId.ifBlank { "task_${task.id}" })
+                    put("cloud_id", task.cloudId)
                     put("family_id", fid)
                     put("title", task.title)
                     put("description", task.description)
@@ -77,67 +52,63 @@ class FamilySyncRepository @Inject constructor(
                 }
                 ApiClient.saveTask(json)
             }
+            transactionDao.getAll().first().forEach { txn ->
+                val json = JSONObject().apply {
+                    put("cloud_id", txn.cloudId)
+                    put("family_id", fid)
+                    put("type", if (txn.type == "INCOME") "income" else "expense")
+                    put("amount", txn.amount)
+                    put("category_name", txn.categoryName)
+                    put("note", txn.note)
+                    put("date", txn.date)
+                    put("last_modified", txn.lastModified)
+                }
+                ApiClient.saveTransaction(json)
+            }
+            log("Отправка завершена")
             Result.success(Unit)
-        } catch (e: Exception) { Result.failure(e) }
+        } catch (e: Exception) {
+            log("Ошибка отправки: ${e.message}")
+            Result.failure(e)
+        }
     }
 
-    // ========== ЗАГРУЗКА ИЗ ОБЛАКА ==========
     suspend fun syncAllFromCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
+        log("Загрузка данных из облака...")
         try {
-            // Категории
-            val cats = ApiClient.getCategories(fid)
-            for (i in 0 until cats.length()) {
-                val obj = cats.getJSONObject(i)
-                val type = if (obj.optString("type") == "income") CategoryType.INCOME else CategoryType.EXPENSE
-                val cat = CategoryEntity(
-                    cloudId = obj.optString("cloud_id"),
-                    name = obj.optString("name"),
-                    type = type,
-                    icon = obj.optString("icon", "💰"),
-                    lastModified = obj.optLong("last_modified", System.currentTimeMillis())
-                )
-                if (categoryDao.getByCloudId(cat.cloudId) == null) categoryDao.insert(cat)
-            }
-
-            // Транзакции
-            val txns = ApiClient.getTransactions(fid)
-            for (i in 0 until txns.length()) {
-                val obj = txns.getJSONObject(i)
-                val type = if (obj.optString("type") == "income") "INCOME" else "EXPENSE"
-                val txn = TransactionEntity(
-                    cloudId = obj.optString("cloud_id"),
-                    type = type,
-                    amount = obj.optDouble("amount", 0.0),
-                    categoryName = obj.optString("category_name", ""),
-                    note = obj.optString("note", ""),
-                    date = obj.optLong("date", 0),
-                    lastModified = obj.optLong("last_modified", System.currentTimeMillis())
-                )
-                if (transactionDao.getByCloudId(txn.cloudId) == null) transactionDao.insert(txn)
-            }
-
-            // Покупки
+            // Покупки — с обновлением статуса
             val shop = ApiClient.getShopping(fid)
+            log("Покупок из облака: ${shop.length()}")
             for (i in 0 until shop.length()) {
                 val obj = shop.getJSONObject(i)
+                val cloudId = obj.optString("cloud_id")
                 val item = ShoppingItemEntity(
-                    cloudId = obj.optString("cloud_id"),
+                    cloudId = cloudId,
                     name = obj.optString("name", ""),
                     isPurchased = obj.optInt("is_purchased", 0) == 1,
                     purchasedByName = obj.optString("purchased_by_name", ""),
                     createdByName = obj.optString("created_by_name", ""),
                     createdAt = obj.optLong("created_at", System.currentTimeMillis())
                 )
-                if (shoppingDao.getByCloudId(item.cloudId) == null) shoppingDao.insert(item)
+                val existing = shoppingDao.getByCloudId(cloudId)
+                if (existing == null) {
+                    shoppingDao.insert(item)
+                    log("Добавлена покупка: ${item.name}")
+                } else {
+                    shoppingDao.update(item.copy(id = existing.id))
+                    log("Обновлена покупка: ${item.name} (куплено: ${item.isPurchased})")
+                }
             }
 
-            // Задачи
+            // Задачи — с обновлением статуса
             val tasks = ApiClient.getTasks(fid)
+            log("Задач из облака: ${tasks.length()}")
             for (i in 0 until tasks.length()) {
                 val obj = tasks.getJSONObject(i)
+                val cloudId = obj.optString("cloud_id")
                 val task = TaskEntity(
-                    cloudId = obj.optString("cloud_id"),
+                    cloudId = cloudId,
                     title = obj.optString("title", ""),
                     description = obj.optString("description", ""),
                     date = obj.optLong("date", 0),
@@ -146,10 +117,41 @@ class FamilySyncRepository @Inject constructor(
                     createdBy = obj.optString("created_by_name", ""),
                     lastModified = obj.optLong("last_modified", System.currentTimeMillis())
                 )
-                if (taskDao.getByCloudId(task.cloudId) == null) taskDao.insert(task)
+                val existing = taskDao.getByCloudId(cloudId)
+                if (existing == null) {
+                    taskDao.insert(task)
+                    log("Добавлена задача: ${task.title}")
+                } else {
+                    taskDao.update(task.copy(id = existing.id))
+                    log("Обновлена задача: ${task.title} (выполнено: ${task.isCompleted})")
+                }
             }
 
+            // Транзакции
+            val txns = ApiClient.getTransactions(fid)
+            log("Транзакций из облака: ${txns.length()}")
+            for (i in 0 until txns.length()) {
+                val obj = txns.getJSONObject(i)
+                val cloudId = obj.optString("cloud_id")
+                val txn = TransactionEntity(
+                    cloudId = cloudId,
+                    type = if (obj.optString("type") == "income") "INCOME" else "EXPENSE",
+                    amount = obj.optDouble("amount", 0.0),
+                    categoryName = obj.optString("category_name", ""),
+                    note = obj.optString("note", ""),
+                    date = obj.optLong("date", 0),
+                    lastModified = obj.optLong("last_modified", System.currentTimeMillis())
+                )
+                if (transactionDao.getByCloudId(txn.cloudId) == null) {
+                    transactionDao.insert(txn)
+                }
+            }
+
+            log("Загрузка завершена")
             Result.success(Unit)
-        } catch (e: Exception) { Result.failure(e) }
+        } catch (e: Exception) {
+            log("Ошибка загрузки: ${e.message}")
+            Result.failure(e)
+        }
     }
 }
