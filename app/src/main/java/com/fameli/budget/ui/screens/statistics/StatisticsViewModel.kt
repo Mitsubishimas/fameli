@@ -13,7 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(private val dao: TransactionDao) : ViewModel() {
     
-    val period = MutableStateFlow("all") // all, day, month, year
+    val period = MutableStateFlow("month")
     private val now = LocalDate.now()
 
     private fun getRange(p: String): Pair<Long, Long> {
@@ -26,12 +26,9 @@ class StatisticsViewModel @Inject constructor(private val dao: TransactionDao) :
                 now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000 to
                 now.plusMonths(1).withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000 - 1
             }
-            "year" -> {
+            else -> {
                 now.withDayOfYear(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000 to
                 now.plusYears(1).withDayOfYear(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000 - 1
-            }
-            else -> { // all
-                0L to Long.MAX_VALUE
             }
         }
     }
