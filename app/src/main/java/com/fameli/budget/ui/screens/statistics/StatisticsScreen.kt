@@ -24,7 +24,7 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
         item {
             Text("Аналитика", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("День" to "day", "Месяц" to "month", "Год" to "year").forEach { (label, value) ->
+                listOf("Все" to "all", "День" to "day", "Месяц" to "month", "Год" to "year").forEach { (label, value) ->
                     FilterChip(selected = period == value, onClick = { viewModel.setPeriod(value) }, label = { Text(label) })
                 }
             }
@@ -40,7 +40,7 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
             }
         }
 
-        item { Text("Доходы", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
+        item { Text("Доходы (${incomes.size})", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
         if (incomes.isEmpty()) { item { Text("Нет доходов") } }
         items(incomes) { e ->
             Card(Modifier.fillMaxWidth()) {
@@ -51,7 +51,7 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
             }
         }
 
-        item { Text("Расходы", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) }
+        item { Text("Расходы (${expenses.size})", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) }
         if (expenses.isEmpty()) { item { Text("Нет расходов") } }
         items(expenses) { e ->
             Card(Modifier.fillMaxWidth()) {
