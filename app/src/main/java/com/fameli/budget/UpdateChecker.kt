@@ -20,7 +20,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object UpdateChecker {
-    private const val CURRENT_VERSION = "v1.9.2"
+    private const val CURRENT_VERSION = "v1.9.5"
     private const val REPO = "Mitsubishimas/fameli"
 
     private fun log(msg: String) = AppLogger.log("UPDATE", msg)
@@ -29,27 +29,25 @@ object UpdateChecker {
         val appContext = context.applicationContext
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                log("Проверка обновлений. Текущая версия: $CURRENT_VERSION")
+                log("Проверка обновлений. Версия: $CURRENT_VERSION")
                 val url = URL("https://raw.githubusercontent.com/$REPO/main/version.txt")
-                val connection = url.openConnection() as HttpURLConnection
-                connection.connectTimeout = 10000
-                connection.readTimeout = 10000
-                val latestVersion = connection.inputStream.bufferedReader().readText().trim()
-                connection.disconnect()
-                
-                log("Версия на сервере: $latestVersion")
+                val conn = url.openConnection() as HttpURLConnection
+                conn.connectTimeout = 10000
+                conn.readTimeout = 10000
+                val latest = conn.inputStream.bufferedReader().readText().trim()
+                conn.disconnect()
+                log("На сервере: $latest")
 
                 withContext(Dispatchers.Main) {
-                    if (latestVersion.isNotEmpty() && latestVersion != CURRENT_VERSION.removePrefix("v")) {
-                        log("Доступна новая версия: $latestVersion")
-                        downloadApk(appContext, latestVersion)
+                    if (latest.isNotEmpty() && latest != CURRENT_VERSION.removePrefix("v")) {
+                        log("Доступна версия $latest")
+                        downloadApk(appContext, latest)
                     } else if (showDialog) {
-                        log("У вас последняя версия")
                         Toast.makeText(appContext, "У вас последняя версия ($CURRENT_VERSION)", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
-                log("Ошибка проверки: ${e.message}")
+                log("Ошибка: ${e.message}")
                 withContext(Dispatchers.Main) {
                     Toast.makeText(appContext, "Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
                 }
@@ -59,7 +57,6 @@ object UpdateChecker {
 
     private fun downloadApk(context: Context, version: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()) {
-            log("Нет разрешения на установку")
             Toast.makeText(context, "Разрешите установку", Toast.LENGTH_LONG).show()
             val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                 data = Uri.parse("package:${context.packageName}")
@@ -71,24 +68,20 @@ object UpdateChecker {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                log("Получение URL для скачивания...")
+                log("Получение URL...")
                 val apiUrl = URL("https://api.github.com/repos/$REPO/releases/latest")
-                val apiConnection = apiUrl.openConnection() as HttpURLConnection
-                apiConnection.setRequestProperty("Accept", "application/vnd.github.v3+json")
-                apiConnection.setRequestProperty("User-Agent", "Fameli-App")
-                val json = apiConnection.inputStream.bufferedReader().readText()
-                apiConnection.disconnect()
+                val conn = apiUrl.openConnection() as HttpURLConnection
+                conn.setRequestProperty("Accept", "application/vnd.github.v3+json")
+                conn.setRequestProperty("User-Agent", "Fameli-App")
+                val json = conn.inputStream.bufferedReader().readText()
+                conn.disconnect()
 
                 val marker = "\"browser_download_url\":\""
-                val startIdx = json.indexOf(marker)
-                if (startIdx == -1) {
-                    log("URL для скачивания не найден")
-                    return@launch
-                }
-                val urlStart = startIdx + marker.length
+                val start = json.indexOf(marker)
+                if (start == -1) { log("URL не найден"); return@launch }
+                val urlStart = start + marker.length
                 val urlEnd = json.indexOf("\"", urlStart)
                 val downloadUrl = json.substring(urlStart, urlEnd)
-                
                 log("Скачивание: $downloadUrl")
 
                 val file = File(context.externalCacheDir, "Fameli-Update.apk")
@@ -97,24 +90,21 @@ object UpdateChecker {
                 val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
                 val request = DownloadManager.Request(Uri.parse(downloadUrl))
                 request.setTitle("Fameli")
-                request.setDescription("Скачивание v$version...")
+                request.setDescription("v$version")
                 request.setDestinationUri(Uri.fromFile(file))
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
                 val downloadId = dm.enqueue(request)
-                log("Загрузка началась, ID: $downloadId")
+                log("Загрузка ID: $downloadId")
 
                 val receiver = object : BroadcastReceiver() {
                     override fun onReceive(ctx: Context, intent: Intent) {
                         val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                         if (id == downloadId) {
                             ctx.unregisterReceiver(this)
-                            log("Загрузка завершена, размер: ${file.length()}")
-                            if (file.exists() && file.length() > 1000000) {
-                                installApk(ctx, file)
-                            } else {
-                                log("Файл повреждён")
-                            }
+                            log("Загружено: ${file.length()} байт")
+                            if (file.exists() && file.length() > 1000000) installApk(ctx, file)
+                            else log("Файл повреждён")
                         }
                     }
                 }
@@ -132,20 +122,16 @@ object UpdateChecker {
 
     private fun installApk(context: Context, file: File) {
         try {
-            log("Установка APK...")
+            log("Установка...")
             val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-            } else {
-                Uri.fromFile(file)
-            }
+            } else Uri.fromFile(file)
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "application/vnd.android.package-archive")
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             context.startActivity(intent)
-        } catch (e: Exception) {
-            log("Ошибка установки: ${e.message}")
-        }
+        } catch (e: Exception) { log("Ошибка установки: ${e.message}") }
     }
 }
