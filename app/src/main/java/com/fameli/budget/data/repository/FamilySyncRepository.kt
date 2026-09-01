@@ -123,7 +123,7 @@ class FamilySyncRepository @Inject constructor(
                 val obj = txns.getJSONObject(i)
                 val txn = TransactionEntity(
                     cloudId = obj.optString("cloud_id"),
-                    type = if (obj.optString("type") == "income") "INCOME" else "EXPENSE",
+                    type = if (obj.optString("type").uppercase() == "INCOME") "INCOME" else "EXPENSE",
                     amount = obj.optDouble("amount", 0.0),
                     categoryName = obj.optString("category_name", ""),
                     note = obj.optString("note", ""),
