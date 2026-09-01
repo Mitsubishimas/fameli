@@ -7,8 +7,8 @@ public final class BuildConfig {
   public static final boolean DEBUG = false;
   public static final String APPLICATION_ID = "com.fameli.budget";
   public static final String BUILD_TYPE = "release";
-  public static final int VERSION_CODE = 89;
-  public static final String VERSION_NAME = "1.10.10";
+  public static final int VERSION_CODE = 90;
+  public static final String VERSION_NAME = "1.10.11";
   // Field from default config.
   public static final String YANDEX_CLIENT_ID = "your_yandex_client_id";
 }
