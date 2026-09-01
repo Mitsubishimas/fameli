@@ -1,7 +1,6 @@
 package com.fameli.budget.ui.screens.shopping;
 
 import com.fameli.budget.data.local.dao.ShoppingDao;
-import com.fameli.budget.data.repository.FamilySyncRepository;
 import com.fameli.budget.firebase.FirebaseAuthRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -29,29 +28,24 @@ public final class ShoppingViewModel_Factory implements Factory<ShoppingViewMode
 
   private final Provider<FirebaseAuthRepository> authRepositoryProvider;
 
-  private final Provider<FamilySyncRepository> familyRepoProvider;
-
   public ShoppingViewModel_Factory(Provider<ShoppingDao> shoppingDaoProvider,
-      Provider<FirebaseAuthRepository> authRepositoryProvider,
-      Provider<FamilySyncRepository> familyRepoProvider) {
+      Provider<FirebaseAuthRepository> authRepositoryProvider) {
     this.shoppingDaoProvider = shoppingDaoProvider;
     this.authRepositoryProvider = authRepositoryProvider;
-    this.familyRepoProvider = familyRepoProvider;
   }
 
   @Override
   public ShoppingViewModel get() {
-    return newInstance(shoppingDaoProvider.get(), authRepositoryProvider.get(), familyRepoProvider.get());
+    return newInstance(shoppingDaoProvider.get(), authRepositoryProvider.get());
   }
 
   public static ShoppingViewModel_Factory create(Provider<ShoppingDao> shoppingDaoProvider,
-      Provider<FirebaseAuthRepository> authRepositoryProvider,
-      Provider<FamilySyncRepository> familyRepoProvider) {
-    return new ShoppingViewModel_Factory(shoppingDaoProvider, authRepositoryProvider, familyRepoProvider);
+      Provider<FirebaseAuthRepository> authRepositoryProvider) {
+    return new ShoppingViewModel_Factory(shoppingDaoProvider, authRepositoryProvider);
   }
 
   public static ShoppingViewModel newInstance(ShoppingDao shoppingDao,
-      FirebaseAuthRepository authRepository, FamilySyncRepository familyRepo) {
-    return new ShoppingViewModel(shoppingDao, authRepository, familyRepo);
+      FirebaseAuthRepository authRepository) {
+    return new ShoppingViewModel(shoppingDao, authRepository);
   }
 }

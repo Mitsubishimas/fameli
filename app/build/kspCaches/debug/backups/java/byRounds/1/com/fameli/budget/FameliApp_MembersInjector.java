@@ -3,7 +3,6 @@ package com.fameli.budget;
 import com.fameli.budget.data.local.FameliDatabase;
 import com.fameli.budget.data.repository.FamilyManager;
 import com.fameli.budget.data.repository.FamilySyncRepository;
-import com.fameli.budget.firebase.FirebaseAuthRepository;
 import dagger.MembersInjector;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.InjectedFieldSignature;
@@ -31,23 +30,18 @@ public final class FameliApp_MembersInjector implements MembersInjector<FameliAp
 
   private final Provider<FamilyManager> familyManagerProvider;
 
-  private final Provider<FirebaseAuthRepository> authRepositoryProvider;
-
   public FameliApp_MembersInjector(Provider<FameliDatabase> databaseProvider,
       Provider<FamilySyncRepository> familySyncRepositoryProvider,
-      Provider<FamilyManager> familyManagerProvider,
-      Provider<FirebaseAuthRepository> authRepositoryProvider) {
+      Provider<FamilyManager> familyManagerProvider) {
     this.databaseProvider = databaseProvider;
     this.familySyncRepositoryProvider = familySyncRepositoryProvider;
     this.familyManagerProvider = familyManagerProvider;
-    this.authRepositoryProvider = authRepositoryProvider;
   }
 
   public static MembersInjector<FameliApp> create(Provider<FameliDatabase> databaseProvider,
       Provider<FamilySyncRepository> familySyncRepositoryProvider,
-      Provider<FamilyManager> familyManagerProvider,
-      Provider<FirebaseAuthRepository> authRepositoryProvider) {
-    return new FameliApp_MembersInjector(databaseProvider, familySyncRepositoryProvider, familyManagerProvider, authRepositoryProvider);
+      Provider<FamilyManager> familyManagerProvider) {
+    return new FameliApp_MembersInjector(databaseProvider, familySyncRepositoryProvider, familyManagerProvider);
   }
 
   @Override
@@ -55,7 +49,6 @@ public final class FameliApp_MembersInjector implements MembersInjector<FameliAp
     injectDatabase(instance, databaseProvider.get());
     injectFamilySyncRepository(instance, familySyncRepositoryProvider.get());
     injectFamilyManager(instance, familyManagerProvider.get());
-    injectAuthRepository(instance, authRepositoryProvider.get());
   }
 
   @InjectedFieldSignature("com.fameli.budget.FameliApp.database")
@@ -72,11 +65,5 @@ public final class FameliApp_MembersInjector implements MembersInjector<FameliAp
   @InjectedFieldSignature("com.fameli.budget.FameliApp.familyManager")
   public static void injectFamilyManager(FameliApp instance, FamilyManager familyManager) {
     instance.familyManager = familyManager;
-  }
-
-  @InjectedFieldSignature("com.fameli.budget.FameliApp.authRepository")
-  public static void injectAuthRepository(FameliApp instance,
-      FirebaseAuthRepository authRepository) {
-    instance.authRepository = authRepository;
   }
 }

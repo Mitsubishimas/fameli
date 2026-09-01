@@ -49,7 +49,7 @@ public final class TaskDao_Impl implements TaskDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR IGNORE INTO `tasks` (`id`,`cloudId`,`title`,`description`,`date`,`time`,`createdBy`,`createdByUid`,`isCompleted`,`isDeleted`,`lastModified`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR ABORT INTO `tasks` (`id`,`cloudId`,`title`,`description`,`date`,`time`,`createdBy`,`createdByUid`,`isCompleted`,`isDeleted`,`lastModified`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override

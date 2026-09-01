@@ -38,21 +38,20 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
                 Button(onClick = { viewModel.toggleType(false) }, modifier = Modifier.weight(1f)) { Text("Доход") }
             }
             OutlinedTextField(amount, { viewModel.updateAmount(it) }, label = { Text("Сумма") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-            
+
             Text("Категория")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(categories) { c ->
                     SuggestionChip(onClick = { viewModel.selectCategory(c) }, label = { Text("${c.icon} ${c.name}") })
                 }
             }
-            
+
             OutlinedTextField(note, { viewModel.updateNote(it) }, label = { Text("Заметка") }, modifier = Modifier.fillMaxWidth())
-            
-            // Показываем статус синхронизации
+
             if (syncMessage.isNotBlank()) {
-                Text(syncMessage, color = if (syncMessage.startsWith("❌")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+                Text(syncMessage, color = MaterialTheme.colorScheme.primary)
             }
-            
+
             Button(
                 onClick = { viewModel.save(); navController.navigateUp() },
                 modifier = Modifier.fillMaxWidth(),

@@ -2,12 +2,12 @@ package com.fameli.budget.ui.screens.transaction
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.fameli.budget.data.local.dao.*
-import com.fameli.budget.data.local.entity.*
-import com.fameli.budget.data.repository.FamilyManager
-import com.fameli.budget.data.repository.FamilySyncRepository
+import com.fameli.budget.data.local.dao.CategoryDao
+import com.fameli.budget.data.local.dao.TransactionDao
+import com.fameli.budget.data.local.entity.CategoryEntity
+import com.fameli.budget.data.local.entity.CategoryType
+import com.fameli.budget.data.local.entity.TransactionEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -16,9 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AddTransactionViewModel @Inject constructor(
     private val transactionDao: TransactionDao,
-    private val categoryDao: CategoryDao,
-    private val familyRepo: FamilySyncRepository,
-    private val familyManager: FamilyManager
+    private val categoryDao: CategoryDao
 ) : ViewModel() {
     val amount = MutableStateFlow("")
     val note = MutableStateFlow("")
@@ -38,32 +36,17 @@ class AddTransactionViewModel @Inject constructor(
     fun save() = viewModelScope.launch {
         val a = amount.value.toDoubleOrNull() ?: return@launch
         val c = selectedCategory.value ?: return@launch
-        val type = if (isExpense.value) "EXPENSE" else "INCOME"
-
         val txn = TransactionEntity(
             cloudId = UUID.randomUUID().toString(),
-            type = type,
+            type = if (isExpense.value) "EXPENSE" else "INCOME",
             amount = a,
             categoryId = c.id,
             categoryName = c.name,
             note = note.value,
             date = System.currentTimeMillis()
         )
-        
-        // 1. Сохраняем локально
         transactionDao.insert(txn)
         amount.value = ""; note.value = ""; selectedCategory.value = null
-
-        // 2. Отправляем в облако
-        val fid = familyManager.currentFamilyId
-        if (fid != null) {
-            syncMessage.value = "Отправка..."
-            launch(Dispatchers.IO) {
-                familyRepo.syncTransaction(txn)
-                syncMessage.value = "✅ Отправлено"
-            }
-        } else {
-            syncMessage.value = "❌ Нет семьи"
-        }
+        syncMessage.value = "Сохранено"
     }
 }

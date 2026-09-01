@@ -1,7 +1,6 @@
 package com.fameli.budget.ui.screens.goals;
 
 import com.fameli.budget.data.local.dao.GoalDao;
-import com.fameli.budget.data.repository.FamilySyncRepository;
 import com.fameli.budget.firebase.FirebaseAuthRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -29,29 +28,23 @@ public final class GoalViewModel_Factory implements Factory<GoalViewModel> {
 
   private final Provider<FirebaseAuthRepository> authRepositoryProvider;
 
-  private final Provider<FamilySyncRepository> familyRepoProvider;
-
   public GoalViewModel_Factory(Provider<GoalDao> goalDaoProvider,
-      Provider<FirebaseAuthRepository> authRepositoryProvider,
-      Provider<FamilySyncRepository> familyRepoProvider) {
+      Provider<FirebaseAuthRepository> authRepositoryProvider) {
     this.goalDaoProvider = goalDaoProvider;
     this.authRepositoryProvider = authRepositoryProvider;
-    this.familyRepoProvider = familyRepoProvider;
   }
 
   @Override
   public GoalViewModel get() {
-    return newInstance(goalDaoProvider.get(), authRepositoryProvider.get(), familyRepoProvider.get());
+    return newInstance(goalDaoProvider.get(), authRepositoryProvider.get());
   }
 
   public static GoalViewModel_Factory create(Provider<GoalDao> goalDaoProvider,
-      Provider<FirebaseAuthRepository> authRepositoryProvider,
-      Provider<FamilySyncRepository> familyRepoProvider) {
-    return new GoalViewModel_Factory(goalDaoProvider, authRepositoryProvider, familyRepoProvider);
+      Provider<FirebaseAuthRepository> authRepositoryProvider) {
+    return new GoalViewModel_Factory(goalDaoProvider, authRepositoryProvider);
   }
 
-  public static GoalViewModel newInstance(GoalDao goalDao, FirebaseAuthRepository authRepository,
-      FamilySyncRepository familyRepo) {
-    return new GoalViewModel(goalDao, authRepository, familyRepo);
+  public static GoalViewModel newInstance(GoalDao goalDao, FirebaseAuthRepository authRepository) {
+    return new GoalViewModel(goalDao, authRepository);
   }
 }

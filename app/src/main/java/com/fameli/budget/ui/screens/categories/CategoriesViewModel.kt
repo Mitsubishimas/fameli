@@ -5,9 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.fameli.budget.data.local.dao.CategoryDao
 import com.fameli.budget.data.local.entity.CategoryEntity
 import com.fameli.budget.data.local.entity.CategoryType
-import com.fameli.budget.data.repository.FamilySyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -15,8 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CategoriesViewModel @Inject constructor(
-    private val dao: CategoryDao,
-    private val familyRepo: FamilySyncRepository
+    private val dao: CategoryDao
 ) : ViewModel() {
 
     val expenseCategories = dao.getByType(CategoryType.EXPENSE).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -33,15 +30,8 @@ class CategoriesViewModel @Inject constructor(
     fun updateType(t: CategoryType) { newType.value = t }
 
     fun addCategory() = viewModelScope.launch {
-        val cat = CategoryEntity(
-            cloudId = UUID.randomUUID().toString(),
-            name = newName.value,
-            type = newType.value,
-            icon = newIcon.value
-        )
+        val cat = CategoryEntity(cloudId = UUID.randomUUID().toString(), name = newName.value, type = newType.value, icon = newIcon.value)
         dao.insert(cat)
-        // Синхронизация в фоне
-        launch(Dispatchers.IO) { familyRepo.syncCategory(cat) }
         hideAdd()
     }
 

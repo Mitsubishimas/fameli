@@ -7,6 +7,7 @@ import android.os.Build
 import com.fameli.budget.data.local.FameliDatabase
 import com.fameli.budget.data.local.entity.CategoryEntity
 import com.fameli.budget.data.local.entity.CategoryType
+import com.fameli.budget.data.remote.ApiClient
 import com.fameli.budget.data.repository.FamilyManager
 import com.fameli.budget.data.repository.FamilySyncRepository
 import dagger.hilt.android.HiltAndroidApp
@@ -14,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -29,9 +31,6 @@ class FameliApp : Application() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             getSystemService(NotificationManager::class.java).createNotificationChannel(
                 NotificationChannel("default", "Уведомления", NotificationManager.IMPORTANCE_DEFAULT)
-            )
-            getSystemService(NotificationManager::class.java).createNotificationChannel(
-                NotificationChannel("task_reminders", "Напоминания о задачах", NotificationManager.IMPORTANCE_HIGH)
             )
         }
         
@@ -61,11 +60,10 @@ class FameliApp : Application() {
     
     private suspend fun loadFamilyAndSync() {
         try {
-            val families = familySyncRepository.getMyFamilies()
-            if (families.isNotEmpty()) {
-                familyManager.currentFamilyId = families.first()
-                familySyncRepository.startListening()
-                // АВТОЗАГРУЗКА ДАННЫХ ИЗ ОБЛАКА
+            val families = ApiClient.getFamilies()
+            if (families.length() > 0) {
+                val familyId = families.getJSONObject(0).optString("id")
+                familyManager.currentFamilyId = familyId
                 familySyncRepository.syncAllFromCloud()
             }
         } catch (_: Exception) {}
