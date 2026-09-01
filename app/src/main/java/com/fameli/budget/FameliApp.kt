@@ -12,10 +12,8 @@ import com.fameli.budget.data.remote.AppLogger
 import com.fameli.budget.data.repository.FamilyManager
 import com.fameli.budget.data.repository.FamilySyncRepository
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -28,8 +26,6 @@ class FameliApp : Application() {
     override fun onCreate() {
         super.onCreate()
         
-        AppLogger.log("APP", "Приложение запущено")
-        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             getSystemService(NotificationManager::class.java).createNotificationChannel(
                 NotificationChannel("default", "Уведомления", NotificationManager.IMPORTANCE_DEFAULT)
@@ -39,6 +35,7 @@ class FameliApp : Application() {
         CoroutineScope(Dispatchers.IO).launch {
             addDefaultCategories()
             loadFamilyAndSync()
+            startAutoSync()
         }
     }
     
@@ -58,36 +55,27 @@ class FameliApp : Application() {
                     CategoryEntity(name = "Подарки", type = CategoryType.INCOME, icon = "🎁", isDefault = true),
                 )
                 defaults.forEach { dao.insert(it) }
-                AppLogger.log("APP", "Категории созданы: ${defaults.size}")
-            } else {
-                AppLogger.log("APP", "Категории уже есть: ${existing.size}")
             }
-        } catch (e: Exception) {
-            AppLogger.log("APP", "Ошибка категорий: ${e.message}")
-        }
+        } catch (_: Exception) {}
     }
     
     private suspend fun loadFamilyAndSync() {
         try {
-            AppLogger.log("APP", "Загрузка семей...")
             val families = ApiClient.getFamilies()
-            AppLogger.log("APP", "Семей получено: ${families.length()}")
-            
             if (families.length() > 0) {
-                val fid = families.getJSONObject(0).optString("id")
-                familyManager.currentFamilyId = fid
-                AppLogger.log("APP", "Семья: $fid")
-                
-                val result = familySyncRepository.syncAllFromCloud()
-                result.fold(
-                    onSuccess = { AppLogger.log("APP", "Синхронизация при старте: УСПЕХ") },
-                    onFailure = { e -> AppLogger.log("APP", "Синхронизация при старте: ОШИБКА ${e.message}") }
-                )
-            } else {
-                AppLogger.log("APP", "Семей нет")
+                familyManager.currentFamilyId = families.getJSONObject(0).optString("id")
+                familySyncRepository.syncAllFromCloud()
             }
-        } catch (e: Exception) {
-            AppLogger.log("APP", "Ошибка загрузки: ${e.message}")
+        } catch (_: Exception) {}
+    }
+
+    private suspend fun startAutoSync() {
+        while (true) {
+            delay(5 * 60 * 1000) // 5 минут
+            try {
+                familySyncRepository.syncAllFromCloud()
+                AppLogger.log("SYNC", "Автосинхронизация выполнена")
+            } catch (_: Exception) {}
         }
     }
 }
