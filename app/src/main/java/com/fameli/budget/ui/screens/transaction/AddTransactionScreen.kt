@@ -13,6 +13,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,41 +24,79 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
     val isExpense by viewModel.isExpense.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val selected by viewModel.selectedCategory.collectAsState()
-    val syncMessage by viewModel.syncMessage.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Добавить") },
+                title = { Text("Добавить транзакцию") },
                 navigationIcon = { IconButton(onClick = { navController.navigateUp() }) { Icon(Icons.Filled.ArrowBack, null) } }
             )
         }
     ) { p ->
         Column(Modifier.fillMaxSize().padding(p).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            
+            // Тип: Доход/Расход
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { viewModel.toggleType(true) }, modifier = Modifier.weight(1f)) { Text("Расход") }
                 Button(onClick = { viewModel.toggleType(false) }, modifier = Modifier.weight(1f)) { Text("Доход") }
             }
-            OutlinedTextField(amount, { viewModel.updateAmount(it) }, label = { Text("Сумма") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
 
+            // Сумма
+            OutlinedTextField(
+                value = amount,
+                onValueChange = { viewModel.updateAmount(it) },
+                label = { Text("Сумма") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Категория
             Text("Категория")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(categories) { c ->
-                    SuggestionChip(onClick = { viewModel.selectCategory(c) }, label = { Text("${c.icon} ${c.name}") })
+                    SuggestionChip(
+                        onClick = { viewModel.selectCategory(c) },
+                        label = { Text("${c.icon} ${c.name}") },
+                        colors = if (selected?.id == c.id) SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ) else SuggestionChipDefaults.suggestionChipColors()
+                    )
                 }
             }
 
-            OutlinedTextField(note, { viewModel.updateNote(it) }, label = { Text("Заметка") }, modifier = Modifier.fillMaxWidth())
-
-            if (syncMessage.isNotBlank()) {
-                Text(syncMessage, color = MaterialTheme.colorScheme.primary)
+            // Дата
+            OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("📅 ${SimpleDateFormat("dd.MM.yyyy", Locale("ru")).format(Date(selectedDate))}")
             }
 
+            // Заметка
+            OutlinedTextField(
+                value = note,
+                onValueChange = { viewModel.updateNote(it) },
+                label = { Text("Заметка") },
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 3
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            // Кнопка сохранить
             Button(
                 onClick = { viewModel.save(); navController.navigateUp() },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = amount.isNotBlank() && selected != null
             ) { Text("Сохранить") }
         }
+    }
+
+    if (showDatePicker) {
+        val dp = rememberDatePickerState(selectedDate)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = { TextButton(onClick = { dp.selectedDateMillis?.let { viewModel.setDate(it) }; showDatePicker = false }) { Text("OK") } },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Отмена") } }
+        ) { DatePicker(dp) }
     }
 }

@@ -11,7 +11,6 @@ import androidx.navigation.*
 import androidx.navigation.compose.*
 import com.fameli.budget.ui.screens.auth.*
 import com.fameli.budget.ui.screens.dashboard.*
-import com.fameli.budget.ui.screens.family.*
 import com.fameli.budget.ui.screens.goals.*
 import com.fameli.budget.ui.screens.planner.*
 import com.fameli.budget.ui.screens.settings.*
@@ -26,6 +25,7 @@ sealed class Screen(val route: String) {
     object Goals : Screen("goals")
     object Shopping : Screen("shopping")
     object Planner : Screen("planner")
+    object AddTransaction : Screen("add_transaction")
     object Settings : Screen("settings")
 }
 
@@ -42,6 +42,7 @@ fun FameliNavHost() {
         composable(Screen.Goals.route) { MainScaffold(navController) }
         composable(Screen.Shopping.route) { MainScaffold(navController) }
         composable(Screen.Planner.route) { MainScaffold(navController) }
+        composable(Screen.AddTransaction.route) { MainScaffold(navController) }
         composable(Screen.Settings.route) { MainScaffold(navController) }
     }
 }
@@ -70,6 +71,7 @@ fun MainScaffold(navController: NavHostController) {
         },
         floatingActionButton = {
             when (currentRoute) {
+                Screen.Dashboard.route -> FloatingActionButton(onClick = { navController.navigate(Screen.AddTransaction.route) }) { Icon(Icons.Filled.Add, "Добавить") }
                 Screen.Goals.route -> FloatingActionButton(onClick = { showGoalDialog = true }) { Icon(Icons.Filled.Add, "Цель") }
                 Screen.Shopping.route -> FloatingActionButton(onClick = { showShoppingDialog = true }) { Icon(Icons.Filled.Add, "Покупка") }
                 Screen.Planner.route -> FloatingActionButton(onClick = { showTaskDialog = true }) { Icon(Icons.Filled.Add, "Задача") }
@@ -84,6 +86,7 @@ fun MainScaffold(navController: NavHostController) {
                 Screen.Goals.route -> GoalScreen(goalVM, showGoalDialog) { showGoalDialog = false }
                 Screen.Shopping.route -> ShoppingScreen(shoppingVM, showShoppingDialog) { showShoppingDialog = false }
                 Screen.Planner.route -> PlannerScreen(plannerVM, showTaskDialog) { showTaskDialog = false }
+                Screen.AddTransaction.route -> AddTransactionScreen(navController)
                 Screen.Settings.route -> SettingsScreen()
             }
         }

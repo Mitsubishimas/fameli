@@ -22,6 +22,7 @@ class AddTransactionViewModel @Inject constructor(
     val note = MutableStateFlow("")
     val isExpense = MutableStateFlow(true)
     val selectedCategory = MutableStateFlow<CategoryEntity?>(null)
+    val selectedDate = MutableStateFlow(System.currentTimeMillis())
     val syncMessage = MutableStateFlow("")
 
     val categories: StateFlow<List<CategoryEntity>> = isExpense.flatMapLatest { exp ->
@@ -32,6 +33,7 @@ class AddTransactionViewModel @Inject constructor(
     fun updateNote(v: String) { note.value = v }
     fun toggleType(exp: Boolean) { isExpense.value = exp; selectedCategory.value = null }
     fun selectCategory(c: CategoryEntity) { selectedCategory.value = c }
+    fun setDate(date: Long) { selectedDate.value = date }
 
     fun save() = viewModelScope.launch {
         val a = amount.value.toDoubleOrNull() ?: return@launch
@@ -43,10 +45,12 @@ class AddTransactionViewModel @Inject constructor(
             categoryId = c.id,
             categoryName = c.name,
             note = note.value,
-            date = System.currentTimeMillis()
+            date = selectedDate.value,
+            lastModified = System.currentTimeMillis()
         )
         transactionDao.insert(txn)
         amount.value = ""; note.value = ""; selectedCategory.value = null
+        selectedDate.value = System.currentTimeMillis()
         syncMessage.value = "Сохранено"
     }
 }
