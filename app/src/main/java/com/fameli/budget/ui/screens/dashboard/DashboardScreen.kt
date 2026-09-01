@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.fameli.budget.data.local.entity.TransactionEntity
 import com.fameli.budget.ui.screens.planner.PlannerViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -32,7 +31,7 @@ fun DashboardScreen(
     val selectedDate by plannerVM.selectedDate.collectAsState()
     val tasks by plannerVM.tasks.collectAsState()
 
-    var showTransactions by remember { mutableStateOf<String?>(null) }
+    var showType by remember { mutableStateOf<String?>(null) }
 
     val cal = Calendar.getInstance().apply { timeInMillis = selectedDate }
     val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
@@ -42,18 +41,18 @@ fun DashboardScreen(
         
         item { Text(monthLabel.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) }
 
+        // Финансовая сводка
         item {
             Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Баланс: ${format(balance.totalIncome - balance.totalExpense)}",
                         style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Column(modifier = Modifier.clickable { showTransactions = "INCOME" }) {
+                        Column(modifier = Modifier.clickable { showType = "INCOME" }) {
                             Text("Доходы", style = MaterialTheme.typography.labelSmall)
                             Text("+${format(balance.totalIncome)}", color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
                         }
-                        Column(modifier = Modifier.clickable { showTransactions = "EXPENSE" }, horizontalAlignment = Alignment.End) {
+                        Column(modifier = Modifier.clickable { showType = "EXPENSE" }, horizontalAlignment = Alignment.End) {
                             Text("Расходы", style = MaterialTheme.typography.labelSmall)
                             Text("-${format(balance.totalExpense)}", color = Color(0xFFC62828), fontWeight = FontWeight.Bold)
                         }
@@ -77,30 +76,27 @@ fun DashboardScreen(
                     var dayCounter = 1
                     for (week in 0 until 6) {
                         Row(Modifier.fillMaxWidth()) {
-                            for (dayOfWeek in 0 until 7) {
-                                if (week == 0 && dayOfWeek < startOffset) {
+                            for (dow in 0 until 7) {
+                                if (week == 0 && dow < startOffset) {
                                     Spacer(Modifier.weight(1f).height(44.dp))
                                 } else if (dayCounter <= daysInMonth) {
-                                    val currentDay = dayCounter
+                                    val day = dayCounter
                                     val dayCal = Calendar.getInstance().apply {
-                                        timeInMillis = selectedDate
-                                        set(Calendar.DAY_OF_MONTH, currentDay)
-                                        set(Calendar.HOUR_OF_DAY, 12)
+                                        timeInMillis = selectedDate; set(Calendar.DAY_OF_MONTH, day); set(Calendar.HOUR_OF_DAY, 12)
                                     }
-                                    val hasTasks = monthTasks.any { task ->
-                                        val tc = Calendar.getInstance().apply { timeInMillis = task.date }
-                                        tc.get(Calendar.DAY_OF_MONTH) == currentDay && tc.get(Calendar.MONTH) == cal.get(Calendar.MONTH)
+                                    val hasTasks = monthTasks.any { t ->
+                                        val tc = Calendar.getInstance().apply { timeInMillis = t.date }
+                                        tc.get(Calendar.DAY_OF_MONTH) == day && tc.get(Calendar.MONTH) == cal.get(Calendar.MONTH)
                                     }
-                                    val isSelected = cal.get(Calendar.DAY_OF_MONTH) == currentDay
-                                    Box(
-                                        modifier = Modifier.weight(1f).height(44.dp).padding(2.dp).clip(CircleShape)
-                                            .background(if (isSelected) MaterialTheme.colorScheme.primary else if (hasTasks) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
-                                            .clickable { plannerVM.setSelectedDate(dayCal.timeInMillis) },
+                                    val isSelected = cal.get(Calendar.DAY_OF_MONTH) == day
+                                    Box(Modifier.weight(1f).height(44.dp).padding(2.dp).clip(CircleShape)
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primary else if (hasTasks) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                                        .clickable { plannerVM.setSelectedDate(dayCal.timeInMillis) },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text("$currentDay", color = if (isSelected) MaterialTheme.colorScheme.onPrimary else Color.Unspecified)
-                                            if (hasTasks) Box(Modifier.size(5.dp).clip(CircleShape).background(if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary))
+                                            Text("$day", color = if (isSelected) MaterialTheme.colorScheme.onPrimary else Color.Unspecified)
+                                            if (hasTasks) Box(Modifier.size(5.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
                                         }
                                     }
                                     dayCounter++
@@ -114,7 +110,7 @@ fun DashboardScreen(
             }
         }
 
-        // Задачи
+        // Задачи на дату
         item { Text("Задачи: ${SimpleDateFormat("dd.MM.yyyy", Locale("ru")).format(Date(selectedDate))}", fontWeight = FontWeight.Bold) }
         if (tasks.isEmpty()) { item { Text("Нет задач") } }
         items(tasks) { task ->
@@ -127,12 +123,12 @@ fun DashboardScreen(
         }
     }
 
-    // Диалог транзакций
-    if (showTransactions != null) {
-        val filtered = transactions.filter { it.type == showTransactions }
+    // Диалог с транзакциями при клике
+    if (showType != null) {
+        val filtered = transactions.filter { it.type == showType }
         AlertDialog(
-            onDismissRequest = { showTransactions = null },
-            title = { Text(if (showTransactions == "INCOME") "Доходы" else "Расходы") },
+            onDismissRequest = { showType = null },
+            title = { Text(if (showType == "INCOME") "Доходы" else "Расходы") },
             text = {
                 LazyColumn(Modifier.height(400.dp)) {
                     if (filtered.isEmpty()) { item { Text("Нет данных") } }
@@ -144,7 +140,7 @@ fun DashboardScreen(
                     }
                 }
             },
-            confirmButton = { Button(onClick = { showTransactions = null }) { Text("Закрыть") } }
+            confirmButton = { Button(onClick = { showType = null }) { Text("Закрыть") } }
         )
     }
 }
