@@ -15,18 +15,18 @@ interface TransactionDao {
     fun getBetween(start: Long, end: Long): Flow<List<TransactionEntity>>
 
     @Query("""
-        SELECT c.name as categoryName, c.color as color, c.type as type, SUM(t.amount) as total
-        FROM transactions t INNER JOIN categories c ON t.categoryId = c.id
-        WHERE t.date BETWEEN :start AND :end AND t.isDeleted = 0 AND c.isDeleted = 0 AND c.type = :type
-        GROUP BY t.categoryId ORDER BY total DESC
+        SELECT categoryName as categoryName, 0 as color, type as type, SUM(amount) as total
+        FROM transactions
+        WHERE date BETWEEN :start AND :end AND isDeleted = 0 AND type = :type
+        GROUP BY categoryName ORDER BY total DESC
     """)
     fun getCategorySums(start: Long, end: Long, type: String): Flow<List<CategoryExpense>>
 
     @Query("""
-        SELECT COALESCE(SUM(CASE WHEN c.type = 'INCOME' THEN t.amount ELSE 0 END), 0) as totalIncome,
-               COALESCE(SUM(CASE WHEN c.type = 'EXPENSE' THEN t.amount ELSE 0 END), 0) as totalExpense
-        FROM transactions t INNER JOIN categories c ON t.categoryId = c.id
-        WHERE t.date BETWEEN :start AND :end AND t.isDeleted = 0 AND c.isDeleted = 0
+        SELECT COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END), 0) as totalIncome,
+               COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0 END), 0) as totalExpense
+        FROM transactions
+        WHERE date BETWEEN :start AND :end AND isDeleted = 0
     """)
     fun getMonthlyBalance(start: Long, end: Long): Flow<MonthlyBalance>
 

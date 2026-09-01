@@ -295,10 +295,10 @@ public final class TransactionDao_Impl implements TransactionDao {
   public Flow<List<CategoryExpense>> getCategorySums(final long start, final long end,
       final String type) {
     final String _sql = "\n"
-            + "        SELECT c.name as categoryName, c.color as color, c.type as type, SUM(t.amount) as total\n"
-            + "        FROM transactions t INNER JOIN categories c ON t.categoryId = c.id\n"
-            + "        WHERE t.date BETWEEN ? AND ? AND t.isDeleted = 0 AND c.isDeleted = 0 AND c.type = ?\n"
-            + "        GROUP BY t.categoryId ORDER BY total DESC\n"
+            + "        SELECT categoryName as categoryName, 0 as color, type as type, SUM(amount) as total\n"
+            + "        FROM transactions\n"
+            + "        WHERE date BETWEEN ? AND ? AND isDeleted = 0 AND type = ?\n"
+            + "        GROUP BY categoryName ORDER BY total DESC\n"
             + "    ";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 3);
     int _argIndex = 1;
@@ -307,8 +307,7 @@ public final class TransactionDao_Impl implements TransactionDao {
     _statement.bindLong(_argIndex, end);
     _argIndex = 3;
     _statement.bindString(_argIndex, type);
-    return CoroutinesRoom.createFlow(__db, false, new String[] {"transactions",
-        "categories"}, new Callable<List<CategoryExpense>>() {
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"transactions"}, new Callable<List<CategoryExpense>>() {
       @Override
       @NonNull
       public List<CategoryExpense> call() throws Exception {
@@ -348,18 +347,17 @@ public final class TransactionDao_Impl implements TransactionDao {
   @Override
   public Flow<MonthlyBalance> getMonthlyBalance(final long start, final long end) {
     final String _sql = "\n"
-            + "        SELECT COALESCE(SUM(CASE WHEN c.type = 'INCOME' THEN t.amount ELSE 0 END), 0) as totalIncome,\n"
-            + "               COALESCE(SUM(CASE WHEN c.type = 'EXPENSE' THEN t.amount ELSE 0 END), 0) as totalExpense\n"
-            + "        FROM transactions t INNER JOIN categories c ON t.categoryId = c.id\n"
-            + "        WHERE t.date BETWEEN ? AND ? AND t.isDeleted = 0 AND c.isDeleted = 0\n"
+            + "        SELECT COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END), 0) as totalIncome,\n"
+            + "               COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0 END), 0) as totalExpense\n"
+            + "        FROM transactions\n"
+            + "        WHERE date BETWEEN ? AND ? AND isDeleted = 0\n"
             + "    ";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 2);
     int _argIndex = 1;
     _statement.bindLong(_argIndex, start);
     _argIndex = 2;
     _statement.bindLong(_argIndex, end);
-    return CoroutinesRoom.createFlow(__db, false, new String[] {"transactions",
-        "categories"}, new Callable<MonthlyBalance>() {
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"transactions"}, new Callable<MonthlyBalance>() {
       @Override
       @NonNull
       public MonthlyBalance call() throws Exception {
