@@ -36,7 +36,7 @@ class FamilySyncRepository @Inject constructor(
                     val json = JSONObject().apply {
                         put("cloud_id", txn.cloudId)
                         put("family_id", fid)
-                        put("type", txn.type.lowercase())
+                        put("type", txn.type.uppercase())
                         put("amount", txn.amount)
                         put("category_name", txn.categoryName)
                         put("note", txn.note)

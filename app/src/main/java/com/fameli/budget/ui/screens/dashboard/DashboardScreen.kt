@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.fameli.budget.data.local.entity.TransactionEntity
 import com.fameli.budget.ui.screens.planner.PlannerViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -32,6 +33,8 @@ fun DashboardScreen(
     val tasks by plannerVM.tasks.collectAsState()
 
     var showType by remember { mutableStateOf<String?>(null) }
+    var selectedTxn by remember { mutableStateOf<TransactionEntity?>(null) }
+    var editTxn by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val cal = Calendar.getInstance().apply { timeInMillis = selectedDate }
     val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
@@ -41,12 +44,10 @@ fun DashboardScreen(
         
         item { Text(monthLabel.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) }
 
-        // Финансовая сводка
         item {
             Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Баланс: ${format(balance.totalIncome - balance.totalExpense)}",
-                        style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    Text("Баланс: ${format(balance.totalIncome - balance.totalExpense)}", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Column(modifier = Modifier.clickable { showType = "INCOME" }) {
                             Text("Доходы", style = MaterialTheme.typography.labelSmall)
@@ -81,9 +82,7 @@ fun DashboardScreen(
                                     Spacer(Modifier.weight(1f).height(44.dp))
                                 } else if (dayCounter <= daysInMonth) {
                                     val day = dayCounter
-                                    val dayCal = Calendar.getInstance().apply {
-                                        timeInMillis = selectedDate; set(Calendar.DAY_OF_MONTH, day); set(Calendar.HOUR_OF_DAY, 12)
-                                    }
+                                    val dayCal = Calendar.getInstance().apply { timeInMillis = selectedDate; set(Calendar.DAY_OF_MONTH, day); set(Calendar.HOUR_OF_DAY, 12) }
                                     val hasTasks = monthTasks.any { t ->
                                         val tc = Calendar.getInstance().apply { timeInMillis = t.date }
                                         tc.get(Calendar.DAY_OF_MONTH) == day && tc.get(Calendar.MONTH) == cal.get(Calendar.MONTH)
@@ -100,9 +99,7 @@ fun DashboardScreen(
                                         }
                                     }
                                     dayCounter++
-                                } else {
-                                    Spacer(Modifier.weight(1f).height(44.dp))
-                                }
+                                } else Spacer(Modifier.weight(1f).height(44.dp))
                             }
                         }
                     }
@@ -110,7 +107,6 @@ fun DashboardScreen(
             }
         }
 
-        // Задачи на дату
         item { Text("Задачи: ${SimpleDateFormat("dd.MM.yyyy", Locale("ru")).format(Date(selectedDate))}", fontWeight = FontWeight.Bold) }
         if (tasks.isEmpty()) { item { Text("Нет задач") } }
         items(tasks) { task ->
@@ -123,7 +119,7 @@ fun DashboardScreen(
         }
     }
 
-    // Диалог с транзакциями при клике
+    // Диалог списка
     if (showType != null) {
         val filtered = transactions.filter { it.type == showType }
         AlertDialog(
@@ -131,16 +127,53 @@ fun DashboardScreen(
             title = { Text(if (showType == "INCOME") "Доходы" else "Расходы") },
             text = {
                 LazyColumn(Modifier.height(400.dp)) {
-                    if (filtered.isEmpty()) { item { Text("Нет данных") } }
                     items(filtered) { txn ->
-                        Column(Modifier.padding(8.dp)) {
-                            Text(txn.note.ifBlank { txn.categoryName }, fontWeight = FontWeight.Medium)
-                            Text("${format(txn.amount)} | ${SimpleDateFormat("dd.MM", Locale("ru")).format(Date(txn.date))}", style = MaterialTheme.typography.bodySmall)
+                        Card(Modifier.fillMaxWidth().padding(4.dp).clickable { editTxn = txn; showType = null }) {
+                            Column(Modifier.padding(12.dp)) {
+                                Text(txn.note.ifBlank { txn.categoryName }, fontWeight = FontWeight.Medium)
+                                Text("${format(txn.amount)} | ${SimpleDateFormat("dd.MM", Locale("ru")).format(Date(txn.date))}", style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                     }
                 }
             },
             confirmButton = { Button(onClick = { showType = null }) { Text("Закрыть") } }
+        )
+    }
+
+    // Диалог редактирования/удаления
+    editTxn?.let { txn ->
+        var editType by remember { mutableStateOf(txn.type) }
+        var editAmount by remember { mutableStateOf(txn.amount.toString()) }
+        var editNote by remember { mutableStateOf(txn.note) }
+        var editCategory by remember { mutableStateOf(txn.categoryName) }
+
+        AlertDialog(
+            onDismissRequest = { editTxn = null },
+            title = { Text("Транзакция") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(editType == "INCOME", { editType = "INCOME" }, label = { Text("Доход") })
+                        FilterChip(editType == "EXPENSE", { editType = "EXPENSE" }, label = { Text("Расход") })
+                    }
+                    OutlinedTextField(editAmount, { editAmount = it }, label = { Text("Сумма") })
+                    OutlinedTextField(editCategory, { editCategory = it }, label = { Text("Категория") })
+                    OutlinedTextField(editNote, { editNote = it }, label = { Text("Заметка") })
+                }
+            },
+            confirmButton = {
+                Row {
+                    TextButton(onClick = { viewModel.deleteTransaction(txn); editTxn = null }) {
+                        Text("Удалить", color = Color(0xFFC62828))
+                    }
+                    Button(onClick = {
+                        viewModel.updateTransaction(txn.copy(type = editType, amount = editAmount.toDoubleOrNull() ?: txn.amount, note = editNote, categoryName = editCategory))
+                        editTxn = null
+                    }) { Text("Сохранить") }
+                }
+            },
+            dismissButton = { TextButton(onClick = { editTxn = null }) { Text("Отмена") } }
         )
     }
 }

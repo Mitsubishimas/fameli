@@ -14,7 +14,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(private val dao: TransactionDao) : ViewModel() {
-    
     private val now = LocalDate.now()
     private val start = now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
     private val end = now.plusMonths(1).withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000 - 1
@@ -27,5 +26,9 @@ class DashboardViewModel @Inject constructor(private val dao: TransactionDao) : 
 
     fun deleteTransaction(txn: TransactionEntity) = viewModelScope.launch {
         dao.softDelete(txn.localId)
+    }
+
+    fun updateTransaction(txn: TransactionEntity) = viewModelScope.launch {
+        dao.update(txn.copy(lastModified = System.currentTimeMillis()))
     }
 }
