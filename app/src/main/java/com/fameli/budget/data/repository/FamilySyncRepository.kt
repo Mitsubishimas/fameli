@@ -22,16 +22,18 @@ class FamilySyncRepository @Inject constructor(
 
     private fun log(msg: String) = AppLogger.log("SYNC", msg)
 
+    // ========== ЗАГРУЗКА ИЗ ОБЛАКА (облако — источник истины) ==========
     suspend fun syncAllFromCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
+        log("Загрузка из облака...")
         try {
-            // Получаем облачные ID
+            // Транзакции
             val cloudTxns = ApiClient.getTransactions(fid)
-            val cloudTxnIds = mutableSetOf<String>()
+            val cloudIds = mutableSetOf<String>()
             for (i in 0 until cloudTxns.length()) {
                 val obj = cloudTxns.getJSONObject(i)
                 val cloudId = obj.optString("cloud_id")
-                cloudTxnIds.add(cloudId)
+                cloudIds.add(cloudId)
                 val txn = TransactionEntity(
                     cloudId = cloudId,
                     type = if (obj.optString("type").uppercase() == "INCOME") "INCOME" else "EXPENSE",
@@ -49,9 +51,8 @@ class FamilySyncRepository @Inject constructor(
                     transactionDao.update(txn.copy(localId = existing.localId))
                 }
             }
-            // Удаляем локальные которых нет в облаке
             transactionDao.getAll().first().forEach { local ->
-                if (!cloudTxnIds.contains(local.cloudId)) transactionDao.softDelete(local.localId)
+                if (!cloudIds.contains(local.cloudId)) transactionDao.softDelete(local.localId)
             }
 
             // Покупки
@@ -119,59 +120,70 @@ class FamilySyncRepository @Inject constructor(
         }
     }
 
+    // ========== ОТПРАВКА (только если локально НОВЕЕ или НЕТ в облаке) ==========
     suspend fun syncAllLocalToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
+        log("Отправка...")
         try {
-            // Отправляем только НОВЫЕ транзакции
+            // Транзакции — сравниваем lastModified
             val cloudTxns = ApiClient.getTransactions(fid)
-            val cloudTxnIds = mutableSetOf<String>()
-            for (i in 0 until cloudTxns.length()) cloudTxnIds.add(cloudTxns.getJSONObject(i).optString("cloud_id"))
-            
-            val localTxns = transactionDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }
-            val newTxns = localTxns.filter { !cloudTxnIds.contains(it.cloudId) }
-            log("Новых транзакций для отправки: ${newTxns.size}")
-            newTxns.forEach { txn ->
-                ApiClient.saveTransaction(JSONObject().apply {
-                    put("cloud_id", txn.cloudId); put("family_id", fid)
-                    put("type", txn.type.uppercase()); put("amount", txn.amount)
-                    put("category_name", txn.categoryName); put("note", txn.note)
-                    put("date", txn.date); put("last_modified", txn.lastModified)
-                })
+            val cloudTxnMap = mutableMapOf<String, JSONObject>()
+            for (i in 0 until cloudTxns.length()) {
+                val obj = cloudTxns.getJSONObject(i)
+                cloudTxnMap[obj.optString("cloud_id")] = obj
+            }
+            transactionDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }.forEach { txn ->
+                val cloud = cloudTxnMap[txn.cloudId]
+                val cloudLastMod = cloud?.optLong("last_modified", 0) ?: 0
+                if (cloud == null || txn.lastModified > cloudLastMod) {
+                    ApiClient.saveTransaction(JSONObject().apply {
+                        put("cloud_id", txn.cloudId); put("family_id", fid)
+                        put("type", txn.type.uppercase()); put("amount", txn.amount)
+                        put("category_name", txn.categoryName); put("note", txn.note)
+                        put("date", txn.date); put("last_modified", txn.lastModified)
+                    })
+                }
             }
 
-            // Покупки — только новые
+            // Покупки
             val cloudShop = ApiClient.getShopping(fid)
-            val cloudShopIds = mutableSetOf<String>()
-            for (i in 0 until cloudShop.length()) cloudShopIds.add(cloudShop.getJSONObject(i).optString("cloud_id"))
-            
-            val localShop = shoppingDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }
-            val newShop = localShop.filter { !cloudShopIds.contains(it.cloudId) }
-            log("Новых покупок: ${newShop.size}")
-            newShop.forEach { item ->
-                ApiClient.saveShopping(JSONObject().apply {
-                    put("cloud_id", item.cloudId); put("family_id", fid); put("name", item.name)
-                    put("is_purchased", item.isPurchased); put("purchased_by_name", item.purchasedByName)
-                    put("created_by_name", item.createdByName); put("created_at", item.createdAt)
-                    put("last_modified", item.lastModified)
-                })
+            val cloudShopMap = mutableMapOf<String, JSONObject>()
+            for (i in 0 until cloudShop.length()) {
+                val obj = cloudShop.getJSONObject(i)
+                cloudShopMap[obj.optString("cloud_id")] = obj
+            }
+            shoppingDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }.forEach { item ->
+                val cloud = cloudShopMap[item.cloudId]
+                val cloudLastMod = cloud?.optLong("last_modified", 0) ?: 0
+                if (cloud == null || item.lastModified > cloudLastMod) {
+                    ApiClient.saveShopping(JSONObject().apply {
+                        put("cloud_id", item.cloudId); put("family_id", fid); put("name", item.name)
+                        put("is_purchased", item.isPurchased); put("purchased_by_name", item.purchasedByName)
+                        put("created_by_name", item.createdByName); put("created_at", item.createdAt)
+                        put("last_modified", item.lastModified)
+                    })
+                }
             }
 
-            // Задачи — только новые
+            // Задачи
             val cloudTasks = ApiClient.getTasks(fid)
-            val cloudTaskIds = mutableSetOf<String>()
-            for (i in 0 until cloudTasks.length()) cloudTaskIds.add(cloudTasks.getJSONObject(i).optString("cloud_id"))
-            
-            val localTasks = taskDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }
-            val newTasks = localTasks.filter { !cloudTaskIds.contains(it.cloudId) }
-            log("Новых задач: ${newTasks.size}")
-            newTasks.forEach { task ->
-                ApiClient.saveTask(JSONObject().apply {
-                    put("cloud_id", task.cloudId); put("family_id", fid)
-                    put("title", task.title); put("description", task.description)
-                    put("date", task.date); put("time", task.time)
-                    put("is_completed", task.isCompleted); put("created_by_name", task.createdBy)
-                    put("last_modified", task.lastModified)
-                })
+            val cloudTaskMap = mutableMapOf<String, JSONObject>()
+            for (i in 0 until cloudTasks.length()) {
+                val obj = cloudTasks.getJSONObject(i)
+                cloudTaskMap[obj.optString("cloud_id")] = obj
+            }
+            taskDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }.forEach { task ->
+                val cloud = cloudTaskMap[task.cloudId]
+                val cloudLastMod = cloud?.optLong("last_modified", 0) ?: 0
+                if (cloud == null || task.lastModified > cloudLastMod) {
+                    ApiClient.saveTask(JSONObject().apply {
+                        put("cloud_id", task.cloudId); put("family_id", fid)
+                        put("title", task.title); put("description", task.description)
+                        put("date", task.date); put("time", task.time)
+                        put("is_completed", task.isCompleted); put("created_by_name", task.createdBy)
+                        put("last_modified", task.lastModified)
+                    })
+                }
             }
 
             log("Отправка завершена")
