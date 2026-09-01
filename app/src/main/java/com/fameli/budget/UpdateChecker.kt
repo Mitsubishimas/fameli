@@ -20,7 +20,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object UpdateChecker {
-    private const val CURRENT_VERSION = "v1.9.9"
+    private const val CURRENT_VERSION = "v1.10.0"
     private const val REPO = "Mitsubishimas/fameli"
 
     private fun log(msg: String) = AppLogger.log("UPDATE", msg)
