@@ -30,19 +30,15 @@ interface TransactionDao {
     """)
     fun getMonthlyBalance(start: Long, end: Long): Flow<MonthlyBalance>
 
-    // Проверка по cloudId
     @Query("SELECT * FROM transactions WHERE cloudId = :cloudId LIMIT 1")
     suspend fun getByCloudId(cloudId: String): TransactionEntity?
 
-    // Вставка только если нет
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(transaction: TransactionEntity): Long
 
-    // Обновление
     @Update
     suspend fun update(transaction: TransactionEntity)
 
-    // Мягкое удаление
     @Query("UPDATE transactions SET isDeleted = 1 WHERE localId = :id")
     suspend fun softDelete(id: Long)
 }
