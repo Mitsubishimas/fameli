@@ -2,6 +2,8 @@ package com.fameli.budget.ui.screens.transaction
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -28,7 +30,7 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
     val showAddCategory by viewModel.showAddCategory.collectAsState()
     val newCategoryName by viewModel.newCategoryName.collectAsState()
     var showDatePicker by remember { mutableStateOf(false) }
-    var showCategoryDropdown by remember { mutableStateOf(false) }
+    var showCategoryDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -48,35 +50,9 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
             OutlinedTextField(amount, { viewModel.updateAmount(it) }, label = { Text("Сумма") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
 
-            // Выпадающий список категорий
             Text("Категория")
-            OutlinedButton(onClick = { showCategoryDropdown = true }, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = { showCategoryDialog = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(selectedCategory?.name ?: "Выберите категорию")
-            }
-
-            if (showCategoryDropdown) {
-                AlertDialog(
-                    onDismissRequest = { showCategoryDropdown = false },
-                    title = { Text("Выберите категорию") },
-                    text = {
-                        Column(Modifier.height(300.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            categories.forEach { cat ->
-                                Text(
-                                    "${cat.icon} ${cat.name}",
-                                    modifier = Modifier.fillMaxWidth().clickable { viewModel.selectCategory(cat); showCategoryDropdown = false }.padding(12.dp),
-                                    color = if (selectedCategory?.id == cat.id) MaterialTheme.colorScheme.primary else Color.Unspecified
-                                )
-                            }
-                            Divider()
-                            Text(
-                                "＋ Добавить категорию",
-                                modifier = Modifier.fillMaxWidth().clickable { showCategoryDropdown = false; viewModel.showAddCategoryDialog() }.padding(12.dp),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    },
-                    confirmButton = { Button(onClick = { showCategoryDropdown = false }) { Text("Закрыть") } }
-                )
             }
 
             OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
@@ -93,13 +69,38 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
         }
     }
 
-    if (showDatePicker) {
-        val dp = rememberDatePickerState(selectedDate)
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = { TextButton(onClick = { dp.selectedDateMillis?.let { viewModel.setDate(it) }; showDatePicker = false }) { Text("OK") } },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Отмена") } }
-        ) { DatePicker(dp) }
+    // Диалог выбора категории
+    if (showCategoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showCategoryDialog = false },
+            title = { Text("Выберите категорию") },
+            text = {
+                LazyColumn(Modifier.height(350.dp)) {
+                    items(categories) { cat ->
+                        Text(
+                            "${cat.icon} ${cat.name}",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.selectCategory(cat); showCategoryDialog = false }
+                                .padding(14.dp),
+                            color = if (selectedCategory?.id == cat.id) MaterialTheme.colorScheme.primary else Color.Unspecified
+                        )
+                    }
+                    item {
+                        Divider()
+                        Text(
+                            "＋ Добавить категорию",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showCategoryDialog = false; viewModel.showAddCategoryDialog() }
+                                .padding(14.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            },
+            confirmButton = { Button(onClick = { showCategoryDialog = false }) { Text("Закрыть") } }
+        )
     }
 
     // Диалог добавления категории
@@ -115,5 +116,14 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
             },
             dismissButton = { TextButton(onClick = { viewModel.hideAddCategoryDialog() }) { Text("Отмена") } }
         )
+    }
+
+    if (showDatePicker) {
+        val dp = rememberDatePickerState(selectedDate)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = { TextButton(onClick = { dp.selectedDateMillis?.let { viewModel.setDate(it) }; showDatePicker = false }) { Text("OK") } },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Отмена") } }
+        ) { DatePicker(dp) }
     }
 }
