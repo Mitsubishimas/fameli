@@ -115,6 +115,9 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
                         Checkbox(checked = task.isCompleted, onCheckedChange = { viewModel.toggleComplete(task) })
                         Column(Modifier.weight(1f)) {
                             Text(task.title, fontWeight = FontWeight.Medium)
+                            if (task.description.isNotBlank()) {
+                                Text(task.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                             Text("${task.time} | ${task.createdBy}", style = MaterialTheme.typography.labelSmall)
                         }
                         IconButton(onClick = { viewModel.deleteTask(task) }) { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) }
