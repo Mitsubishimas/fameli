@@ -22,12 +22,11 @@ class FamilySyncRepository @Inject constructor(
 
     private fun log(msg: String) = AppLogger.log("SYNC", msg)
 
-    // ========== ЗАГРУЗКА ИЗ ОБЛАКА (облако — источник истины) ==========
     suspend fun syncAllFromCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         log("Загрузка из облака...")
         try {
-            // Транзакции
+            // Транзакции — включая удалённые
             val cloudTxns = ApiClient.getTransactions(fid)
             val cloudIds = mutableSetOf<String>()
             for (i in 0 until cloudTxns.length()) {
@@ -47,6 +46,9 @@ class FamilySyncRepository @Inject constructor(
                 val existing = transactionDao.getByCloudId(cloudId)
                 if (existing == null) {
                     if (!txn.isDeleted) transactionDao.insert(txn)
+                } else if (txn.isDeleted) {
+                    transactionDao.update(txn.copy(localId = existing.localId))
+                    log("Удалена: ${txn.note}")
                 } else {
                     transactionDao.update(txn.copy(localId = existing.localId))
                 }
@@ -75,8 +77,12 @@ class FamilySyncRepository @Inject constructor(
                 val existing = shoppingDao.getByCloudId(cloudId)
                 if (existing == null) {
                     if (!item.isDeleted) shoppingDao.insert(item)
+                } else if (item.isDeleted) {
+                    shoppingDao.update(item.copy(id = existing.id))
+                    log("Удалена: ${item.name}")
                 } else {
                     shoppingDao.update(item.copy(id = existing.id))
+                    log("~ ${item.name} → ${item.isPurchased}")
                 }
             }
             shoppingDao.getAll().first().forEach { local ->
@@ -104,8 +110,12 @@ class FamilySyncRepository @Inject constructor(
                 val existing = taskDao.getByCloudId(cloudId)
                 if (existing == null) {
                     if (!task.isDeleted) taskDao.insert(task)
+                } else if (task.isDeleted) {
+                    taskDao.update(task.copy(id = existing.id))
+                    log("Удалена: ${task.title}")
                 } else {
                     taskDao.update(task.copy(id = existing.id))
+                    log("~ ${task.title} → ${task.isCompleted}")
                 }
             }
             taskDao.getAll().first().forEach { local ->
@@ -120,18 +130,15 @@ class FamilySyncRepository @Inject constructor(
         }
     }
 
-    // ========== ОТПРАВКА (только если локально НОВЕЕ или НЕТ в облаке) ==========
     suspend fun syncAllLocalToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         log("Отправка...")
         try {
-            // Транзакции — сравниваем lastModified
+            // Транзакции
             val cloudTxns = ApiClient.getTransactions(fid)
             val cloudTxnMap = mutableMapOf<String, JSONObject>()
-            for (i in 0 until cloudTxns.length()) {
-                val obj = cloudTxns.getJSONObject(i)
-                cloudTxnMap[obj.optString("cloud_id")] = obj
-            }
+            for (i in 0 until cloudTxns.length()) cloudTxnMap[cloudTxns.getJSONObject(i).optString("cloud_id")] = cloudTxns.getJSONObject(i)
+
             transactionDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }.forEach { txn ->
                 val cloud = cloudTxnMap[txn.cloudId]
                 val cloudLastMod = cloud?.optLong("last_modified", 0) ?: 0
@@ -148,10 +155,8 @@ class FamilySyncRepository @Inject constructor(
             // Покупки
             val cloudShop = ApiClient.getShopping(fid)
             val cloudShopMap = mutableMapOf<String, JSONObject>()
-            for (i in 0 until cloudShop.length()) {
-                val obj = cloudShop.getJSONObject(i)
-                cloudShopMap[obj.optString("cloud_id")] = obj
-            }
+            for (i in 0 until cloudShop.length()) cloudShopMap[cloudShop.getJSONObject(i).optString("cloud_id")] = cloudShop.getJSONObject(i)
+
             shoppingDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }.forEach { item ->
                 val cloud = cloudShopMap[item.cloudId]
                 val cloudLastMod = cloud?.optLong("last_modified", 0) ?: 0
@@ -168,10 +173,8 @@ class FamilySyncRepository @Inject constructor(
             // Задачи
             val cloudTasks = ApiClient.getTasks(fid)
             val cloudTaskMap = mutableMapOf<String, JSONObject>()
-            for (i in 0 until cloudTasks.length()) {
-                val obj = cloudTasks.getJSONObject(i)
-                cloudTaskMap[obj.optString("cloud_id")] = obj
-            }
+            for (i in 0 until cloudTasks.length()) cloudTaskMap[cloudTasks.getJSONObject(i).optString("cloud_id")] = cloudTasks.getJSONObject(i)
+
             taskDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }.forEach { task ->
                 val cloud = cloudTaskMap[task.cloudId]
                 val cloudLastMod = cloud?.optLong("last_modified", 0) ?: 0
