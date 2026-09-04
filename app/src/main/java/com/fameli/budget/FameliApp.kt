@@ -33,10 +33,36 @@ class FameliApp : Application() {
         }
         
         CoroutineScope(Dispatchers.IO).launch {
+            cleanBadCategories()
             addDefaultCategories()
             loadFamilyAndSync()
             startAutoSync()
         }
+    }
+    
+    private suspend fun cleanBadCategories() {
+        try {
+            val dao = database.categoryDao()
+            val all = dao.getAll().first()
+            // Удаляем категории с пустым именем или ????? иконкой
+            all.forEach { cat ->
+                if (cat.name.isBlank() || cat.icon == "????" || cat.icon == "?" || cat.icon.isBlank()) {
+                    dao.softDelete(cat.id)
+                    AppLogger.log("APP", "Удалена плохая категория: ${cat.name}")
+                }
+            }
+            // Удаляем дубликаты по имени
+            val seen = mutableMapOf<String, Long>()
+            dao.getAll().first().forEach { cat ->
+                val key = "${cat.type}_${cat.name}"
+                if (seen.containsKey(key)) {
+                    dao.softDelete(cat.id)
+                    AppLogger.log("APP", "Удалён дубликат: ${cat.name}")
+                } else {
+                    seen[key] = cat.id
+                }
+            }
+        } catch (_: Exception) {}
     }
     
     private suspend fun addDefaultCategories() {
@@ -71,10 +97,9 @@ class FameliApp : Application() {
 
     private suspend fun startAutoSync() {
         while (true) {
-            delay(5 * 60 * 1000) // 5 минут
+            delay(5 * 60 * 1000)
             try {
                 familySyncRepository.syncAllFromCloud()
-                AppLogger.log("SYNC", "Автосинхронизация выполнена")
             } catch (_: Exception) {}
         }
     }

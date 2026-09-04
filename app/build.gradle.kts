@@ -16,8 +16,8 @@ android {
         applicationId = "com.fameli.budget"
         minSdk = 26
         targetSdk = 35
-        versionCode = 92
-        versionName = "1.10.13"
+        versionCode = 93
+        versionName = "1.10.14"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "YANDEX_CLIENT_ID", "\"your_yandex_client_id\"")
     }
