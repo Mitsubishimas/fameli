@@ -11,8 +11,8 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 93,
-      "versionName": "1.10.14",
+      "versionCode": 94,
+      "versionName": "1.10.15",
       "outputFile": "resources-release-optimize.ap_"
     }
   ],

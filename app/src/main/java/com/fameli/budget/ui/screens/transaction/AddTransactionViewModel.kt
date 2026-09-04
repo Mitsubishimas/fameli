@@ -23,6 +23,8 @@ class AddTransactionViewModel @Inject constructor(
     val isExpense = MutableStateFlow(true)
     val selectedCategory = MutableStateFlow<CategoryEntity?>(null)
     val selectedDate = MutableStateFlow(System.currentTimeMillis())
+    val showAddCategory = MutableStateFlow(false)
+    val newCategoryName = MutableStateFlow("")
     val syncMessage = MutableStateFlow("")
 
     val categories: StateFlow<List<CategoryEntity>> = isExpense.flatMapLatest { exp ->
@@ -34,6 +36,34 @@ class AddTransactionViewModel @Inject constructor(
     fun toggleType(exp: Boolean) { isExpense.value = exp; selectedCategory.value = null }
     fun selectCategory(c: CategoryEntity) { selectedCategory.value = c }
     fun setDate(date: Long) { selectedDate.value = date }
+    fun showAddCategoryDialog() { showAddCategory.value = true; newCategoryName.value = "" }
+    fun hideAddCategoryDialog() { showAddCategory.value = false }
+    fun updateNewCategoryName(v: String) { newCategoryName.value = v }
+
+    fun addCategory() = viewModelScope.launch {
+        val name = newCategoryName.value.trim()
+        if (name.isBlank()) return@launch
+        
+        // Проверка на дубликат (любой регистр)
+        val existing = categoryDao.getAll().first()
+        val duplicate = existing.any { it.name.equals(name, ignoreCase = true) }
+        
+        if (duplicate) {
+            syncMessage.value = "Категория уже существует!"
+            return@launch
+        }
+        
+        val cat = CategoryEntity(
+            cloudId = UUID.randomUUID().toString(),
+            name = name,
+            type = if (isExpense.value) CategoryType.EXPENSE else CategoryType.INCOME,
+            icon = "💰"
+        )
+        categoryDao.insert(cat)
+        selectedCategory.value = cat
+        showAddCategory.value = false
+        syncMessage.value = "Категория добавлена"
+    }
 
     fun save() = viewModelScope.launch {
         val a = amount.value.toDoubleOrNull() ?: return@launch
@@ -51,6 +81,5 @@ class AddTransactionViewModel @Inject constructor(
         transactionDao.insert(txn)
         amount.value = ""; note.value = ""; selectedCategory.value = null
         selectedDate.value = System.currentTimeMillis()
-        syncMessage.value = "Сохранено"
     }
 }
