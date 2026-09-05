@@ -29,6 +29,7 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
     val selectedDate by viewModel.selectedDate.collectAsState()
     val showAddCategory by viewModel.showAddCategory.collectAsState()
     val newCategoryName by viewModel.newCategoryName.collectAsState()
+    val syncMessage by viewModel.syncMessage.collectAsState()
     var showDatePicker by remember { mutableStateOf(false) }
     var showCategoryDialog by remember { mutableStateOf(false) }
 
@@ -42,9 +43,20 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
     ) { p ->
         Column(Modifier.fillMaxSize().padding(p).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             
+            // Кнопки с ВЫДЕЛЕНИЕМ
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { viewModel.toggleType(true) }, modifier = Modifier.weight(1f)) { Text("Расход") }
-                Button(onClick = { viewModel.toggleType(false) }, modifier = Modifier.weight(1f)) { Text("Доход") }
+                Button(
+                    onClick = { viewModel.toggleType(true) },
+                    modifier = Modifier.weight(1f),
+                    colors = if (isExpense) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    else ButtonDefaults.outlinedButtonColors()
+                ) { Text("Расход") }
+                Button(
+                    onClick = { viewModel.toggleType(false) },
+                    modifier = Modifier.weight(1f),
+                    colors = if (!isExpense) ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                    else ButtonDefaults.outlinedButtonColors()
+                ) { Text("Доход") }
             }
 
             OutlinedTextField(amount, { viewModel.updateAmount(it) }, label = { Text("Сумма") },
@@ -53,6 +65,10 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
             Text("Категория")
             OutlinedButton(onClick = { showCategoryDialog = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(selectedCategory?.name ?: "Выберите категорию")
+            }
+
+            if (syncMessage.isNotBlank()) {
+                Text(syncMessage, color = if (syncMessage.startsWith("✅")) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error)
             }
 
             OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
@@ -69,7 +85,6 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
         }
     }
 
-    // Диалог выбора категории
     if (showCategoryDialog) {
         AlertDialog(
             onDismissRequest = { showCategoryDialog = false },
@@ -79,10 +94,7 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
                     items(categories) { cat ->
                         Text(
                             "${cat.icon} ${cat.name}",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.selectCategory(cat); showCategoryDialog = false }
-                                .padding(14.dp),
+                            modifier = Modifier.fillMaxWidth().clickable { viewModel.selectCategory(cat); showCategoryDialog = false }.padding(14.dp),
                             color = if (selectedCategory?.id == cat.id) MaterialTheme.colorScheme.primary else Color.Unspecified
                         )
                     }
@@ -90,10 +102,7 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
                         Divider()
                         Text(
                             "＋ Добавить категорию",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showCategoryDialog = false; viewModel.showAddCategoryDialog() }
-                                .padding(14.dp),
+                            modifier = Modifier.fillMaxWidth().clickable { showCategoryDialog = false; viewModel.showAddCategoryDialog() }.padding(14.dp),
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -103,13 +112,18 @@ fun AddTransactionScreen(navController: NavController, viewModel: AddTransaction
         )
     }
 
-    // Диалог добавления категории
     if (showAddCategory) {
         AlertDialog(
             onDismissRequest = { viewModel.hideAddCategoryDialog() },
             title = { Text("Новая категория") },
             text = {
-                OutlinedTextField(newCategoryName, { viewModel.updateNewCategoryName(it) }, label = { Text("Название") }, modifier = Modifier.fillMaxWidth())
+                Column {
+                    OutlinedTextField(newCategoryName, { viewModel.updateNewCategoryName(it) }, label = { Text("Название") }, modifier = Modifier.fillMaxWidth())
+                    val msg = syncMessage
+                    if (msg.isNotBlank()) {
+                        Text(msg, color = if (msg.startsWith("✅")) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error)
+                    }
+                }
             },
             confirmButton = {
                 Button(onClick = { viewModel.addCategory() }, enabled = newCategoryName.isNotBlank()) { Text("Добавить") }

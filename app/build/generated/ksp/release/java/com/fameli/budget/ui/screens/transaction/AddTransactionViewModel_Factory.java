@@ -2,6 +2,7 @@ package com.fameli.budget.ui.screens.transaction;
 
 import com.fameli.budget.data.local.dao.CategoryDao;
 import com.fameli.budget.data.local.dao.TransactionDao;
+import com.fameli.budget.data.repository.FamilyManager;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
@@ -28,24 +29,28 @@ public final class AddTransactionViewModel_Factory implements Factory<AddTransac
 
   private final Provider<CategoryDao> categoryDaoProvider;
 
+  private final Provider<FamilyManager> familyManagerProvider;
+
   public AddTransactionViewModel_Factory(Provider<TransactionDao> transactionDaoProvider,
-      Provider<CategoryDao> categoryDaoProvider) {
+      Provider<CategoryDao> categoryDaoProvider, Provider<FamilyManager> familyManagerProvider) {
     this.transactionDaoProvider = transactionDaoProvider;
     this.categoryDaoProvider = categoryDaoProvider;
+    this.familyManagerProvider = familyManagerProvider;
   }
 
   @Override
   public AddTransactionViewModel get() {
-    return newInstance(transactionDaoProvider.get(), categoryDaoProvider.get());
+    return newInstance(transactionDaoProvider.get(), categoryDaoProvider.get(), familyManagerProvider.get());
   }
 
   public static AddTransactionViewModel_Factory create(
-      Provider<TransactionDao> transactionDaoProvider, Provider<CategoryDao> categoryDaoProvider) {
-    return new AddTransactionViewModel_Factory(transactionDaoProvider, categoryDaoProvider);
+      Provider<TransactionDao> transactionDaoProvider, Provider<CategoryDao> categoryDaoProvider,
+      Provider<FamilyManager> familyManagerProvider) {
+    return new AddTransactionViewModel_Factory(transactionDaoProvider, categoryDaoProvider, familyManagerProvider);
   }
 
   public static AddTransactionViewModel newInstance(TransactionDao transactionDao,
-      CategoryDao categoryDao) {
-    return new AddTransactionViewModel(transactionDao, categoryDao);
+      CategoryDao categoryDao, FamilyManager familyManager) {
+    return new AddTransactionViewModel(transactionDao, categoryDao, familyManager);
   }
 }
