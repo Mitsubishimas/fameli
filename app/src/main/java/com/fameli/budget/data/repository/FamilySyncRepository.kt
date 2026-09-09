@@ -26,13 +26,37 @@ class FamilySyncRepository @Inject constructor(
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         log("Загрузка из облака...")
         try {
+            // КАТЕГОРИИ — загружаем ВСЕ
+            val cats = ApiClient.getCategories(fid)
+            log("Категорий из облака: ${cats.length()}")
+            for (i in 0 until cats.length()) {
+                val obj = cats.getJSONObject(i)
+                val cloudId = obj.optString("cloud_id")
+                if (cloudId.isBlank()) continue // пропускаем с пустым ID
+                val typeRaw = obj.optString("type", "EXPENSE").uppercase()
+                val cat = CategoryEntity(
+                    cloudId = cloudId,
+                    name = obj.optString("name", ""),
+                    type = if (typeRaw == "INCOME") CategoryType.INCOME else CategoryType.EXPENSE,
+                    icon = if (obj.optString("icon", "").isBlank() || obj.optString("icon") == "????") "💰" else obj.optString("icon"),
+                    lastModified = obj.optLong("last_modified", System.currentTimeMillis())
+                )
+                val existing = categoryDao.getByCloudId(cloudId)
+                if (existing == null) {
+                    categoryDao.insert(cat)
+                    log("+ Категория: ${cat.name}")
+                } else {
+                    categoryDao.update(cat.copy(id = existing.id))
+                }
+            }
+
             // Транзакции
             val cloudTxns = ApiClient.getTransactions(fid)
-            val cloudIds = mutableSetOf<String>()
+            val cloudTxnIds = mutableSetOf<String>()
             for (i in 0 until cloudTxns.length()) {
                 val obj = cloudTxns.getJSONObject(i)
                 val cloudId = obj.optString("cloud_id")
-                cloudIds.add(cloudId)
+                cloudTxnIds.add(cloudId)
                 val txn = TransactionEntity(
                     cloudId = cloudId,
                     type = if (obj.optString("type").uppercase() == "INCOME") "INCOME" else "EXPENSE",
@@ -51,7 +75,7 @@ class FamilySyncRepository @Inject constructor(
                 }
             }
             transactionDao.getAll().first().forEach { local ->
-                if (!cloudIds.contains(local.cloudId)) transactionDao.softDelete(local.localId)
+                if (!cloudTxnIds.contains(local.cloudId)) transactionDao.softDelete(local.localId)
             }
 
             // Покупки
@@ -82,7 +106,7 @@ class FamilySyncRepository @Inject constructor(
                 if (!shopIds.contains(local.cloudId)) shoppingDao.softDelete(local.id)
             }
 
-            // Задачи — с repeatType
+            // Задачи
             val cloudTasks = ApiClient.getTasks(fid)
             val taskIds = mutableSetOf<String>()
             for (i in 0 until cloudTasks.length()) {
@@ -122,69 +146,34 @@ class FamilySyncRepository @Inject constructor(
 
     suspend fun syncAllLocalToCloud(): Result<Unit> = withContext(Dispatchers.IO) {
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
-        log("Отправка...")
         try {
-            // Транзакции
-            val cloudTxns = ApiClient.getTransactions(fid)
-            val cloudTxnMap = mutableMapOf<String, JSONObject>()
-            for (i in 0 until cloudTxns.length()) cloudTxnMap[cloudTxns.getJSONObject(i).optString("cloud_id")] = cloudTxns.getJSONObject(i)
-
             transactionDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }.forEach { txn ->
-                val cloud = cloudTxnMap[txn.cloudId]
-                val cloudLastMod = cloud?.optLong("last_modified", 0) ?: 0
-                if (cloud == null || txn.lastModified > cloudLastMod) {
-                    ApiClient.saveTransaction(JSONObject().apply {
-                        put("cloud_id", txn.cloudId); put("family_id", fid)
-                        put("type", txn.type.uppercase()); put("amount", txn.amount)
-                        put("category_name", txn.categoryName); put("note", txn.note)
-                        put("date", txn.date); put("last_modified", txn.lastModified)
-                    })
-                }
+                ApiClient.saveTransaction(JSONObject().apply {
+                    put("cloud_id", txn.cloudId); put("family_id", fid)
+                    put("type", txn.type.uppercase()); put("amount", txn.amount)
+                    put("category_name", txn.categoryName); put("note", txn.note)
+                    put("date", txn.date); put("last_modified", txn.lastModified)
+                })
             }
-
-            // Покупки
-            val cloudShop = ApiClient.getShopping(fid)
-            val cloudShopMap = mutableMapOf<String, JSONObject>()
-            for (i in 0 until cloudShop.length()) cloudShopMap[cloudShop.getJSONObject(i).optString("cloud_id")] = cloudShop.getJSONObject(i)
-
             shoppingDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }.forEach { item ->
-                val cloud = cloudShopMap[item.cloudId]
-                val cloudLastMod = cloud?.optLong("last_modified", 0) ?: 0
-                if (cloud == null || item.lastModified > cloudLastMod) {
-                    ApiClient.saveShopping(JSONObject().apply {
-                        put("cloud_id", item.cloudId); put("family_id", fid); put("name", item.name)
-                        put("is_purchased", item.isPurchased); put("purchased_by_name", item.purchasedByName)
-                        put("created_by_name", item.createdByName); put("created_at", item.createdAt)
-                        put("last_modified", item.lastModified)
-                    })
-                }
+                ApiClient.saveShopping(JSONObject().apply {
+                    put("cloud_id", item.cloudId); put("family_id", fid); put("name", item.name)
+                    put("is_purchased", item.isPurchased); put("purchased_by_name", item.purchasedByName)
+                    put("created_by_name", item.createdByName); put("created_at", item.createdAt)
+                    put("last_modified", item.lastModified)
+                })
             }
-
-            // Задачи — с repeatType
-            val cloudTasks = ApiClient.getTasks(fid)
-            val cloudTaskMap = mutableMapOf<String, JSONObject>()
-            for (i in 0 until cloudTasks.length()) cloudTaskMap[cloudTasks.getJSONObject(i).optString("cloud_id")] = cloudTasks.getJSONObject(i)
-
             taskDao.getAll().first().filter { !it.isDeleted && it.cloudId.isNotEmpty() }.forEach { task ->
-                val cloud = cloudTaskMap[task.cloudId]
-                val cloudLastMod = cloud?.optLong("last_modified", 0) ?: 0
-                if (cloud == null || task.lastModified > cloudLastMod) {
-                    ApiClient.saveTask(JSONObject().apply {
-                        put("cloud_id", task.cloudId); put("family_id", fid)
-                        put("title", task.title); put("description", task.description)
-                        put("date", task.date); put("time", task.time)
-                        put("is_completed", task.isCompleted); put("created_by_name", task.createdBy)
-                        put("repeat_type", task.repeatType)
-                        put("last_modified", task.lastModified)
-                    })
-                }
+                ApiClient.saveTask(JSONObject().apply {
+                    put("cloud_id", task.cloudId); put("family_id", fid)
+                    put("title", task.title); put("description", task.description)
+                    put("date", task.date); put("time", task.time)
+                    put("is_completed", task.isCompleted); put("created_by_name", task.createdBy)
+                    put("repeat_type", task.repeatType)
+                    put("last_modified", task.lastModified)
+                })
             }
-
-            log("Отправка завершена")
             Result.success(Unit)
-        } catch (e: Exception) {
-            log("Ошибка отправки: ${e.message}")
-            Result.failure(e)
-        }
+        } catch (e: Exception) { Result.failure(e) }
     }
 }
