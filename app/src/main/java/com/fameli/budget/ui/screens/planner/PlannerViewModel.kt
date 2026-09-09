@@ -20,6 +20,7 @@ class PlannerViewModel @Inject constructor(
     val selectedDate = MutableStateFlow(System.currentTimeMillis())
     val newTaskTime = MutableStateFlow("12:00")
     val newTaskRepeat = MutableStateFlow("NONE")
+    val editingTask = MutableStateFlow<TaskEntity?>(null)
     val monthTasks: StateFlow<List<TaskEntity>> = taskDao.getAll().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val tasks: StateFlow<List<TaskEntity>> = selectedDate.flatMapLatest { date ->
@@ -33,6 +34,8 @@ class PlannerViewModel @Inject constructor(
 
     fun setSelectedDate(date: Long) { selectedDate.value = date }
     fun setNewTaskRepeat(repeat: String) { newTaskRepeat.value = repeat }
+    fun setEditingTask(task: TaskEntity?) { editingTask.value = task }
+    fun setNewTaskTime(time: String) { newTaskTime.value = time }
 
     fun addTask(title: String, description: String) = viewModelScope.launch {
         val task = TaskEntity(
@@ -47,6 +50,17 @@ class PlannerViewModel @Inject constructor(
             lastModified = System.currentTimeMillis()
         )
         taskDao.insert(task)
+    }
+
+    fun updateTask(task: TaskEntity, title: String, description: String) = viewModelScope.launch {
+        taskDao.update(task.copy(
+            title = title,
+            description = description,
+            time = newTaskTime.value,
+            repeatType = newTaskRepeat.value,
+            lastModified = System.currentTimeMillis()
+        ))
+        setEditingTask(null)
     }
 
     fun toggleComplete(task: TaskEntity) = viewModelScope.launch {

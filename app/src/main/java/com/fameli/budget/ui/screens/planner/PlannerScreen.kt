@@ -32,6 +32,7 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
     val tasks by viewModel.tasks.collectAsState()
     val monthTasks by viewModel.monthTasks.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
+    val editingTask by viewModel.editingTask.collectAsState()
     val familyVM: FamilyViewModel = hiltViewModel()
     val isSyncing by familyVM.isSyncing.collectAsState()
     var taskTitle by remember { mutableStateOf("") }
@@ -98,7 +99,14 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
             item { Text("Задачи: ${SimpleDateFormat("dd.MM.yyyy", Locale("ru")).format(Date(selectedDate))}", fontWeight = FontWeight.Bold) }
             if (tasks.isEmpty()) { item { Card(Modifier.fillMaxWidth()) { Text("Нет задач", modifier = Modifier.padding(24.dp)) } } }
             items(tasks) { task ->
-                Card(Modifier.fillMaxWidth()) {
+                Card(Modifier.fillMaxWidth().clickable {
+                    // Открываем редактирование
+                    viewModel.setEditingTask(task)
+                    taskTitle = task.title
+                    taskDesc = task.description
+                    viewModel.setNewTaskTime(task.time)
+                    viewModel.setNewTaskRepeat(task.repeatType)
+                }) {
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = task.isCompleted, onCheckedChange = { viewModel.toggleComplete(task) })
                         Column(Modifier.weight(1f)) {
@@ -116,6 +124,7 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
         }
     }
 
+    // Диалог добавления
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
@@ -127,33 +136,22 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
                     OutlinedButton(onClick = { showTimePicker = true }, modifier = Modifier.fillMaxWidth()) { Text("🕐 ${viewModel.newTaskTime.value}") }
                     OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) { Text("📅 ${SimpleDateFormat("dd.MM", Locale("ru")).format(Date(selectedDate))}") }
                     
-                    // Кнопки периода — одинаковые, с подсветкой
                     Text("Период", style = MaterialTheme.typography.labelSmall)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        val repeats = listOf(
-                            "NONE" to "Разово",
-                            "DAILY" to "Ежедневно",
-                            "WEEKLY" to "Еженедельно"
-                        )
+                        val repeats = listOf("NONE" to "Разово", "DAILY" to "Ежедневно", "WEEKLY" to "Еженедельно")
                         repeats.forEach { (value, label) ->
                             val selected = viewModel.newTaskRepeat.value == value
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
+                                modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
                                     .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                                     .clickable { viewModel.setNewTaskRepeat(value) }
                                     .padding(vertical = 10.dp, horizontal = 4.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    label,
-                                    style = MaterialTheme.typography.bodySmall,
+                                Text(label, style = MaterialTheme.typography.bodySmall,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                    textAlign = TextAlign.Center,
-                                    maxLines = 1
-                                )
+                                    textAlign = TextAlign.Center, maxLines = 1)
                             }
                         }
                     }
@@ -164,6 +162,43 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
         )
     }
 
+    // Диалог редактирования
+    editingTask?.let { task ->
+        AlertDialog(
+            onDismissRequest = { viewModel.setEditingTask(null) },
+            title = { Text("Редактировать задачу") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(taskTitle, { taskTitle = it }, label = { Text("Название") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(taskDesc, { taskDesc = it }, label = { Text("Описание") }, modifier = Modifier.fillMaxWidth(), maxLines = 3)
+                    OutlinedButton(onClick = { showTimePicker = true }, modifier = Modifier.fillMaxWidth()) { Text("🕐 ${viewModel.newTaskTime.value}") }
+                    
+                    Text("Период", style = MaterialTheme.typography.labelSmall)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val repeats = listOf("NONE" to "Разово", "DAILY" to "Ежедневно", "WEEKLY" to "Еженедельно")
+                        repeats.forEach { (value, label) ->
+                            val selected = viewModel.newTaskRepeat.value == value
+                            Box(
+                                modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
+                                    .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                    .clickable { viewModel.setNewTaskRepeat(value) }
+                                    .padding(vertical = 10.dp, horizontal = 4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(label, style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center, maxLines = 1)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = { Button(onClick = { viewModel.updateTask(task, taskTitle, taskDesc) }) { Text("Сохранить") } },
+            dismissButton = { TextButton(onClick = { viewModel.setEditingTask(null) }) { Text("Отмена") } }
+        )
+    }
+
     if (showDatePicker) {
         val dp = rememberDatePickerState(viewModel.selectedDate.value)
         DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = { TextButton(onClick = { dp.selectedDateMillis?.let { viewModel.setSelectedDate(it) }; showDatePicker = false }) { Text("OK") } }) { DatePicker(dp) }
@@ -171,6 +206,6 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
 
     if (showTimePicker) {
         val tp = rememberTimePickerState()
-        AlertDialog(onDismissRequest = { showTimePicker = false }, title = { Text("Время") }, text = { TimePicker(tp) }, confirmButton = { Button(onClick = { viewModel.newTaskTime.value = "${tp.hour}:${tp.minute.toString().padStart(2, '0')}"; showTimePicker = false }) { Text("OK") } })
+        AlertDialog(onDismissRequest = { showTimePicker = false }, title = { Text("Время") }, text = { TimePicker(tp) }, confirmButton = { Button(onClick = { viewModel.setNewTaskTime("${tp.hour}:${tp.minute.toString().padStart(2, '0')}"); showTimePicker = false }) { Text("OK") } })
     }
 }
