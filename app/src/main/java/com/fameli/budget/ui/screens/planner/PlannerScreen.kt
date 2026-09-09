@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fameli.budget.data.local.entity.TaskEntity
@@ -47,56 +49,45 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
     ) {
         LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             
-            // КАЛЕНДАРЬ
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
                         Text("📅 ${SimpleDateFormat("LLLL yyyy", Locale("ru")).format(Date(selectedDate))}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(8.dp))
-                        
                         Row(Modifier.fillMaxWidth()) {
                             listOf("Пн","Вт","Ср","Чт","Пт","Сб","Вс").forEach { day ->
-                                Text(day, modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                Text(day, modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                             }
                         }
-                        
+                        Spacer(Modifier.height(4.dp))
                         val firstDay = Calendar.getInstance().apply { timeInMillis = selectedDate; set(Calendar.DAY_OF_MONTH, 1) }
                         val startOffset = (firstDay.get(Calendar.DAY_OF_WEEK) + 5) % 7
-                        
                         var dayCounter = 1
                         for (week in 0 until 6) {
                             Row(Modifier.fillMaxWidth()) {
-                                for (dayOfWeek in 0 until 7) {
-                                    if (week == 0 && dayOfWeek < startOffset) {
+                                for (dow in 0 until 7) {
+                                    if (week == 0 && dow < startOffset) {
                                         Spacer(Modifier.weight(1f).height(40.dp))
                                     } else if (dayCounter <= daysInMonth) {
-                                        val currentDay = dayCounter
-                                        val dayCal = Calendar.getInstance().apply {
-                                            timeInMillis = selectedDate
-                                            set(Calendar.DAY_OF_MONTH, currentDay)
-                                            set(Calendar.HOUR_OF_DAY, 12)
+                                        val day = dayCounter
+                                        val dayCal = Calendar.getInstance().apply { timeInMillis = selectedDate; set(Calendar.DAY_OF_MONTH, day); set(Calendar.HOUR_OF_DAY, 12) }
+                                        val hasTasks = monthTasks.any { t ->
+                                            val tc = Calendar.getInstance().apply { timeInMillis = t.date }
+                                            tc.get(Calendar.DAY_OF_MONTH) == day && tc.get(Calendar.MONTH) == cal.get(Calendar.MONTH)
                                         }
-                                        val hasTasks = monthTasks.any { task ->
-                                            val taskCal = Calendar.getInstance().apply { timeInMillis = task.date }
-                                            taskCal.get(Calendar.DAY_OF_MONTH) == currentDay && taskCal.get(Calendar.MONTH) == cal.get(Calendar.MONTH)
-                                        }
-                                        val isSelected = cal.get(Calendar.DAY_OF_MONTH) == currentDay
-                                        
-                                        Box(
-                                            modifier = Modifier.weight(1f).height(40.dp).padding(2.dp).clip(CircleShape)
-                                                .background(if (isSelected) MaterialTheme.colorScheme.primary else if (hasTasks) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
-                                                .clickable { viewModel.setSelectedDate(dayCal.timeInMillis) },
+                                        val isSelected = cal.get(Calendar.DAY_OF_MONTH) == day
+                                        Box(Modifier.weight(1f).height(40.dp).padding(2.dp).clip(CircleShape)
+                                            .background(if (isSelected) MaterialTheme.colorScheme.primary else if (hasTasks) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                                            .clickable { viewModel.setSelectedDate(dayCal.timeInMillis) },
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                Text("$currentDay", color = if (isSelected) MaterialTheme.colorScheme.onPrimary else Color.Unspecified, style = MaterialTheme.typography.bodySmall)
+                                                Text("$day", color = if (isSelected) MaterialTheme.colorScheme.onPrimary else Color.Unspecified)
                                                 if (hasTasks) Box(Modifier.size(4.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
                                             }
                                         }
                                         dayCounter++
-                                    } else {
-                                        Spacer(Modifier.weight(1f).height(40.dp))
-                                    }
+                                    } else Spacer(Modifier.weight(1f).height(40.dp))
                                 }
                             }
                         }
@@ -104,11 +95,8 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
                 }
             }
 
-            // Задачи
             item { Text("Задачи: ${SimpleDateFormat("dd.MM.yyyy", Locale("ru")).format(Date(selectedDate))}", fontWeight = FontWeight.Bold) }
-            if (tasks.isEmpty()) {
-                item { Card(Modifier.fillMaxWidth()) { Text("Нет задач", modifier = Modifier.padding(24.dp)) } }
-            }
+            if (tasks.isEmpty()) { item { Card(Modifier.fillMaxWidth()) { Text("Нет задач", modifier = Modifier.padding(24.dp)) } } }
             items(tasks) { task ->
                 Card(Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -118,7 +106,7 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
                             if (task.description.isNotBlank()) {
                                 Text(task.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text("${task.time} | ${task.createdBy}", style = MaterialTheme.typography.labelSmall)
+                            Text("🕐 ${task.time} | 🔁 ${when(task.repeatType) {"DAILY" -> "Ежедневно"; "WEEKLY" -> "Еженедельно"; "MONTHLY" -> "Ежемесячно"; else -> "Разово"}}", style = MaterialTheme.typography.labelSmall)
                         }
                         IconButton(onClick = { viewModel.deleteTask(task) }) { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) }
                     }
@@ -135,13 +123,39 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(taskTitle, { taskTitle = it }, label = { Text("Название") }, modifier = Modifier.fillMaxWidth())
-                    OutlinedTextField(taskDesc, { taskDesc = it }, label = { Text("Описание") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(taskDesc, { taskDesc = it }, label = { Text("Описание") }, modifier = Modifier.fillMaxWidth(), maxLines = 3)
                     OutlinedButton(onClick = { showTimePicker = true }, modifier = Modifier.fillMaxWidth()) { Text("🕐 ${viewModel.newTaskTime.value}") }
                     OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) { Text("📅 ${SimpleDateFormat("dd.MM", Locale("ru")).format(Date(selectedDate))}") }
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        FilterChip(viewModel.newTaskRepeat.value == "NONE", { viewModel.setNewTaskRepeat("NONE") }, label = { Text("Разово") })
-                        FilterChip(viewModel.newTaskRepeat.value == "DAILY", { viewModel.setNewTaskRepeat("DAILY") }, label = { Text("Ежедневно") })
-                        FilterChip(viewModel.newTaskRepeat.value == "WEEKLY", { viewModel.setNewTaskRepeat("WEEKLY") }, label = { Text("Еженедельно") })
+                    
+                    // Кнопки периода — одинаковые, с подсветкой
+                    Text("Период", style = MaterialTheme.typography.labelSmall)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val repeats = listOf(
+                            "NONE" to "Разово",
+                            "DAILY" to "Ежедневно",
+                            "WEEKLY" to "Еженедельно"
+                        )
+                        repeats.forEach { (value, label) ->
+                            val selected = viewModel.newTaskRepeat.value == value
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                    .clickable { viewModel.setNewTaskRepeat(value) }
+                                    .padding(vertical = 10.dp, horizontal = 4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    label,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
                 }
             },
