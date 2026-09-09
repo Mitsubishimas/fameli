@@ -26,7 +26,7 @@ class FamilySyncRepository @Inject constructor(
         val fid = familyManager.currentFamilyId ?: return@withContext Result.failure(Exception("Нет семьи"))
         log("Загрузка из облака...")
         try {
-            // Транзакции — включая удалённые
+            // Транзакции
             val cloudTxns = ApiClient.getTransactions(fid)
             val cloudIds = mutableSetOf<String>()
             for (i in 0 until cloudTxns.length()) {
@@ -46,9 +46,6 @@ class FamilySyncRepository @Inject constructor(
                 val existing = transactionDao.getByCloudId(cloudId)
                 if (existing == null) {
                     if (!txn.isDeleted) transactionDao.insert(txn)
-                } else if (txn.isDeleted) {
-                    transactionDao.update(txn.copy(localId = existing.localId))
-                    log("Удалена: ${txn.note}")
                 } else {
                     transactionDao.update(txn.copy(localId = existing.localId))
                 }
@@ -77,19 +74,15 @@ class FamilySyncRepository @Inject constructor(
                 val existing = shoppingDao.getByCloudId(cloudId)
                 if (existing == null) {
                     if (!item.isDeleted) shoppingDao.insert(item)
-                } else if (item.isDeleted) {
-                    shoppingDao.update(item.copy(id = existing.id))
-                    log("Удалена: ${item.name}")
                 } else {
                     shoppingDao.update(item.copy(id = existing.id))
-                    log("~ ${item.name} → ${item.isPurchased}")
                 }
             }
             shoppingDao.getAll().first().forEach { local ->
                 if (!shopIds.contains(local.cloudId)) shoppingDao.softDelete(local.id)
             }
 
-            // Задачи
+            // Задачи — с repeatType
             val cloudTasks = ApiClient.getTasks(fid)
             val taskIds = mutableSetOf<String>()
             for (i in 0 until cloudTasks.length()) {
@@ -104,18 +97,15 @@ class FamilySyncRepository @Inject constructor(
                     time = obj.optString("time", "12:00"),
                     isCompleted = obj.optInt("is_completed", 0) == 1,
                     createdBy = obj.optString("created_by_name", ""),
+                    repeatType = obj.optString("repeat_type", "NONE"),
                     lastModified = obj.optLong("last_modified", System.currentTimeMillis()),
                     isDeleted = obj.optInt("is_deleted", 0) == 1
                 )
                 val existing = taskDao.getByCloudId(cloudId)
                 if (existing == null) {
                     if (!task.isDeleted) taskDao.insert(task)
-                } else if (task.isDeleted) {
-                    taskDao.update(task.copy(id = existing.id))
-                    log("Удалена: ${task.title}")
                 } else {
                     taskDao.update(task.copy(id = existing.id))
-                    log("~ ${task.title} → ${task.isCompleted}")
                 }
             }
             taskDao.getAll().first().forEach { local ->
@@ -170,7 +160,7 @@ class FamilySyncRepository @Inject constructor(
                 }
             }
 
-            // Задачи
+            // Задачи — с repeatType
             val cloudTasks = ApiClient.getTasks(fid)
             val cloudTaskMap = mutableMapOf<String, JSONObject>()
             for (i in 0 until cloudTasks.length()) cloudTaskMap[cloudTasks.getJSONObject(i).optString("cloud_id")] = cloudTasks.getJSONObject(i)
@@ -184,6 +174,7 @@ class FamilySyncRepository @Inject constructor(
                         put("title", task.title); put("description", task.description)
                         put("date", task.date); put("time", task.time)
                         put("is_completed", task.isCompleted); put("created_by_name", task.createdBy)
+                        put("repeat_type", task.repeatType)
                         put("last_modified", task.lastModified)
                     })
                 }
