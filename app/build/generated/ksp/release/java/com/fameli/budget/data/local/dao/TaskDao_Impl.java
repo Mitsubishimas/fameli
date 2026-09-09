@@ -49,7 +49,7 @@ public final class TaskDao_Impl implements TaskDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR ABORT INTO `tasks` (`id`,`cloudId`,`title`,`description`,`date`,`time`,`createdBy`,`createdByUid`,`isCompleted`,`isDeleted`,`lastModified`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR ABORT INTO `tasks` (`id`,`cloudId`,`title`,`description`,`date`,`time`,`isCompleted`,`createdBy`,`createdByUid`,`repeatType`,`isDeleted`,`lastModified`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -61,20 +61,21 @@ public final class TaskDao_Impl implements TaskDao {
         statement.bindString(4, entity.getDescription());
         statement.bindLong(5, entity.getDate());
         statement.bindString(6, entity.getTime());
-        statement.bindString(7, entity.getCreatedBy());
-        statement.bindString(8, entity.getCreatedByUid());
         final int _tmp = entity.isCompleted() ? 1 : 0;
-        statement.bindLong(9, _tmp);
+        statement.bindLong(7, _tmp);
+        statement.bindString(8, entity.getCreatedBy());
+        statement.bindString(9, entity.getCreatedByUid());
+        statement.bindString(10, entity.getRepeatType());
         final int _tmp_1 = entity.isDeleted() ? 1 : 0;
-        statement.bindLong(10, _tmp_1);
-        statement.bindLong(11, entity.getLastModified());
+        statement.bindLong(11, _tmp_1);
+        statement.bindLong(12, entity.getLastModified());
       }
     };
     this.__updateAdapterOfTaskEntity = new EntityDeletionOrUpdateAdapter<TaskEntity>(__db) {
       @Override
       @NonNull
       protected String createQuery() {
-        return "UPDATE OR ABORT `tasks` SET `id` = ?,`cloudId` = ?,`title` = ?,`description` = ?,`date` = ?,`time` = ?,`createdBy` = ?,`createdByUid` = ?,`isCompleted` = ?,`isDeleted` = ?,`lastModified` = ? WHERE `id` = ?";
+        return "UPDATE OR ABORT `tasks` SET `id` = ?,`cloudId` = ?,`title` = ?,`description` = ?,`date` = ?,`time` = ?,`isCompleted` = ?,`createdBy` = ?,`createdByUid` = ?,`repeatType` = ?,`isDeleted` = ?,`lastModified` = ? WHERE `id` = ?";
       }
 
       @Override
@@ -86,14 +87,15 @@ public final class TaskDao_Impl implements TaskDao {
         statement.bindString(4, entity.getDescription());
         statement.bindLong(5, entity.getDate());
         statement.bindString(6, entity.getTime());
-        statement.bindString(7, entity.getCreatedBy());
-        statement.bindString(8, entity.getCreatedByUid());
         final int _tmp = entity.isCompleted() ? 1 : 0;
-        statement.bindLong(9, _tmp);
+        statement.bindLong(7, _tmp);
+        statement.bindString(8, entity.getCreatedBy());
+        statement.bindString(9, entity.getCreatedByUid());
+        statement.bindString(10, entity.getRepeatType());
         final int _tmp_1 = entity.isDeleted() ? 1 : 0;
-        statement.bindLong(10, _tmp_1);
-        statement.bindLong(11, entity.getLastModified());
-        statement.bindLong(12, entity.getId());
+        statement.bindLong(11, _tmp_1);
+        statement.bindLong(12, entity.getLastModified());
+        statement.bindLong(13, entity.getId());
       }
     };
     this.__preparedStmtOfToggleComplete = new SharedSQLiteStatement(__db) {
@@ -220,9 +222,10 @@ public final class TaskDao_Impl implements TaskDao {
           final int _cursorIndexOfDescription = CursorUtil.getColumnIndexOrThrow(_cursor, "description");
           final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfTime = CursorUtil.getColumnIndexOrThrow(_cursor, "time");
+          final int _cursorIndexOfIsCompleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isCompleted");
           final int _cursorIndexOfCreatedBy = CursorUtil.getColumnIndexOrThrow(_cursor, "createdBy");
           final int _cursorIndexOfCreatedByUid = CursorUtil.getColumnIndexOrThrow(_cursor, "createdByUid");
-          final int _cursorIndexOfIsCompleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isCompleted");
+          final int _cursorIndexOfRepeatType = CursorUtil.getColumnIndexOrThrow(_cursor, "repeatType");
           final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
           final int _cursorIndexOfLastModified = CursorUtil.getColumnIndexOrThrow(_cursor, "lastModified");
           final List<TaskEntity> _result = new ArrayList<TaskEntity>(_cursor.getCount());
@@ -240,21 +243,23 @@ public final class TaskDao_Impl implements TaskDao {
             _tmpDate = _cursor.getLong(_cursorIndexOfDate);
             final String _tmpTime;
             _tmpTime = _cursor.getString(_cursorIndexOfTime);
-            final String _tmpCreatedBy;
-            _tmpCreatedBy = _cursor.getString(_cursorIndexOfCreatedBy);
-            final String _tmpCreatedByUid;
-            _tmpCreatedByUid = _cursor.getString(_cursorIndexOfCreatedByUid);
             final boolean _tmpIsCompleted;
             final int _tmp;
             _tmp = _cursor.getInt(_cursorIndexOfIsCompleted);
             _tmpIsCompleted = _tmp != 0;
+            final String _tmpCreatedBy;
+            _tmpCreatedBy = _cursor.getString(_cursorIndexOfCreatedBy);
+            final String _tmpCreatedByUid;
+            _tmpCreatedByUid = _cursor.getString(_cursorIndexOfCreatedByUid);
+            final String _tmpRepeatType;
+            _tmpRepeatType = _cursor.getString(_cursorIndexOfRepeatType);
             final boolean _tmpIsDeleted;
             final int _tmp_1;
             _tmp_1 = _cursor.getInt(_cursorIndexOfIsDeleted);
             _tmpIsDeleted = _tmp_1 != 0;
             final long _tmpLastModified;
             _tmpLastModified = _cursor.getLong(_cursorIndexOfLastModified);
-            _item = new TaskEntity(_tmpId,_tmpCloudId,_tmpTitle,_tmpDescription,_tmpDate,_tmpTime,_tmpCreatedBy,_tmpCreatedByUid,_tmpIsCompleted,_tmpIsDeleted,_tmpLastModified);
+            _item = new TaskEntity(_tmpId,_tmpCloudId,_tmpTitle,_tmpDescription,_tmpDate,_tmpTime,_tmpIsCompleted,_tmpCreatedBy,_tmpCreatedByUid,_tmpRepeatType,_tmpIsDeleted,_tmpLastModified);
             _result.add(_item);
           }
           return _result;
@@ -290,9 +295,10 @@ public final class TaskDao_Impl implements TaskDao {
           final int _cursorIndexOfDescription = CursorUtil.getColumnIndexOrThrow(_cursor, "description");
           final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfTime = CursorUtil.getColumnIndexOrThrow(_cursor, "time");
+          final int _cursorIndexOfIsCompleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isCompleted");
           final int _cursorIndexOfCreatedBy = CursorUtil.getColumnIndexOrThrow(_cursor, "createdBy");
           final int _cursorIndexOfCreatedByUid = CursorUtil.getColumnIndexOrThrow(_cursor, "createdByUid");
-          final int _cursorIndexOfIsCompleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isCompleted");
+          final int _cursorIndexOfRepeatType = CursorUtil.getColumnIndexOrThrow(_cursor, "repeatType");
           final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
           final int _cursorIndexOfLastModified = CursorUtil.getColumnIndexOrThrow(_cursor, "lastModified");
           final List<TaskEntity> _result = new ArrayList<TaskEntity>(_cursor.getCount());
@@ -310,21 +316,23 @@ public final class TaskDao_Impl implements TaskDao {
             _tmpDate = _cursor.getLong(_cursorIndexOfDate);
             final String _tmpTime;
             _tmpTime = _cursor.getString(_cursorIndexOfTime);
-            final String _tmpCreatedBy;
-            _tmpCreatedBy = _cursor.getString(_cursorIndexOfCreatedBy);
-            final String _tmpCreatedByUid;
-            _tmpCreatedByUid = _cursor.getString(_cursorIndexOfCreatedByUid);
             final boolean _tmpIsCompleted;
             final int _tmp;
             _tmp = _cursor.getInt(_cursorIndexOfIsCompleted);
             _tmpIsCompleted = _tmp != 0;
+            final String _tmpCreatedBy;
+            _tmpCreatedBy = _cursor.getString(_cursorIndexOfCreatedBy);
+            final String _tmpCreatedByUid;
+            _tmpCreatedByUid = _cursor.getString(_cursorIndexOfCreatedByUid);
+            final String _tmpRepeatType;
+            _tmpRepeatType = _cursor.getString(_cursorIndexOfRepeatType);
             final boolean _tmpIsDeleted;
             final int _tmp_1;
             _tmp_1 = _cursor.getInt(_cursorIndexOfIsDeleted);
             _tmpIsDeleted = _tmp_1 != 0;
             final long _tmpLastModified;
             _tmpLastModified = _cursor.getLong(_cursorIndexOfLastModified);
-            _item = new TaskEntity(_tmpId,_tmpCloudId,_tmpTitle,_tmpDescription,_tmpDate,_tmpTime,_tmpCreatedBy,_tmpCreatedByUid,_tmpIsCompleted,_tmpIsDeleted,_tmpLastModified);
+            _item = new TaskEntity(_tmpId,_tmpCloudId,_tmpTitle,_tmpDescription,_tmpDate,_tmpTime,_tmpIsCompleted,_tmpCreatedBy,_tmpCreatedByUid,_tmpRepeatType,_tmpIsDeleted,_tmpLastModified);
             _result.add(_item);
           }
           return _result;
@@ -360,9 +368,10 @@ public final class TaskDao_Impl implements TaskDao {
           final int _cursorIndexOfDescription = CursorUtil.getColumnIndexOrThrow(_cursor, "description");
           final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfTime = CursorUtil.getColumnIndexOrThrow(_cursor, "time");
+          final int _cursorIndexOfIsCompleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isCompleted");
           final int _cursorIndexOfCreatedBy = CursorUtil.getColumnIndexOrThrow(_cursor, "createdBy");
           final int _cursorIndexOfCreatedByUid = CursorUtil.getColumnIndexOrThrow(_cursor, "createdByUid");
-          final int _cursorIndexOfIsCompleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isCompleted");
+          final int _cursorIndexOfRepeatType = CursorUtil.getColumnIndexOrThrow(_cursor, "repeatType");
           final int _cursorIndexOfIsDeleted = CursorUtil.getColumnIndexOrThrow(_cursor, "isDeleted");
           final int _cursorIndexOfLastModified = CursorUtil.getColumnIndexOrThrow(_cursor, "lastModified");
           final TaskEntity _result;
@@ -379,21 +388,23 @@ public final class TaskDao_Impl implements TaskDao {
             _tmpDate = _cursor.getLong(_cursorIndexOfDate);
             final String _tmpTime;
             _tmpTime = _cursor.getString(_cursorIndexOfTime);
-            final String _tmpCreatedBy;
-            _tmpCreatedBy = _cursor.getString(_cursorIndexOfCreatedBy);
-            final String _tmpCreatedByUid;
-            _tmpCreatedByUid = _cursor.getString(_cursorIndexOfCreatedByUid);
             final boolean _tmpIsCompleted;
             final int _tmp;
             _tmp = _cursor.getInt(_cursorIndexOfIsCompleted);
             _tmpIsCompleted = _tmp != 0;
+            final String _tmpCreatedBy;
+            _tmpCreatedBy = _cursor.getString(_cursorIndexOfCreatedBy);
+            final String _tmpCreatedByUid;
+            _tmpCreatedByUid = _cursor.getString(_cursorIndexOfCreatedByUid);
+            final String _tmpRepeatType;
+            _tmpRepeatType = _cursor.getString(_cursorIndexOfRepeatType);
             final boolean _tmpIsDeleted;
             final int _tmp_1;
             _tmp_1 = _cursor.getInt(_cursorIndexOfIsDeleted);
             _tmpIsDeleted = _tmp_1 != 0;
             final long _tmpLastModified;
             _tmpLastModified = _cursor.getLong(_cursorIndexOfLastModified);
-            _result = new TaskEntity(_tmpId,_tmpCloudId,_tmpTitle,_tmpDescription,_tmpDate,_tmpTime,_tmpCreatedBy,_tmpCreatedByUid,_tmpIsCompleted,_tmpIsDeleted,_tmpLastModified);
+            _result = new TaskEntity(_tmpId,_tmpCloudId,_tmpTitle,_tmpDescription,_tmpDate,_tmpTime,_tmpIsCompleted,_tmpCreatedBy,_tmpCreatedByUid,_tmpRepeatType,_tmpIsDeleted,_tmpLastModified);
           } else {
             _result = null;
           }

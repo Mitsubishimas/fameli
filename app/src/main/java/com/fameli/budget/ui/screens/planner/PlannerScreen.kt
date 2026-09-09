@@ -138,6 +138,11 @@ fun PlannerScreen(viewModel: PlannerViewModel, showAddDialog: Boolean, onDismiss
                     OutlinedTextField(taskDesc, { taskDesc = it }, label = { Text("Описание") }, modifier = Modifier.fillMaxWidth())
                     OutlinedButton(onClick = { showTimePicker = true }, modifier = Modifier.fillMaxWidth()) { Text("🕐 ${viewModel.newTaskTime.value}") }
                     OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) { Text("📅 ${SimpleDateFormat("dd.MM", Locale("ru")).format(Date(selectedDate))}") }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        FilterChip(viewModel.newTaskRepeat.value == "NONE", { viewModel.setNewTaskRepeat("NONE") }, label = { Text("Разово") })
+                        FilterChip(viewModel.newTaskRepeat.value == "DAILY", { viewModel.setNewTaskRepeat("DAILY") }, label = { Text("Ежедневно") })
+                        FilterChip(viewModel.newTaskRepeat.value == "WEEKLY", { viewModel.setNewTaskRepeat("WEEKLY") }, label = { Text("Еженедельно") })
+                    }
                 }
             },
             confirmButton = { Button(onClick = { viewModel.addTask(taskTitle, taskDesc); taskTitle = ""; taskDesc = ""; onDismiss() }, enabled = taskTitle.isNotBlank()) { Text("Добавить") } },

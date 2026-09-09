@@ -15,9 +15,10 @@ data class TaskEntity(
     val description: String = "",
     val date: Long = 0,
     val time: String = "12:00",
+    val isCompleted: Boolean = false,
     val createdBy: String = "",
     val createdByUid: String = "",
-    val isCompleted: Boolean = false,
+    val repeatType: String = "NONE", // NONE, DAILY, WEEKLY, MONTHLY
     val isDeleted: Boolean = false,
     val lastModified: Long = System.currentTimeMillis()
 ) {
