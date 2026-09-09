@@ -30,6 +30,10 @@ fun ShoppingScreen(
     val showDialog by viewModel.showAddDialog.collectAsState()
     val newName by viewModel.newItemName.collectAsState()
     val dialogVisible = showAddDialog || showDialog
+    var showArchive by remember { mutableStateOf(false) }
+
+    val activeItems = items.filter { !it.isPurchased }
+    val archivedItems = items.filter { it.isPurchased }
 
     SwipeRefresh(
         state = rememberSwipeRefreshState(isRefreshing = isSyncing),
@@ -37,11 +41,34 @@ fun ShoppingScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item { Text("Покупки", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) }
-            if (items.isEmpty()) {
-                item { Card(Modifier.fillMaxWidth()) { Text("Список пуст", modifier = Modifier.padding(24.dp)) } }
+            item {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Покупки", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    TextButton(onClick = { showArchive = !showArchive }) {
+                        Icon(if (showArchive) Icons.Filled.List else Icons.Filled.Archive, null)
+                        Spacer(Modifier.width(4.dp))
+                        Text(if (showArchive) "Активные" else "Архив (${archivedItems.size})")
+                    }
+                }
             }
-            items(items) { item -> ShoppingItemCard(item, viewModel) }
+
+            val displayItems = if (showArchive) archivedItems else activeItems
+
+            if (displayItems.isEmpty()) {
+                item {
+                    Card(Modifier.fillMaxWidth()) {
+                        Text(
+                            if (showArchive) "Архив пуст" else "Список пуст",
+                            modifier = Modifier.padding(24.dp),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+            }
+
+            items(displayItems) { item ->
+                ShoppingItemCard(item, viewModel)
+            }
             item { Spacer(Modifier.height(72.dp)) }
         }
     }
@@ -65,7 +92,7 @@ fun ShoppingItemCard(item: ShoppingItemEntity, viewModel: ShoppingViewModel) {
             Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                 Text(item.name, textDecoration = if (item.isPurchased) TextDecoration.LineThrough else TextDecoration.None)
                 Text("by ${item.createdByName}", style = MaterialTheme.typography.labelSmall)
-                if (item.isPurchased) Text("Купил: ${item.purchasedByName}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                if (item.isPurchased) Text("✅ Купил: ${item.purchasedByName}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
             }
             IconButton(onClick = { viewModel.deleteItem(item) }) { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) }
         }
