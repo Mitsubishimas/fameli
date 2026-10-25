@@ -16,3 +16,16 @@
 node_modules/
 package-lock.json
 service-account.json
+
+# Build
+/app/build/
+/build/
+*.apk
+*.aab
+
+# Backups
+*.sql
+fameli_backup_*.sql
+
+# Local
+local.properties

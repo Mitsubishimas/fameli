@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="gcm_defaultSenderId" translatable="false">189624151535</string>
-    <string name="google_api_key" translatable="false">AIzaSyDqAYeScy6FAmsjt5m1YUQRO-7zUIiX_RI</string>
-    <string name="google_app_id" translatable="false">1:189624151535:android:7779d2fd75fa43bdb55a1a</string>
-    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyDqAYeScy6FAmsjt5m1YUQRO-7zUIiX_RI</string>
-    <string name="google_storage_bucket" translatable="false">fameli-private.firebasestorage.app</string>
-    <string name="project_id" translatable="false">fameli-private</string>
-</resources>
