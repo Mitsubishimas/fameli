@@ -1,5 +1,6 @@
 package com.fameli.budget.data.repository;
 
+import com.fameli.budget.data.local.dao.BudgetDao;
 import com.fameli.budget.data.local.dao.CategoryDao;
 import com.fameli.budget.data.local.dao.ShoppingDao;
 import com.fameli.budget.data.local.dao.TaskDao;
@@ -34,32 +35,37 @@ public final class FamilySyncRepository_Factory implements Factory<FamilySyncRep
 
   private final Provider<ShoppingDao> shoppingDaoProvider;
 
+  private final Provider<BudgetDao> budgetDaoProvider;
+
   private final Provider<FamilyManager> familyManagerProvider;
 
   public FamilySyncRepository_Factory(Provider<TransactionDao> transactionDaoProvider,
       Provider<CategoryDao> categoryDaoProvider, Provider<TaskDao> taskDaoProvider,
-      Provider<ShoppingDao> shoppingDaoProvider, Provider<FamilyManager> familyManagerProvider) {
+      Provider<ShoppingDao> shoppingDaoProvider, Provider<BudgetDao> budgetDaoProvider,
+      Provider<FamilyManager> familyManagerProvider) {
     this.transactionDaoProvider = transactionDaoProvider;
     this.categoryDaoProvider = categoryDaoProvider;
     this.taskDaoProvider = taskDaoProvider;
     this.shoppingDaoProvider = shoppingDaoProvider;
+    this.budgetDaoProvider = budgetDaoProvider;
     this.familyManagerProvider = familyManagerProvider;
   }
 
   @Override
   public FamilySyncRepository get() {
-    return newInstance(transactionDaoProvider.get(), categoryDaoProvider.get(), taskDaoProvider.get(), shoppingDaoProvider.get(), familyManagerProvider.get());
+    return newInstance(transactionDaoProvider.get(), categoryDaoProvider.get(), taskDaoProvider.get(), shoppingDaoProvider.get(), budgetDaoProvider.get(), familyManagerProvider.get());
   }
 
   public static FamilySyncRepository_Factory create(Provider<TransactionDao> transactionDaoProvider,
       Provider<CategoryDao> categoryDaoProvider, Provider<TaskDao> taskDaoProvider,
-      Provider<ShoppingDao> shoppingDaoProvider, Provider<FamilyManager> familyManagerProvider) {
-    return new FamilySyncRepository_Factory(transactionDaoProvider, categoryDaoProvider, taskDaoProvider, shoppingDaoProvider, familyManagerProvider);
+      Provider<ShoppingDao> shoppingDaoProvider, Provider<BudgetDao> budgetDaoProvider,
+      Provider<FamilyManager> familyManagerProvider) {
+    return new FamilySyncRepository_Factory(transactionDaoProvider, categoryDaoProvider, taskDaoProvider, shoppingDaoProvider, budgetDaoProvider, familyManagerProvider);
   }
 
   public static FamilySyncRepository newInstance(TransactionDao transactionDao,
-      CategoryDao categoryDao, TaskDao taskDao, ShoppingDao shoppingDao,
+      CategoryDao categoryDao, TaskDao taskDao, ShoppingDao shoppingDao, BudgetDao budgetDao,
       FamilyManager familyManager) {
-    return new FamilySyncRepository(transactionDao, categoryDao, taskDao, shoppingDao, familyManager);
+    return new FamilySyncRepository(transactionDao, categoryDao, taskDao, shoppingDao, budgetDao, familyManager);
   }
 }

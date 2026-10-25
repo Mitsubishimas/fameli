@@ -20,25 +20,25 @@ class FamilyViewModel @Inject constructor(
     val message = MutableStateFlow<String?>(null)
     val isSyncing = MutableStateFlow(false)
 
-    fun joinFamily(code: String) = viewModelScope.launch(Dispatchers.IO) {
-        familyManager.currentFamilyId = code
-        familyId.value = code
-        message.value = "Присоединились. Синхронизация..."
-        repo.syncAllFromCloud().fold(
-            onSuccess = { message.value = "Данные загружены" },
-            onFailure = { e -> message.value = "Ошибка: ${e.message}" }
-        )
+    fun joinFamily(code: String) {
+        if (code.isBlank()) return
+        familyManager.currentFamilyId = code.trim()
+        familyId.value = code.trim()
+        message.value = "Присоединились: $code"
     }
 
     fun forceSync() = viewModelScope.launch(Dispatchers.IO) {
-        val fid = familyManager.currentFamilyId ?: return@launch
+        familyManager.currentFamilyId ?: return@launch
         isSyncing.value = true
-        repo.syncAllLocalToCloud().fold(
-            onSuccess = { repo.syncAllFromCloud().fold(
-                onSuccess = { message.value = "Готово" },
-                onFailure = { e -> message.value = "Ошибка: ${e.message}" }
-            )},
-            onFailure = { e -> message.value = "Ошибка: ${e.message}" }
+
+        repo.syncAllFromCloud().fold(
+            onSuccess = {
+                repo.syncAllLocalToCloud().fold(
+                    onSuccess = { message.value = "Готово" },
+                    onFailure = { e -> message.value = "Ошибка отправки: ${e.message}" }
+                )
+            },
+            onFailure = { e -> message.value = "Ошибка загрузки: ${e.message}" }
         )
         isSyncing.value = false
     }

@@ -3,6 +3,7 @@ package com.fameli.budget.di
 import android.content.Context
 import androidx.room.Room
 import com.fameli.budget.data.local.FameliDatabase
+import com.fameli.budget.data.local.MIGRATION_9_10
 import com.fameli.budget.data.local.dao.*
 import dagger.Module
 import dagger.Provides
@@ -18,7 +19,8 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): FameliDatabase =
         Room.databaseBuilder(context, FameliDatabase::class.java, "fameli_db")
-            .fallbackToDestructiveMigration()
+            .addMigrations(MIGRATION_9_10)
+            .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
     @Provides fun provideTransactionDao(db: FameliDatabase): TransactionDao = db.transactionDao()
